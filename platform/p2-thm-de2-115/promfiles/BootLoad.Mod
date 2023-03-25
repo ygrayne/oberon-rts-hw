@@ -1,14 +1,16 @@
-MODULE* BootLoad;  
+MODULE* BootLoad;
   (* NW 20.10.2013 / PR 4.2.2014 *)
   (* CFB 02.09.2015 Boot from SDHC disk only*)
   (* CFB 30.04.2018 Artix-7 XC7A35T, Spartan-7 XC7S50. 192KB BRAM: 160KB Code, 32KB Data *)
   (* CFB 06.08.2019 Up to SPI x 3, shift SPIFAST *)
   (* CFB 03.06.2020 512 KB RAM *)
   (* CFB 04.06.2020 SPIWORD option *)
+
+  (* gray: 16MB - 8k RAM, of which 8MB heap, for THM platform on Terasic DE-115 *)
+
   IMPORT SYSTEM;
   CONST MT = 12; SP = 14; LNK = 15;
-    MTOrg = 20H; MemLim = 080000H; stackOrg = 070000H;
-    swi = -60; led = -60;
+    MTOrg = 20H; MemLim = 01000000H - 02000H; stackOrg = 0800000H;
     spiData = -48; spiCtrl = -44;
     CARD0 = 1; SPIFAST = 8; SPIWORD = 16;
     FSoffset = 80000H;   (*block offset*)

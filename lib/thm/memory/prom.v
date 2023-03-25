@@ -1,28 +1,33 @@
-//
-// prom.v -- PROM interface and PROM simulation
-//           512 x 32 bit = 2 KB
-//
-
+/**
+  PROM
+  --
+  Architecture: THM
+  --
+  Base: THM-Oberon
+  --
+  2023 Gray, gray@grayraven.org
+  https://oberon-rts.org/licences
+  --
+  2023-03: parameter 'memfile'
+**/
 
 `timescale 1ns / 1ps
 `default_nettype none
 
-
-module prom(clk, rst,
-            stb, we, addr,
-            data_out, ack);
-    input clk;
-    input rst;
-    input stb;
-    input we;
-    input [10:2] addr;
-    output reg [31:0] data_out;
-    output reg ack;
+module prom #(parameter memfile) (
+  input clk,
+  input rst,
+  input stb,
+  input we,
+  input [10:2] addr,
+  output reg [31:0] data_out,
+  output reg ack
+);
 
   reg [31:0] mem[0:511];
 
   initial begin
-    $readmemh("../prom.mem", mem);
+    $readmemh(memfile, mem);
   end
 
   always @(posedge clk) begin
@@ -42,3 +47,5 @@ module prom(clk, rst,
   end
 
 endmodule
+
+`resetall
