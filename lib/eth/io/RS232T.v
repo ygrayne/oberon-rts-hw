@@ -1,40 +1,50 @@
-`timescale 1ns / 1ps  // NW 4.5.09 / 15.8.10 / 15.11.10
+/**
+  RS232 transmitter
+  115,200 and 19,200 baud, 8 bits
+  --
+  Design by NW 4.5.09 / 15.8.10 / 15.11.10
+  --
+  Changes by Gray, gray@grayraven.org
+  2020-05: Paramterised clock frequency
+**/
 
-// RS232 transmitter for 19200 bps, 8 bit data
-// CFB 24.07.16 Clock is 50 MHz, default rate is 115.2 KHz
-// 50000 / 2604 = 19.2 KHz
-// 50000 / 434 = 115.2 KHz 
-// CFB 28.05.20 Clock is 40 MHz, default rate is 115.2 KHz
-// 40000 / 2083 = 19.2 KHz
-// 40000 / 347 = 115.2 KHz 
+`timescale 1ns / 1ps
+`default_nettype none
 
-module RS232T(
-    input clk, rst,
-    input start, // request to accept and send a byte
-	 input fsel,  // frequency selection
-    input [7:0] data,
-    output rdy,
-    output TxD);
+module RS232T #(parameter ClockFreq = 50000000) (
+  input wire clk,
+  input wire rst_n,
+  input wire start,  // request to accept and send a byte
+	input wire fsel,   // frequency selection, 0 = fast = default
+  input wire [7:0] data_in,
+  output wire rdy,
+  output wire txd
+);
 
-wire endtick, endbit;
-wire [11:0] limit;
-reg run;
-reg [11:0] tick;
-reg [3:0] bitcnt;
-reg [8:0] shreg;
+  localparam limitFast = ClockFreq / 115200;
+  localparam limitSlow = ClockFreq / 19200;
 
-assign limit = fsel ? 2083 : 347; // 40 MHZ
-assign endtick = tick == limit;
-assign endbit = bitcnt == 9;
-assign rdy = ~run;
-assign TxD = shreg[0];
+  wire endtick, endbit;
+  wire [11:0] limit;
+  reg run;
+  reg [11:0] tick;
+  reg [3:0] bitcnt;
+  reg [8:0] shreg;
 
-always @ (posedge clk) begin
-  run <= (~rst | endtick & endbit) ? 0 : start ? 1 : run;
-  tick <= (run & ~endtick) ? tick + 1 : 0;
-  bitcnt <= (endtick & ~endbit) ? bitcnt + 1 :
-    (endtick & endbit) ? 0 : bitcnt;
-  shreg <= (~rst) ? 1 : start ? {data, 1'b0} :
-    endtick ? {1'b1, shreg[8:1]} : shreg;
-end
+  assign limit = fsel ? limitSlow[11:0] : limitFast[11:0];
+  assign endtick = tick == limit;
+  assign endbit = (bitcnt == 4'd9);
+  assign rdy = ~run;
+  assign txd = shreg[0];
+
+  always @ (posedge clk) begin
+    run <= (~rst_n | endtick & endbit) ? 1'b0 : start ? 1'b1 : run;
+    tick <= (run & ~endtick) ? tick + 1'b1 : 1'b0;
+    bitcnt <= (endtick & ~endbit) ? bitcnt + 1'b1 :
+      (endtick & endbit) ? 4'b0 : bitcnt;
+    shreg <= (~rst_n) ? 1'b1 : start ? {data_in, 1'b0} :
+      endtick ? {1'b1, shreg[8:1]} : shreg;
+  end
 endmodule
+
+`resetall

@@ -1,27 +1,45 @@
-`timescale 1ns / 1ps  // NW 31.8.2018
-//with interrupt and floating-point
-//
-// Embedded Project Oberon OS 
-// Astrobe for RISC5 v8.0
-// CFB Software 
-// https://www.astrobe.com
-//
-// CFB 13.10.2021
-//
+/**
+  RISC5 CPU
+  --
+  With interrupt and floating-point
+  --
+  Base/design: Project Oberon, NW 31.8.2018
 
-module RISC5(
-input clk, rst, irq,
-input [31:0] inbus, codebus,
-output [23:0] adr,
-output rd, wr, ben,
-output [31:0] outbus);
+  This file was originally based on Astrobe for RISC5 v7.0.1, Embedded Project Oberon
+  CFB Software, CFB 13.10.2021
+  http://www.astrobe.com
+  --
+  Changes by gray@grayraven.org
+  * make externally available several registers: SP, LNK, IR, SPC, PC
+  * make externally available several signals: intAck, RTI
+  * non-returning interrupt funcationality (intabort)
+**/
 
-localparam StartAdr = 22'h3FF800;
+`timescale 1ns / 1ps
+`default_nettype none
+
+module RISC5 (
+  input wire clk, rst, irq,
+  input wire [31:0] inbus, codebus,
+  input wire intabort,           // ** gray: abort interrupt: load address 0 = abort handler as return address for interrupt
+  output wire intackx, rtix,     // ** gray: 'intAck' and 'RTI' signal for external interrupt controller
+  output wire [31:0] spx,        // ** gray: stack pointer value (reg 14)
+  output wire [31:0] lnkx,       // ** gray: link register value (reg 15)
+  output wire [31:0] irx,        // ** gray: instruction register value
+  output wire [23:0] spcx,       // ** gray: saved PC on interrupt
+  output wire [21:0] pcx,
+  output wire [23:0] adr,
+  output wire rd, wr, ben,
+  output wire [31:0] outbus
+);
+
+localparam StartAdr = 22'b100_0000_0000_0000_0000; // adr[23:2]
+localparam IsrAdr = 1;
 
 reg [21:0] PC;
-reg [31:0] IR;  // instruction register
+reg [31:0] IR;    // instruction register
 reg N, Z, C, OV;  // condition flags
-reg [31:0] H;  // aux register
+reg [31:0] H;     // aux register
 reg stallL1;
 
 wire [21:0] pcmux, pcmux0, nxpc;
@@ -43,6 +61,11 @@ reg irq1, intEnb, intPnd, intMd;
 reg [25:0] SPC; // saved PC on interrupt
 wire intAck;
 
+assign intackx = intAck;            // ** gray: 'intAck' signal for external interrupt controller
+assign spcx = {SPC[21:0], 2'b0};    // ** gray: interrupt return address for abort handler = offending location
+assign irx = IR;                    // ** gray: instruction register value for backtrace stack
+assign pcx = PC;
+
 wire [31:0] A, B, C0, C1, aluRes, regmux, inbus1;
 wire [31:0] lshout, rshout;
 wire [31:0] quotient, remainder;
@@ -52,6 +75,8 @@ wire [31:0] fsum, fprod, fquot;
 wire ADD, SUB, MUL, DIV;
 wire FAD, FSB, FML, FDV;
 wire LDR, STR, BR, RTI;
+
+assign rtix = RTI; // ** gray: 'RTI' signal for external interrupt controller
 
 Registers regs (.clk(clk), .wr(regwr), .rno0(ira0), .rno1(irb),
    .rno2(irc), .din(regmux), .dout0(A), .dout1(B), .dout2(C0));
@@ -63,7 +88,9 @@ Divider divUnit (.clk(clk), .run(DIV), .stall(stallD),
    .u(~u), .x(B), .y(C1), .quot(quotient), .rem(remainder));
 
 LeftShifter LSUnit (.x(B), .y(lshout), .sc(C1[4:0]));
+
 RightShifter RSUnit(.x(B), .y(rshout), .sc(C1[4:0]), .md(IR[16]));
+
 FPAdder fpaddx (.clk(clk), .run(FAD|FSB), .u(u), .v(v), .stall(stallFA),
    .x(B), .y({FSB^C0[31], C0[30:0]}), .z(fsum));
 
@@ -72,6 +99,16 @@ FPMultiplier fpmulx (.clk(clk), .run(FML), .stall(stallFM),
 
 FPDivider fpdivx (.clk(clk), .run(FDV), .stall(stallFD),
    .x(B), .y(C0), .z(fquot));
+
+// ** gray: stack pointer and link register values
+reg [31:0] SP, LNK;
+always @(posedge clk) begin
+  SP <= (regwr & (ira0 == 14)) ? regmux : SP;
+  LNK <= (regwr & (ira0 == 15)) ? regmux : LNK;
+end
+assign spx = SP;
+assign lnkx = LNK;
+// ** gray end
 
 assign p = IR[31];
 assign q = IR[30];
@@ -112,7 +149,7 @@ assign aluRes =
   ~op[3] ?
     (~op[2] ?
       (~op[1] ?
-        (~op[0] ? 
+        (~op[0] ?
           (q ?  // MOV
             (~u ? {{16{v}}, imm} : {imm, 16'b0}) :
             (~u ? C0 : (~v ? H : {N, Z, C, OV, 20'b0, 8'h53}))) :
@@ -152,11 +189,13 @@ assign cond = IR[27] ^
    (cc == 7)); // T, F
 
 assign intAck = intPnd & intEnb & ~intMd & ~stall;
-assign pcmux = ~rst | stall | intAck | RTI ? 
-      (~rst | stall ? (~rst ? StartAdr : PC) :
-      (intAck ? 1 : SPC)) : pcmux0;
-assign pcmux0 = (BR & cond) ? (u? nxpc + disp : (IR[7] ? C0[23:0] + nxpc : C0[23:2])) : nxpc; 
-  
+assign pcmux = ~rst | stall | intAck | RTI ?
+  (~rst | stall ?
+    (~rst ? StartAdr : PC) :
+    (intAck ? IsrAdr : SPC)  // if intAck | RTI
+  ) : pcmux0;
+assign pcmux0 = (BR & cond) ? (u ? nxpc + disp : (IR[7] ? C0[23:0] + nxpc : C0[23:2])) : nxpc;
+
 assign sa = aluRes[31];
 assign sb = B[31];
 assign sc = C1[31];
@@ -164,12 +203,12 @@ assign sc = C1[31];
 assign nn = RTI ? SPC[25] : regwr ? regmux[31] : N;
 assign zz = RTI ? SPC[24] : regwr ? (regmux == 0) : Z;
 assign cx = RTI ? SPC[23] :
-    ADD ? (~sb&sc&~sa) | (sb&sc&sa) | (sb&~sa) :
-	 SUB ? (~sb&sc&~sa) | (sb&sc&sa) | (~sb&sa) : C;
+  ADD ? (~sb&sc&~sa) | (sb&sc&sa) | (sb&~sa) :
+  SUB ? (~sb&sc&~sa) | (sb&sc&sa) | (~sb&sa) : C;
 assign vv = RTI ? SPC[22] :
-    ADD ? (sa&~sb&~sc) | (~sa&sb&sc): 
-	 SUB ? (sa&~sb&sc) | (~sa&sb&~sc) : OV;
-	 
+  ADD ? (sa&~sb&~sc) | (~sa&sb&sc):
+	SUB ? (sa&~sb&sc) | (~sa&sb&~sc) : OV;
+
 assign stallL0 = (LDR|STR) & ~stallL1;
 assign stall = stallL0 | stallM | stallD | stallFA | stallFM | stallFD;
 
@@ -184,6 +223,8 @@ always @ (posedge clk) begin
   intPnd <= rst & ~intAck & ((~irq1 & irq) | intPnd);
   intMd <= rst & ~RTI & (intAck | intMd);
   intEnb <= ~rst ? 0 : (BR & ~u & ~v & IR[5]) ? IR[0] : intEnb;
-  SPC <= (intAck) ? {nn, zz, cx, vv, pcmux0} : SPC;
-  end 
-endmodule 
+  SPC <= (intAck) ? {nn, zz, cx, vv, pcmux0} : intabort ? {26'b0} : SPC;    // ** gray: intabort: load address 0 = abort handler as return address, cond flags are zero (don't matter)
+  end
+endmodule
+
+`resetall
