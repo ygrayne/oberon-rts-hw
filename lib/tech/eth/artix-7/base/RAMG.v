@@ -2,8 +2,8 @@
   RAM blocks: allocate BRAM in 32k and 16k 32-bit blocks
   Allocate as many 32k blocks as possible, then add a 16k block as needed
   --
-  Parameter: 'MemBlocks': the number of 16kx32 blocks, ie. 16,384 * 4 bytes
-  Limitation: minimum MemBlocks = 3 (ie. 196,608 bytes, allocates one 32k and one 16k block)
+  Parameter: 'mem_blocks': the number of 16kx32 blocks, ie. 16,384 * 4 bytes
+  Limitation: minimum mem_blocks = 3 (ie. 196,608 bytes, allocates one 32k and one 16k block)
   --
   Logic for byte-wise write enable and rdata demux-ing from Astrobe's design. Thanks.
   --

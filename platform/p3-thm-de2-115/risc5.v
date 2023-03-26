@@ -256,7 +256,7 @@ module risc5 (
 
   assign sdcard_ss_n = spi_cs_n[0];
 
-  proctim ptmr_0 (
+  proctim_thm ptmr_0 (
     .clk(clk),
     .rst(rst),
     .stb(ptmr_stb),
@@ -267,7 +267,7 @@ module risc5 (
     .ack(ptmr_ack)
   );
 
-  start start_0 (
+  start_thm start_0 (
     .clk(clk),
     .rst(rst),
     .stb(start_stb),
@@ -277,7 +277,7 @@ module risc5 (
     .ack(start_ack)
   );
 
-  sysctrl sysctrl_0 (
+  sysctrl_thm sysctrl_0 (
     .clk(clk),
     .rst(rst),
     .stb(scr_stb),
