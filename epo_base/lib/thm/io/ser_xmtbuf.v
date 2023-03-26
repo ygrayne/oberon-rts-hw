@@ -1,5 +1,5 @@
 //
-// xmtbuf.v -- serial line transmitter buffer
+// ser_xmtbuf.v -- serial line transmitter buffer
 //
 
 

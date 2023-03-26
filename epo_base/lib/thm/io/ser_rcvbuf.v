@@ -1,5 +1,5 @@
 //
-// rcvbuf.v -- serial line receiver buffer
+// ser_rcvbuf.v -- serial line receiver buffer
 //
 
 

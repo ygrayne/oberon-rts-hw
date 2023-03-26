@@ -1,19 +1,24 @@
 *.code-workspace
 ## ingnore all
 /*
+
 # add .gitgnore
 !.gitignore
+
 # add dirs
 !/lib/
 !/platform/
 !/doc/
 !/orig/
+!/epo_base/
 
 # ignore contents of build dirs within platform
 /platform/**/build/*
 /platform/**/promfiles/*
+/epo_base/platform/**/build/*
+/epo_base/platform/**/promfiles/*
 
-## Add files
+## add files
 !*.mod
 !*.md
 #!*.mem
@@ -24,12 +29,19 @@
 
 ## add *.runs directories
 !/platform/**/build/*.runs/
+!epo_base/platform/**/build/*.runs/
+
 ## ignore completely
 /platform/**/build/*.runs/.jobs
 /platform/**/build/*.runs/synth_*
+/epo_base/platform/**/build/*.runs/.jobs
+/epo_base/platform/**/build/*.runs/synth_*
+
 ## ignore dir contents
 /platform/**/build/*.runs/impl_*/*
-## add memory config files (inside impl_*)
+/epo_base/platform/**/build/*.runs/impl_*/*
+
+## but add fpga memory config files (inside impl_*)
 #!*.mcs
 
 ## Quartus
@@ -37,10 +49,15 @@
 !*.qpf
 !*.qsf
 !*.srf
+
 # add output_files directory
 !/platform/**/build/output_files/
+!epo_base/platform/**/build/output_files/
+
 # ignore everything inside this dir
 /platform/**/build/output_files/*
-# add fpga programming files
+/epo_base/platform/**/build/output_files/*
+
+# but add fpga programming files
 #!*.sof
 #!*.pof

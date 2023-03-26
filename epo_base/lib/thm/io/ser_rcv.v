@@ -1,5 +1,5 @@
 //
-// rcv.v -- serial line receiver
+// ser_rcv.v -- serial line receiver
 //
 
 

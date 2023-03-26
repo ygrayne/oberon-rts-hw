@@ -40,4 +40,4 @@ module rst(
 
 endmodule
 
-`reseetall
+`resetall

@@ -1,5 +1,5 @@
 //
-// xmt.v -- serial line transmitter
+// ser_xmt.v -- serial line transmitter
 //
 
 

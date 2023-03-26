@@ -59,43 +59,69 @@ The focus is currently on the Arty and the DE2-115.
 
 Note: these directories may or may not be visible in the repo, as some are still empty, or just placeholders for the structure's sake.
 
-* oberon-rts-hw
-  * lib
-    * eth: Verilog modules for ETH architecture
-    * thm: Verilog modules for THM architecture
-    * gen: generic modules for both architectures
-    * board: board-specific modules
-      * eth
-        * arty-a7-100
-        * cvgx-sk
-        * de2-115
-        * nexys-a7-200
-      * thm
-        * (as for eth)
-    * tech: technology-specific modules
-      * eth
-        * artix-7: Xilinx
-        * cyclone-iv: Altera
-        * cyclone-v: Altera
-      * thm
-        * (as for eth)
-  * platform: for example:
+* lib
+  * eth: Verilog modules for ETH architecture (see remarks below)
+    * cpu
+    * base: basic functionality
+    * ext: extended functionality
+    * io: well, IO, eg. RS232, GPI, SPI
+    * mon: system monitoring and instrumention
+    * gen: general functionality, eg. fifos, stack (with the potential to "promote" to upper level gen)
+  * thm: Verilog modules for THM architecture
+    * (as for eth)
+  * gen: generic modules for both architectures
+    * (dunno yet)
+  * board: board-specific modules
+    * eth
+      * arty-a7-100
+        * eg. board specific IO, such as for LEDs and switches
+      * cvgx-sk
+      * de2-115
+      * nexys-a7-200
+    * thm
+      * (as for eth)
+  * tech: technology-specific modules
+    * eth
+      * artix-7
+        * eg. for clocks
+      * cyclone-iv
+      * cyclone-v
+    * thm
+      * (as for eth)
+* platform:
+  * p3-thm-de2-115
+  * p4-eth-arty-a7-100
+* orig: the original modules
+  * epo: Embedded Project Oberon (which uses ETH architecture)
+  * thm: THM-Oberon
+* epo_base: all libs and build directories to build the two base platforms for EPO using ETH and THM architectures
+  * lib (see above)
+    * eth
+    * thm
+    * board
+    * tech
+  * platform
     * p1-eth-arty-a7-100
-      * RISC5Top.v (top Verilog file)
-      * ArtyA7-100.xdc (constraints, includes pin allocations)
-      * build: Vivado project directory
-        * p1-eth-arty-a7-100.xpr (project file for Vivado, list of Verilog design files)
-      * memfiles: PROM load files, incl. Oberon source
-    * p2-thm-de2-115
-      * risc5.v (top Verilog file)
-      * risc5.sdc (constraints)
-      * build: Quartus project directory
-        * risc5.qsf (project settings, pin allocations, list of Verilog design files)
-        * risc5.qpf (project file for Quartus)
-      * promfiles: PROM load files, incl. Oberon source
-  * orig: the original modules
-    * epo: Embedded Project Oberon (which uses ETH architecture)
-    * thm: THM-Oberon
+    * RISC5Top.v (top Verilog file)
+    * ArtyA7-100.xdc (constraints, includes pin allocations)
+    * build: Vivado project directory
+      * p1-eth-arty-a7-100.xpr (project file for Vivado, list of Verilog design files)
+    * memfiles: PROM load files, incl. Oberon source
+  * p2-thm-de2-115
+    * risc5.v (top Verilog file)
+    * risc5.sdc (constraints)
+    * build: Quartus project directory
+      * risc5.qsf (project settings, pin allocations, list of Verilog design files)
+      * risc5.qpf (project file for Quartus)
+    * promfiles: PROM load files, incl. Oberon source
+
+With directories
+* 'cpu' and 'base' a processor can be constructed for EPO
+  * eg. CPU, RAM, clock, reset
+* 'ext' in addition, a processor can be constructed for Oberon RTS
+  * eg. process timing, stack monitoring, error handling
+* 'mon' in addition, the processor for RTS can be instrumented for monitoring
+  * logging, process performance monitoring, calltracing
 
 ## Platforms
 
