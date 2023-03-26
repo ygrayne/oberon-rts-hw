@@ -1,6 +1,8 @@
 /**
   Program/command Start Tables
   --
+  Architecture: ETH
+  --
   The FPGA just holds the table number and the armed signal, in order
   to survice a restart. The actual commands are defined in software.
   --
@@ -11,7 +13,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module START2 (
+module start (
   input wire clk,
   input wire rst_n,
   input wire wr,

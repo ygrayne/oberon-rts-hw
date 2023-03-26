@@ -3,11 +3,11 @@
   --
   With interrupt and floating-point
   --
-  Base/design: Project Oberon, NW 31.8.2018
-
-  This file was originally based on Astrobe for RISC5 v7.0.1, Embedded Project Oberon
-  CFB Software, CFB 13.10.2021
-  http://www.astrobe.com
+  Architecture: ETH
+  --
+  Base/design:
+    * Project Oberon, NW 31.8.2018
+    * Embedded Project Oberon, CFB 13.10.2021
   --
   Changes by gray@grayraven.org
   * make externally available several registers: SP, LNK, IR, SPC, PC
@@ -18,7 +18,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module RISC5 (
+module risc5_cpu (
   input wire clk, rst, irq,
   input wire [31:0] inbus, codebus,
   input wire intabort,           // ** gray: abort interrupt: load address 0 = abort handler as return address for interrupt

@@ -1,7 +1,9 @@
 /**
   Process Timers Block
   --
-  Instantiate 'NumPrCtrl' process timers.
+  Instantiate 'numptmr' periodic process timers.
+  --
+  Architecture: ETH
   --
   Control data:
   for tickers:
@@ -23,20 +25,20 @@
   for process timers:
   [15:0]: individual timer number
   --
-  (c) 2020 - 2021 Gray, gray@grayraven.org
+  2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
 
 `timescale 1ns / 1ps
 `default_nettype none
 
-  module PROCTIMBLK5 #(parameter NumPrCtrl = 16) (
+  module proctimers #(parameter num_proc_tmr = 16) (
   input wire clk,
   input wire rst_n,
   input wire wr,
   input wire tick,
   input wire [31:0] data_in,
-  output wire [NumPrCtrl-1:0] procRdy
+  output wire [num_proc_tmr-1:0] procRdy
 );
 
   // splitting the input data
@@ -66,14 +68,14 @@
   endgenerate
 
   // control signals for process timers
-  wire [NumPrCtrl-1:0] wr_pc;
+  wire [num_proc_tmr-1:0] wr_pc;
   wire [4:0] select_pc = which;  // address individual timers
 
   // generate the process timers
   genvar j;
   generate
-    for (j = 0; j < NumPrCtrl; j = j+1) begin: ptim
-      PROCTIM5 pc (
+    for (j = 0; j < num_proc_tmr; j = j+1) begin: ptim
+      proctim pt (
         .clk(clk), .rst_n(rst_n), .tick(tick),
         .period_done(period_done),
         .wr(wr_pc[j]),
@@ -87,7 +89,7 @@
 endmodule
 
 
-module PROCTIM5 (
+module proctim (
   input wire clk,
   input wire rst_n,
   input wire tick,

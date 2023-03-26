@@ -1,7 +1,9 @@
 /**
   Serial Peripheral Interface (SPI)
   --
-  Original design by PDR 23.3.12 / 16.10.13
+  Architecture: ETH
+  --
+  Base: Project Oberon, PDR 23.3.12 / 16.10.13
   --
   New features:
   * Separation of data width and speed selection
@@ -10,28 +12,20 @@
   * Clock frequency is parameterised
   --
   Clock frequency/speed:
-  * fast = FastSCLK
-  * slow = SlowSCLK
+  * fast = fast_sclk
+  * slow = slow_sclk
   --
   Data width:
-  * [1:0] width: 2'b00 = 8 bits, 2'b10 = 16 bits, 2'b01 = 32 bits
+  * [1:0] width: 2'b00 => 8 bits, 2'b10 => 16 bits, 2'b01 => 32 bits
   --
   2020 Gray, gray@grayraven.org, 2020-06-16
   https://oberon-rts.org/licences
 **/
 
-// Motorola Serial Peripheral Interface (SPI) PDR 23.3.12 / 16.10.13
-// transmitter / receiver of words (fast, clk/3) or bytes (slow, clk/64)
-// e.g 8.33MHz or ~400KHz respectively at 25MHz (slow needed for SD-card init)
-// note: bytes are always MSbit first; but if fast, words are LSByte first
-
-// CFB 24.7.2016 Adjusted tick limits for 50MHz clock
-// PDR 6.11.2017 / CFB 20.4.18 Idle the clock at high for DS3234 RTC chip
-
 `timescale 1ns / 1ps
 `default_nettype none
 
-module SPIE #(parameter ClockFreq = 50000000, FastSCLK = 10000000, SlowSCLK = 400000) (
+module spie #(parameter clock_freq = 50000000, fast_sclk = 10000000, slow_sclk = 400000) (
   input wire clk, rst_n,
   input wire start,
   input wire fast,             // use fast transfer speed
@@ -44,8 +38,8 @@ module SPIE #(parameter ClockFreq = 50000000, FastSCLK = 10000000, SlowSCLK = 40
   output wire MOSI, SCLK
 );
 
-  localparam tickCntFast = (ClockFreq / FastSCLK);
-  localparam tickCntSlow = (ClockFreq / SlowSCLK);
+  localparam tickCntFast = (clock_freq / fast_sclk);
+  localparam tickCntSlow = (clock_freq / slow_sclk);
   localparam tickCntFast2 = tickCntFast / 2;
   localparam tickCntSlow2 = tickCntSlow / 2;
 

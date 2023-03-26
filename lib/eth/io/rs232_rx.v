@@ -2,7 +2,9 @@
   RS232 receiver
   115,200 and 19,200 baud, 8 bits
   --
-  Design by NW 4.5.09 / 15.8.10 / 15.11.10 / 13.8.15
+  Architecture: ETH
+  --
+  Base: Project Oberon, NW 4.5.09 / 15.8.10 / 15.11.10 / 13.8.15
   --
   Changes by Gray, gray@grayraven.org:
   2020-05: Parameterised clock frequency
@@ -12,7 +14,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module RS232R #(parameter ClockFreq = 50000000) (
+module rs232_rx #(parameter clock_freq = 50000000) (
   input wire clk,
   input wire rst_n,
   input wire done,
@@ -22,8 +24,8 @@ module RS232R #(parameter ClockFreq = 50000000) (
   output wire [7:0] data_out
 );
 
-  localparam limitFast = ClockFreq / 115200;
-  localparam limitSlow = ClockFreq / 19200;
+  localparam limitFast = clock_freq / 115200;
+  localparam limitSlow = clock_freq / 19200;
 
   reg run, stat, Q0, Q1;
   reg [11:0] tick;

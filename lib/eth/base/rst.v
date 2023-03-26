@@ -3,7 +3,7 @@
   --
   Architecture: ETH
   --
-  Origin: clk_rst.v of THM-Oberon
+  Base: THM-Oberon
   --
   2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
@@ -39,4 +39,3 @@ module rst (
 endmodule
 
 `resetall
-

@@ -1,6 +1,8 @@
 /**
   Buffered RS232 Transmitter
   --
+  Architecture: ETH
+  --
   Original RS232 transmitter design by NW 4.5.09 / 15.8.10 / 15.11.10
   --
   2020 Gray, gray@grayraven.org
@@ -10,7 +12,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module RS232TB #(parameter ClockFreq = 50000000, BufNumSlots = 63) (
+module rs232_txb #(parameter clock_freq = 50000000, num_slots = 63) (
   input wire clk,
   input wire rst_n,
   input wire fsel,
@@ -18,7 +20,7 @@ module RS232TB #(parameter ClockFreq = 50000000, BufNumSlots = 63) (
   input wire [7:0] data_in,
   output wire empty,
   output wire full,
-  output wire [$clog2(BufNumSlots):0] count,
+  // output wire [$clog2(BufNumSlots):0] count,
   output wire txd
 );
 
@@ -34,18 +36,18 @@ module RS232TB #(parameter ClockFreq = 50000000, BufNumSlots = 63) (
   end
 
   // unbuffered RS232 transmitter
-  RS232T #(.ClockFreq(ClockFreq)) rs232t (
-    .clk(clk), 
+  rs232_tx #(.clock_freq(clock_freq)) rs232_tx_0 (
+    .clk(clk),
     .rst_n(rst_n),
-    .fsel(fsel), 
-    .start(start_tx), 
-    .rdy(rdy), 
+    .fsel(fsel),
+    .start(start_tx),
+    .rdy(rdy),
     .data_in(fifo_out),
     .txd(txd)
   );
 
   // buffer
-  FIFO1 #(.Slots(BufNumSlots)) fifo (
+  fifo #(.num_slots(num_slots)) fifo_0 (
     .clk(clk),
     .rst_n(rst_n),
     .wr(wr),
@@ -53,8 +55,8 @@ module RS232TB #(parameter ClockFreq = 50000000, BufNumSlots = 63) (
     .data_in(data_in),
     .data_out(fifo_out),
     .empty(empty),
-    .full(full),
-    .count(count)
+    .full(full)
+    // .count(count)
   );
 
 endmodule

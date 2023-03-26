@@ -2,7 +2,9 @@
   RS232 transmitter
   115,200 and 19,200 baud, 8 bits
   --
-  Design by NW 4.5.09 / 15.8.10 / 15.11.10
+  Architecture: ETH
+  --
+  Base: Project Oberon, NW 4.5.09 / 15.8.10 / 15.11.10
   --
   Changes by Gray, gray@grayraven.org
   2020-05: Paramterised clock frequency
@@ -11,7 +13,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module RS232T #(parameter ClockFreq = 50000000) (
+module rs232_tx #(parameter clock_freq = 50000000) (
   input wire clk,
   input wire rst_n,
   input wire start,  // request to accept and send a byte
@@ -21,8 +23,8 @@ module RS232T #(parameter ClockFreq = 50000000) (
   output wire txd
 );
 
-  localparam limitFast = ClockFreq / 115200;
-  localparam limitSlow = ClockFreq / 19200;
+  localparam limitFast = clock_freq / 115200;
+  localparam limitSlow = clock_freq / 19200;
 
   wire endtick, endbit;
   wire [11:0] limit;

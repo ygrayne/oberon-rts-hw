@@ -10,7 +10,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module  CLOCKS1 (
+module  clocks (
 	input wire clk_in,
 	input wire rst,
 	output wire outclk_0, // 40 MHz

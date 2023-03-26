@@ -1,7 +1,9 @@
 /**
   32-bit PROM initialised from hex file
   --
-  Design by PDR 23.12.13
+  Architeture: ETH
+  --
+  Base: Project Oberon, PDR 23.12.13
   --
   Changes by Gray, gray@grayraven.org
   2020-05: memory file name parameterisation
@@ -11,7 +13,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module PROM #(parameter memfile = "BootLoad.mem") (
+module prom #(parameter memfile = "BootLoad.mem") (
   input wire clk,
   input wire [8:0] adr,
   output reg [31:0] data

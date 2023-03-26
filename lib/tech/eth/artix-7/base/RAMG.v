@@ -14,7 +14,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module RAMG #(parameter mem_blocks = 3) (
+module ramg #(parameter mem_blocks = 3) (
   input wire clk,
   input wire wr,
   input wire be,

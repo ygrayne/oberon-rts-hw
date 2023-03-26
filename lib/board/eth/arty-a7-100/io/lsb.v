@@ -25,15 +25,15 @@ module lsb (
 );
 
   // debouncers
-  DBNC dbnc_btn0 (.clk(clk), .hwbutton(btn_in[0]), .state(btn[0]));
-  DBNC dbnc_btn1 (.clk(clk), .hwbutton(btn_in[1]), .state(btn[1]));
-  DBNC dbnc_btn2 (.clk(clk), .hwbutton(btn_in[2]), .state(btn[2]));
-  DBNC dbnc_btn3 (.clk(clk), .hwbutton(btn_in[3]), .state(btn[3]));
+  dbnc #(.polarity(1)) dbnc_btn0 (.clk(clk), .btn_in(btn_in[0]), .btn_out(btn[0]));
+  dbnc #(.polarity(1)) dbnc_btn1 (.clk(clk), .btn_in(btn_in[1]), .btn_out(btn[1]));
+  dbnc #(.polarity(1)) dbnc_btn2 (.clk(clk), .btn_in(btn_in[2]), .btn_out(btn[2]));
+  dbnc #(.polarity(1)) dbnc_btn3 (.clk(clk), .btn_in(btn_in[3]), .btn_out(btn[3]));
 
-  DBNC dbnc_swi0 (.clk(clk), .hwbutton(swi_in[0]), .state(swi[0]));
-  DBNC dbnc_swi1 (.clk(clk), .hwbutton(swi_in[1]), .state(swi[1]));
-  DBNC dbnc_swi2 (.clk(clk), .hwbutton(swi_in[2]), .state(swi[2]));
-  DBNC dbnc_swi3 (.clk(clk), .hwbutton(swi_in[3]), .state(swi[3]));
+  dbnc #(.polarity(1)) dbnc_swi0 (.clk(clk), .btn_in(swi_in[0]), .btn_out(swi[0]));
+  dbnc #(.polarity(1)) dbnc_swi1 (.clk(clk), .btn_in(swi_in[1]), .btn_out(swi[1]));
+  dbnc #(.polarity(1)) dbnc_swi2 (.clk(clk), .btn_in(swi_in[2]), .btn_out(swi[2]));
+  dbnc #(.polarity(1)) dbnc_swi3 (.clk(clk), .btn_in(swi_in[3]), .btn_out(swi[3]));
 
   always @(posedge clk) begin
     leds <= ~rst_n ? 8'b0 : wr ? data_in[7:0] : leds;

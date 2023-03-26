@@ -3,13 +3,13 @@
   System control register
   Stripped down... only implements system reset
   --
-
+  Architecture: ETH
   --
   2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
 
-module SYSCTRL (
+module sysctrl (
   input wire clk,
   input wire rst_n,
   input wire wr,
