@@ -1,8 +1,8 @@
 # Platforms
 
-## Next Up
+## Status
 
-Add two platforms with minimum functionality to support a stripped down version of Oberon RTS:
+There are two platforms with minimum functionality to support a stripped down version of Oberon RTS (as well as EPO):
 
 * p3-eth-arty-a7-100
 * p4-thm-de2-115

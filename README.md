@@ -111,7 +111,7 @@ Note: these directories may or may not be visible in the repo, as some are still
 * orig: the original modules
   * epo: Embedded Project Oberon (which uses ETH architecture)
   * thm: THM-Oberon
-* epo_base: all libs and build directories to build the two base platforms for EPO using ETH and THM architectures
+* epo-base: all libs and build directories to build the two base platforms for EPO using ETH and THM architectures
   * lib (see above)
     * eth
     * thm
@@ -133,8 +133,14 @@ With directories
 
 See the README file in the platform directory.
 
-* p1-eth-arty-a7-100: runs EPO 8.0 out-of-the-box
-* p2-thm-de-115: runs EPO 8.0 out-of-the-box
+* In epo-base
+  * p1-eth-arty-a7-100: runs EPO 8.0 out-of-the-box
+  * p2-thm-de-115: same as P1
+* In main platform dir
+  * p3-thm-de-115: runs minimal version of Oberon RTS (as well as EPO)
+  * p4-eth-arty-a7-100: same as P3
+
+"Same" means the SD card can be swapped.
 
 
 ## Licences
