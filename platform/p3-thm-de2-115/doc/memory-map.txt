@@ -1,0 +1,117 @@
+
+Memory Map
+----------
+
+FFFFFC  +---------------------------+
+        | 64 devices (1 word each)  |     256 Bytes
+FFFF00  +---------------------------+
+        | 64 devices (1 word each)  |     256 Bytes
+FFFE00  +---------------------------+
+        | 64 devices (1 word each)  |     256 Bytes
+FFFD00  +---------------------------+
+        | 64 devices (1 word each)  |     256 Bytes
+FFFD80  +---------------------------+
+        |      -- unused --         |     3 kB
+FFF000  +---------------------------+
+        |          PROM             |      4 KB
+FFE000  +---------------------------+
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |          RAM              |     16 MB - 8 kB
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+000000  +---------------------------+
+
+
+Device Address Map
+------------------
+
+address equiv  dev      function
+
+FFFFFC    -4    15
+FFFFF8    -8    14
+FFFFF4   -12    13
+FFFFF0   -16    12
+FFFFEC   -20    11
+FFFFE8   -24    10
+FFFFE4   -28     9
+FFFFE0   -32     8
+FFFFDC   -36     7
+FFFFD8   -40     6
+FFFFD4   -44     5      SPI status/control
+FFFFD0   -48     4      SPI data
+FFFFCC   -52     3      RS232 status/control
+FFFFC8   -56     2      RS232 line data
+FFFFC4   -60     1      switches, LEDs
+FFFFC0   -64     0      milliseconds timer
+
+FFFFBC   -68
+FFFFB8   -72
+FFFFB4   -76
+FFFFB0   -80
+FFFFAC   -84
+FFFFA8   -88
+FFFFA4   -92
+FFFFA0   -96
+FFFF9C  -100
+FFFF98  -104
+FFFF94  -108
+FFFF90  -112
+FFFF8C  -116
+FFFF88  -120
+FFFF84  -124
+FFFF80  -128
+
+FFFF7C  -132
+FFFF78  -136
+FFFF74  -140
+FFFF70  -144
+FFFF6C  -148
+FFFF68  -152
+FFFF64  -156
+FFFF60  -160
+FFFF5C  -164
+FFFF58  -168
+FFFF54  -172
+FFFF50  -176
+FFFF4C  -180
+FFFF48  -184
+FFFF44  -188
+FFFF40  -192
+
+FFFF3C  -196
+FFFF38  -200
+FFFF34  -204
+FFFF30  -208
+FFFF2C  -212
+FFFF28  -216
+FFFF24  -220
+FFFF20  -224
+FFFF1C  -228
+FFFF18  -232
+FFFF14  -236
+FFFF10  -240
+FFFF0C  -244
+FFFF08  -248
+FFFF04  -252
+FFFF00  -256
+
+...
+
+FFFE00
+
+...
+
+FFFD00
+
+...
+
+FFFC00

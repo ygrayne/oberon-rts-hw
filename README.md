@@ -4,9 +4,15 @@
 
 ## Introduction
 
-The purpose of this repo is to develop and provide hardware platforms for embedded Oberon systems, either Embedded Project Oberon, or Oberon RTS.
+The purpose of the contents of this repo is to develop and provide hardware platforms for embedded Oberon systems, either Embedded Project Oberon, or Oberon RTS.
 
 There is (or will be shortly) another repo for the corresponding software, oberon-rts-sw.
+
+## Current Status
+
+Two platforms, P3 and P4, implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
+
+Most on-chip devices, such as process timers, reset circuits, or SPI and RS232 interfaces, can now directly be (and are) used by either architecture without adaptations or specific configurations.
 
 ## Overview
 
@@ -66,11 +72,11 @@ Note: these directories may or may not be visible in the repo, as some are still
     * ext: extended functionality
     * io: well, IO, eg. RS232, GPI, SPI
     * mon: system monitoring and instrumention
-    * gen: general functionality, eg. fifos, stack (with the potential to "promote" to upper level gen)
+    * gen: general functionality, eg. fifos, stacks
   * thm: Verilog modules for THM architecture
     * (as for eth)
-  * gen: generic modules for both architectures
-    * (dunno yet)
+  * any: modules for both architectures
+    * (as for eth)
   * board: board-specific modules
     * eth
       * arty-a7-100
@@ -90,7 +96,18 @@ Note: these directories may or may not be visible in the repo, as some are still
       * (as for eth)
 * platform:
   * p3-thm-de2-115
+    * risc5.v (top Verilog file)
+    * risc5.sdc (constraints)
+    * build: Quartus project directory
+      * risc5.qsf (project settings, pin allocations, list of Verilog design files)
+      * risc5.qpf (project file for Quartus)
+    * promfiles: PROM load files, incl. Oberon source
   * p4-eth-arty-a7-100
+    * RISC5Top.v (top Verilog file)
+    * arty-a7.xdc (constraints, includes pin allocations)
+    * build: Vivado project directory
+      * p4-eth-arty-a7-100.xpr (project file for Vivado, list of Verilog design files)
+    * promfiles: PROM load files, incl. Oberon source
 * orig: the original modules
   * epo: Embedded Project Oberon (which uses ETH architecture)
   * thm: THM-Oberon
@@ -101,19 +118,8 @@ Note: these directories may or may not be visible in the repo, as some are still
     * board
     * tech
   * platform
-    * p1-eth-arty-a7-100
-    * RISC5Top.v (top Verilog file)
-    * ArtyA7-100.xdc (constraints, includes pin allocations)
-    * build: Vivado project directory
-      * p1-eth-arty-a7-100.xpr (project file for Vivado, list of Verilog design files)
-    * memfiles: PROM load files, incl. Oberon source
-  * p2-thm-de2-115
-    * risc5.v (top Verilog file)
-    * risc5.sdc (constraints)
-    * build: Quartus project directory
-      * risc5.qsf (project settings, pin allocations, list of Verilog design files)
-      * risc5.qpf (project file for Quartus)
-    * promfiles: PROM load files, incl. Oberon source
+    * p1-eth-arty-a7-100: EPO on ETH architecture
+    * p2-thm-de2-115: EPO on THM architecture
 
 With directories
 * 'cpu' and 'base' a processor can be constructed for EPO
