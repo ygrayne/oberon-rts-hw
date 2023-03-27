@@ -1,9 +1,7 @@
 /**
   Serial Peripheral Interface (SPI) Device
   --
-  Architecture: THM
-  --
-  Base: THM-Oberon, Project Oberon
+  Architecture: ANY
   ---
   Control register:
   [2:0] chip select
@@ -27,19 +25,19 @@
 
 module spie #(parameter clock_freq = 50_000_000) (
   // internal interface
-  input clk,
-  input rst,
-  input stb,
-  input we,
-  input addr,
-  input[31:0] data_in,
-  output[31:0] data_out,
-  output ack,
+  input wire clk,
+  input wire rst,
+  input wire stb,
+  input wire we,
+  input wire addr,
+  input wire [31:0] data_in,
+  output wire [31:0] data_out,
+  output wire ack,
   // external interface
-  output[2:0] cs_n,
-  output sclk,
-  output mosi,
-  input miso
+  output wire [2:0] cs_n,
+  output wire sclk,
+  output wire mosi,
+  input wire miso
 );
 
   wire rd_data = stb & ~we & ~addr;	// read received data
@@ -63,7 +61,7 @@ module spie #(parameter clock_freq = 50_000_000) (
 
   assign cs_n[2:0] = ~spi_ctrl[2:0];
 
-  spie_rctr #(.clock_freq(clock_freq)) spie_rctr_0 (
+  spie_rxtx #(.clock_freq(clock_freq)) spie_rxtx_0 (
     .clk(clk),
     .rst(rst),
     .fast(spi_ctrl[3]),

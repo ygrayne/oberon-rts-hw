@@ -45,15 +45,15 @@ set_property -dict {PACKAGE_PIN B8 IOSTANDARD LVCMOS33} [get_ports {btn_in[3]}]
 
 
 ## Pmod Header JA
-set_property -dict {PACKAGE_PIN G13 IOSTANDARD LVCMOS33} [get_ports {spi_0_cs_n[0]}]
-set_property -dict {PACKAGE_PIN B11 IOSTANDARD LVCMOS33} [get_ports {spi_0_mosi[0]}]
-set_property -dict {PACKAGE_PIN A11 IOSTANDARD LVCMOS33} [get_ports {spi_0_miso[0]}]
-set_property -dict {PACKAGE_PIN D12 IOSTANDARD LVCMOS33} [get_ports {spi_0_sclk[0]}]
+set_property -dict {PACKAGE_PIN G13 IOSTANDARD LVCMOS33} [get_ports {sdcard_cs_n}]
+set_property -dict {PACKAGE_PIN B11 IOSTANDARD LVCMOS33} [get_ports {sdcard_mosi}]
+set_property -dict {PACKAGE_PIN A11 IOSTANDARD LVCMOS33} [get_ports {sdcard_miso}]
+set_property -dict {PACKAGE_PIN D12 IOSTANDARD LVCMOS33} [get_ports {sdcard_sclk}]
 #set_property -dict {PACKAGE_PIN D13 IOSTANDARD LVCMOS33} [get_ports {GPIO[12]}]
 #set_property -dict {PACKAGE_PIN B18 IOSTANDARD LVCMOS33} [get_ports {GPIO[13]}]
 #set_property -dict {PACKAGE_PIN A18 IOSTANDARD LVCMOS33} [get_ports {GPIO[14]}]
 #set_property -dict {PACKAGE_PIN K16 IOSTANDARD LVCMOS33} [get_ports {GPIO[15]}]
-set_property PULLUP true [get_ports {spi_0_miso[0]}]
+#set_property PULLUP true [get_ports {spi_0_miso[0]}]
 
 ## Pmod Header JB
 #set_property -dict { PACKAGE_PIN E15 IOSTANDARD LVCMOS33 } [get_ports {spi2_CS[0]}]
@@ -119,7 +119,7 @@ set_property -dict {PACKAGE_PIN A9 IOSTANDARD LVCMOS33}  [get_ports {rs232_0_rxd
 #set_property -dict {PACKAGE_PIN U18 IOSTANDARD LVCMOS33} [get_ports {spi_0_mosi[1]}]
 #set_property -dict {PACKAGE_PIN R17 IOSTANDARD LVCMOS33} [get_ports {spi_0_miso[1]}]
 #set_property -dict {PACKAGE_PIN P17 IOSTANDARD LVCMOS33} [get_ports {spi_0_sclk[1]}] ; # IO13
-#set_property PULLUP true [get_ports {spi1_MISO[1]}]
+#set_property PULLUP true [get_ports {spi_0_miso[1]}]
 
 #set_property -dict { PACKAGE_PIN L18   IOSTANDARD LVCMOS33 } [get_ports {i2c_SCL}]
 #set_property -dict { PACKAGE_PIN M18   IOSTANDARD LVCMOS33 } [get_ports {i2c_SDA}]

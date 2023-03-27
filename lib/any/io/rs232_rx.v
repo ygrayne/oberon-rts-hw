@@ -2,7 +2,7 @@
   RS232 receiver
   115,200 and 19,200 baud, 8 bits
   --
-  Architecture: ETH
+  Architecture: ANY
   --
   Base: Project Oberon, NW 4.5.09 / 15.8.10 / 15.11.10 / 13.8.15
   --

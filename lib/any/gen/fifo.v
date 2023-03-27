@@ -1,6 +1,8 @@
 /**
   Simple FIFO.
   --
+  Architecture: ANY
+  --
   Parameters:
   * width: data width in bits (max 32 bits)
   * num_slots: number of fifo slots (max 32 slots)

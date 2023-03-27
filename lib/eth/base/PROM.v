@@ -16,13 +16,18 @@
 module prom #(parameter memfile = "BootLoad.mem") (
   input wire clk,
   input wire [8:0] adr,
-  output reg [31:0] data
+  output reg [31:0] data_out
 );
 
   reg [31:0] mem [511:0];
 
-  initial $readmemh(memfile, mem);
-  always @(posedge clk) data <= mem[adr];
+  initial begin
+    $readmemh(memfile, mem);
+  end
+
+  always @(posedge clk) begin
+    data_out <= mem[adr];
+  end
 
 endmodule
 

@@ -1,7 +1,7 @@
 /**
   Reset
   --
-  Architecture: ETH
+  Architecture: ANY
   --
   Base: THM-Oberon
   --

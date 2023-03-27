@@ -3,6 +3,8 @@
   --
   Base: Project Oberon, PDR 23.3.12 / 16.10.13
   --
+  Architecture: ANY
+  --
   New features:
   * Separation of data width and speed selection
   * Data can be 8, 16, or 32 bits wide
@@ -10,8 +12,8 @@
   * Clock frequencies are parameterised
   --
   Serial clock frequency/speed:
-  * fast = fastSCLK
-  * slow = slowSCLK
+  * fast = fast_sclk
+  * slow = slow_sclk
   --
   Data width:
   * [1:0] datawidth: 2'b00 => 8 bits, 2'b01 => 32 bits, 2'b10 => 16 bits
@@ -23,29 +25,29 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module spie_rctr #(parameter clock_freq = 50000000, fastSCLK = 10000000, slowSCLK = 400000) (
-  input clk,
-  inout rst,
-  input start,
-  input fast,             // use fast transfer speed (fastSCLK)
-  input msbytefirst,      // send MSByte first, not LSByte (MSbit is always first)
-  input [1:0] datawidth,  // select 8, 16, or 32 bits data transfer
-  input miso,
-  input [31:0] dataTx,
-  output [31:0] dataRx,
+module spie_rxtx #(parameter clock_freq = 50000000, fast_sclk = 10000000, slow_sclk = 400000) (
+  input wire clk,
+  input wire rst,
+  input wire start,
+  input wire fast,             // use fast transfer speed (fast_sclk)
+  input wire msbytefirst,      // send MSByte first, not LSByte (MSbit is always first)
+  input wire [1:0] datawidth,  // select 8, 16, or 32 bits data transfer
+  input wire miso,
+  input wire [31:0] dataTx,
+  output wire [31:0] dataRx,
   output reg rdy,
-  output mosi,
-  output sclk
+  output wire mosi,
+  output wire sclk
 );
 
-  localparam tickCntFast = (clock_freq / fastSCLK);
-  localparam tickCntSlow = (clock_freq / slowSCLK);
+  localparam tickCntFast = (clock_freq / fast_sclk);
+  localparam tickCntSlow = (clock_freq / slow_sclk);
   localparam tickCntFast2 = tickCntFast / 2;
   localparam tickCntSlow2 = tickCntSlow / 2;
 
-  wire w8  = (datawidth == 2'b00);
-  wire w16 = (datawidth == 2'b10);
-  wire w32 = (datawidth == 2'b01);
+  wire w8  = (datawidth == 2'b00) ? 1'b1 : 1'b0;
+  wire w16 = (datawidth == 2'b10) ? 1'b1 : 1'b0;
+  wire w32 = (datawidth == 2'b01) ? 1'b1 : 1'b0;
 
   reg [31:0] shreg;
   reg [6:0] tick;

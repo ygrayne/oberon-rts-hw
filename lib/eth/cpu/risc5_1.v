@@ -33,7 +33,8 @@ module risc5_cpu (
   output wire [31:0] outbus
 );
 
-localparam StartAdr = 22'b100_0000_0000_0000_0000; // adr[23:2]
+//localparam StartAdr = 22'b100_0000_0000_0000_0000; // adr[23:2]
+localparam StartAdr = 22'h7FF000; // adr[23:2], ie. actual address 0FFE000 DIV 4
 localparam IsrAdr = 1;
 
 reg [21:0] PC;

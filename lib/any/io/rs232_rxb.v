@@ -1,7 +1,7 @@
 /**
   Buffered RS232 Receiver
   --
-  Architecture: ETH
+  Architecture: ANY
   --
   Original RS232 receiver design by NW 4.5.09 / 15.8.10 / 15.11.10 / 13.8.15
   --

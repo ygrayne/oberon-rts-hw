@@ -1,7 +1,7 @@
 /**
   Buffered RS232 Transmitter
   --
-  Architecture: ETH
+  Architecture: ANY
   --
   Original RS232 transmitter design by NW 4.5.09 / 15.8.10 / 15.11.10
   --

@@ -3,7 +3,9 @@
   --
   Architecture: THM
   --
-  Base: TMM-oberon
+  Base:
+    * TMM-oberon
+    * Project Oberon
   --
   2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
@@ -30,7 +32,7 @@
 `define RS232_BUF_SLOTS 255
 
 module risc5 (
-  // clocks
+  // clock
   input clk_in,
   // SDRAM
   output sdram_clk,
@@ -47,7 +49,7 @@ module risc5 (
   input rs232_0_rxd,
   output rs232_0_txd,
   // SD card
-  output sdcard_ss_n,
+  output sdcard_cs_n,
   output sdcard_sclk,
   output sdcard_mosi,
   input sdcard_miso,
@@ -72,62 +74,63 @@ module risc5 (
   wire clk;               // system clock, 50 MHz
   // reset
   wire rst;               // system reset
+  wire rst_trig;          // reset triggers
   // cpu
-  wire bus_stb;           // bus strobe
+  wire bus_stb;
   wire bus_we;            // bus write enable
   wire [23:2] bus_addr;   // bus address (word address)
   wire [31:0] bus_din;    // bus data input, for reads
   wire [31:0] bus_dout;   // bus data output, for writes
-  wire bus_ack;           // bus acknowledge
+  wire bus_ack;
   // prom
-  wire prom_stb;          // prom strobe
-  wire [31:0] prom_dout;  // prom data output
-  wire prom_ack;          // prom acknowledge
+  wire prom_stb;
+  wire [31:0] prom_dout;
+  wire prom_ack;
   // ram
-  wire ram_stb;           // ram strobe
-  wire [26:2] ram_addr;   // ram address
-  wire [31:0] ram_dout;   // ram data output
-  wire ram_ack;           // ram acknowledge
+  wire ram_stb;
+  wire [26:2] ram_addr;
+  wire [31:0] ram_dout;
+  wire ram_ack;
   // i/o
   wire io_stb;            // i/o strobe
-  // tmr
-  wire tmr_stb;           // timer strobe
-  wire [31:0] tmr_dout;   // timer data output
-  wire tmr_ms;            // timer millisecond ticker
-  wire tmr_ack;           // timer acknowledge
+  // ms timer
+  wire tmr_stb;
+  wire [31:0] tmr_dout;   // data out: running milliseconds since reset
+  wire tmr_ms_tick;       // millisecond timer tick
+  wire tmr_ack;
   // lsb
-  wire lsb_stb;           // lsb strobe
-  wire [31:0] lsb_dout;   // lsb data output
-  wire [3:0] lsb_btn;     // lsb button signals
-  wire [17:0] lsb_swi;    // lsb switch signals
-  wire lsb_ack;           // lsb acknowledge
-  // rs232
-  wire rs232_stb;         // rs232 strobe
-  wire [31:0] rs232_dout; // rs232 data output
-  wire rs232_ack;         // rs232 acknowledge
-  // spi
-  wire spi_stb;           // SPI strobe
-  wire [31:0] spi_dout;   // SPI data output
-  wire [2:0] spi_cs_n;    // SPI chip select output
-  wire spi_ack;           // SPI acknowledge
-  // proc periodic timing
-  wire ptmr_stb;          // proc timers strobe
-  wire [31:0] ptmr_dout;  // proc timers data output (ready signals)
-  wire ptmr_ack;          // proc timers acknowledge
+  wire lsb_stb;
+  wire [31:0] lsb_dout;   // data out: buttons, switches
+  wire [3:0] lsb_btn;     // button signals out
+  wire [17:0] lsb_swi;    // button signals out
+  wire lsb_ack;
   // start tables
-  wire start_stb;         // start tables strobe
-  wire [31:0] start_dout; // start tables data output
-  wire start_ack;         // start tables acknowledge
+  wire start_stb;
+  wire [31:0] start_dout; // data out: start-up table number, armed bit
+  wire start_ack;
   // sys ctrl reg
-  wire scr_stb;           // system control register strobe
-  wire [31:0] scr_dout;   // system control register data output
-  wire scr_sysrst;        // system control register system reset signal
-  wire scr_ack;           // system control register acknowledge
+  wire scr_stb;
+  wire [31:0] scr_dout;   // data out: register content
+  wire scr_sysrst;        // system reset signal out
+  wire scr_ack;
+  // rs232
+  wire rs232_0_stb;
+  wire [31:0] rs232_0_dout; // data out: received data, status
+  wire rs232_0_ack;
+  // spi
+  wire spi_0_stb;
+  wire [31:0] spi_0_dout;   // data out: received data, status
+  wire spi_0_sclk_d;          // sclk signal from device
+  wire spi_0_mosi_d;          // mosi signal from device
+  wire spi_0_miso_d;          // miso signals to device
+  wire [2:0] spi_0_cs_n_d;    // chip selects from device
+  wire spi_0_ack;
+  // proc periodic timing
+  wire ptmr_stb;
+  wire [31:0] ptmr_dout;  // proc timers data output (ready signals)
+  wire ptmr_ack;
 
-  //--------------------------------------
-  // module instances
-  //--------------------------------------
-
+  // clocks
   clk clk_0 (
     .clk_in(clk_in),
     .clk_ok(clk_ok),
@@ -136,15 +139,18 @@ module risc5 (
     .clk_50(clk)
   );
 
+  // reset
+  assign rst_trig = lsb_btn[0] | scr_sysrst;
   rst rst_0 (
     // in
     .clk(clk),
     .clk_ok(clk_ok),
-    .rst_in(lsb_btn[0] | scr_sysrst),
+    .rst_in(rst_trig),
     // out
     .rst(rst)
   );
 
+  // CPU
   cpu cpu_0 (
     .clk(clk),
     .rst(rst),
@@ -156,6 +162,7 @@ module risc5 (
     .bus_ack(bus_ack)
   );
 
+  // boot ROM
   prom #(.memfile(`PROM_FILE)) prom_0 (
     .clk(clk),
     .rst(rst),
@@ -166,6 +173,7 @@ module risc5 (
     .ack(prom_ack)
   );
 
+  // SDRAM
   assign ram_addr[26:2] = { 3'b000, bus_addr[23:2] };
   ram ram_0 (
     .clk_ok(clk_ok),
@@ -189,17 +197,20 @@ module risc5 (
     .sdram_dq(sdram_dq[31:0])
   );
 
+  // ms timer
   tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(tmr_stb),
+    .we(bus_we),
     // out
     .data_out(tmr_dout[31:0]),
-    .ms(tmr_ms),
+    .ms_tick(tmr_ms_tick),
     .ack(tmr_ack)
   );
 
+  // LEDs, switches, buttons
   lsb lsb_0 (
     // in
     .clk(clk),
@@ -226,124 +237,146 @@ module risc5 (
     .swi(lsb_swi[17:0])
   );
 
-  rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
-    .clk(clk),
-    .rst(rst),
-    .stb(rs232_stb),
-    .we(bus_we),
-    .addr(bus_addr[2]),
-    .data_in(bus_dout[7:0]),
-    .data_out(rs232_dout[31:0]),
-    .ack(rs232_ack),
-    .rxd(rs232_0_rxd),
-    .txd(rs232_0_txd)
-  );
-
-  spie #(.clock_freq(`CLOCK_FREQ)) spie_0 (
-    .clk(clk),
-    .rst(rst),
-    .stb(spi_stb),
-    .we(bus_we),
-    .addr(bus_addr[2]),
-    .data_in(bus_dout[31:0]),
-    .data_out(spi_dout[31:0]),
-    .ack(spi_ack),
-    .cs_n(spi_cs_n[2:0]),
-    .sclk(sdcard_sclk),
-    .mosi(sdcard_mosi),
-    .miso(sdcard_miso)
-  );
-
-  assign sdcard_ss_n = spi_cs_n[0];
-
-  proctim_thm ptmr_0 (
-    .clk(clk),
-    .rst(rst),
-    .stb(ptmr_stb),
-    .we(bus_we),
-    .tick(tmr_ms),
-    .data_in(bus_dout[31:0]),
-    .data_out(ptmr_dout[31:0]),
-    .ack(ptmr_ack)
-  );
-
-  start_thm start_0 (
+  // (-re) start tables
+  start start_0 (
+    // in
     .clk(clk),
     .rst(rst),
     .stb(start_stb),
     .we(bus_we),
     .data_in(bus_dout[15:0]),
+    // out
     .data_out(start_dout[31:0]),
     .ack(start_ack)
   );
 
-  sysctrl_thm sysctrl_0 (
+  // sys ctrl register
+  sysctrl sysctrl_0 (
+    // in
     .clk(clk),
     .rst(rst),
     .stb(scr_stb),
     .we(bus_we),
     .data_in(bus_dout[15:0]),
+    // out
     .data_out(scr_dout[31:0]),
-    .sys_rst(scr_sysrst),
+    .sysrst(scr_sysrst),
     .ack(scr_ack)
   );
 
-  //--------------------------------------
-  // address decoder (16 MB addr space)
-  //--------------------------------------
+  // RS232 buffered
+  rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(rs232_0_stb),
+    .we(bus_we),
+    .addr(bus_addr[2]),
+    .data_in(bus_dout[7:0]),
+    // out
+    .data_out(rs232_0_dout[31:0]),
+    .ack(rs232_0_ack),
+    // external
+    .rxd(rs232_0_rxd),
+    .txd(rs232_0_txd)
+  );
+
+  // SPI
+  spie #(.clock_freq(`CLOCK_FREQ)) spie_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(spi_0_stb),
+    .we(bus_we),
+    .addr(bus_addr[2]),
+    .data_in(bus_dout[31:0]),
+    // out
+    .data_out(spi_0_dout[31:0]),
+    .ack(spi_0_ack),
+    // external
+    .cs_n(spi_0_cs_n_d[2:0]),
+    .sclk(spi_0_sclk_d),
+    .mosi(spi_0_mosi_d),
+    .miso(spi_0_miso_d)
+  );
+
+  assign sdcard_cs_n = spi_0_cs_n_d[0];
+  assign sdcard_sclk = spi_0_sclk_d;
+  assign sdcard_mosi = spi_0_mosi_d;
+  assign spi_0_miso_d = sdcard_miso;
+
+  // process periodic timers
+  proctimers ptmr_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(ptmr_stb),
+    .we(bus_we),
+    .tick(tmr_ms_tick),
+    .data_in(bus_dout[31:0]),
+    // out
+    .data_out(ptmr_dout[31:0]),
+    .ack(ptmr_ack)
+  );
+
+
+  // address decoding
+  // ----------------
 
   // PROM: 2 KB @ 0xFFE000
   assign prom_stb =
     (bus_stb == 1'b1 && bus_addr[23:12] == 12'hFFE
                      && bus_addr[11] == 1'b0) ? 1'b1 : 1'b0;
 
-  // RAM: (16 MB - 8 kB) @ 0x000000
+  // RAM: (16 MB - 8 kB) @ 000000H
   assign ram_stb =
     (bus_stb == 1'b1 && bus_addr[23:13] != 11'h7FF) ? 1'b1 : 1'b0;
 
-  // I/O: 256 bytes (64 words) @ 0xFFFF00
+  // I/O: 256 bytes (64 words) @ 0FFFF00H
   assign io_stb = (bus_stb == 1'b1 && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
-  assign tmr_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0; // -64
-  assign lsb_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0; // -60 note: system LEDs via LED() procedure must be at this address
-  assign rs232_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001) ? 1'b1 : 1'b0;  // -56 (data 000), -52 (ctrl/status 100)
-  assign spi_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010) ? 1'b1 : 1'b0;  // -48 (data 000), -44 (ctrl/status 100)
+  assign spi_0_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010) ? 1'b1 : 1'b0;  // -48 (data 000), -44 (ctrl/status 100)
+  assign rs232_0_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001) ? 1'b1 : 1'b0;  // -56 (data 000), -52 (ctrl/status 100)
+  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0; // -60 note: system LEDs via LED() procedure must be at this address
+  assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0; // -64
+
+  // the current addresses of P4 for compatibility
+  assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
+  assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
+
 
 //  assign ptmr_stb = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
-//  assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101110) ? 1'b1 : 1'b0;  // -72
-//  assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101101) ? 1'b1 : 1'b0;  // -76
+//  assign start_stb = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101110) ? 1'b1 : 1'b0;  // -72
+//  assign scr_stb = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101101) ? 1'b1 : 1'b0;  // -76
 
-  // the current addresses p4 for compatibility
-  assign ptmr_stb  = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
-  assign start_stb = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
-  assign scr_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
 
-  //--------------------------------------
-  // data and acknowledge multiplexers
-  //--------------------------------------
-
+  // data out demultiplexing
+  // -----------------------
   assign bus_din[31:0] =
-    prom_stb  ? prom_dout[31:0] :
-    ram_stb   ? ram_dout[31:0]  :
-    tmr_stb   ? tmr_dout[31:0]  :
-    lsb_stb   ? lsb_dout[31:0]  :
-    rs232_stb ? rs232_dout[31:0]  :
-    spi_stb   ? spi_dout[31:0]  :
-    ptmr_stb  ? ptmr_dout[31:0]  :
-    start_stb ? start_dout[31:0]  :
-    scr_stb   ? scr_dout[31:0] :
+    prom_stb    ? prom_dout[31:0] :
+    ram_stb     ? ram_dout[31:0]  :
+    tmr_stb     ? tmr_dout[31:0]  :
+    lsb_stb     ? lsb_dout[31:0]  :
+    rs232_0_stb ? rs232_0_dout[31:0]  :
+    spi_0_stb   ? spi_0_dout[31:0]  :
+    ptmr_stb    ? ptmr_dout[31:0]  :
+    start_stb   ? start_dout[31:0]  :
+    scr_stb     ? scr_dout[31:0] :
     32'h0;
 
+  // bus ack demultiplexing
+  // ======================
   assign bus_ack =
-    prom_stb ? prom_ack :
-    ram_stb  ? ram_ack  :
-    tmr_stb  ? tmr_ack  :
-    lsb_stb  ? lsb_ack  :
-    rs232_stb  ? rs232_ack  :
-    spi_stb  ? spi_ack  :
-    ptmr_stb  ? ptmr_ack  :
-    start_stb ? start_ack :
-    scr_stb ? scr_ack :
+    prom_stb    ? prom_ack :
+    ram_stb     ? ram_ack  :
+    tmr_stb     ? tmr_ack  :
+    lsb_stb     ? lsb_ack  :
+    rs232_0_stb ? rs232_0_ack  :
+    spi_0_stb   ? spi_0_ack  :
+    ptmr_stb    ? ptmr_ack  :
+    start_stb   ? start_ack :
+    scr_stb     ? scr_ack :
     1'b0;
 
 endmodule

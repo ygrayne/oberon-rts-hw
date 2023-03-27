@@ -50,81 +50,98 @@
 `define NUM_PROC_CTRL 16
 `define MEM_BLK_SIZE 'h10000    // 64k
 `define PROM_FILE "../../../platform/p4-eth-arty-a7-100/promfiles/BootLoad-512k-64k.mem"
+`define RS232_BUF_SLOTS 256
 
 module RISC5Top (
+  // clock
   input wire clk_in,
+  // RS 232
   input  wire rs232_0_rxd,
   output wire rs232_0_txd,
-  input wire [1:0] spi_0_miso,
-  output wire [1:0] spi_0_sclk,
-  output wire [1:0] spi_0_mosi,
-  output wire [1:0] spi_0_cs_n,
+  // SD card (SPI CS = 0)
+  input wire sdcard_miso,
+  output wire sdcard_cs_n,
+  output wire sdcard_sclk,
+  output wire sdcard_mosi,
+  // SPI (other than SD card)
+  input wire [1:1] spi_0_miso,
+  output wire [1:1] spi_0_cs_n,
+  output wire [1:1] spi_0_sclk,
+  output wire [1:1] spi_0_mosi,
+  // LEDs, switches, buttons
   input wire [3:0] btn_in,
   input wire [3:0] swi_in,
   output wire [7:0] sys_leds
  );
 
   // clk
-  wire clk;                 // system clock
-  wire clk2x;               // memory clock
-  wire clk_ok;              // clocks stable
+  wire clk;                   // system clock
+  wire clk2x;                 // memory clock
+  wire clk_ok;                // clocks stable
   // reset
-  wire rst_n;               // active low
+  wire rst_n;                 // active low
+  wire rst;                   // active high
+  wire rst_trig;              // reset triggers
   // cpu
-  wire [23:0] adr;          // address bus
-  wire [31:0] inbus;        // data to RISC core
-  wire [31:0] inbus0;       // data & code from RAM
-  wire [31:0] romout;       // code to RISC core from PROM
-  wire [31:0] codebus;      // code to RISC core from RAM
-  wire [31:0] outbus;       // data from RISC core
-  wire [31:0] iomap;        // io device address mapping/de-muxing
-  wire [7:0] iowadr;        // IO word address (1024 IO addresses)
-  wire rd;                  // CPU read
-  wire wr;                  // CPU write
-  wire ben;                 // CPU byte enable
-  wire ioenb;               // IO enable
-  wire irq_req;             // interrupt request to CPU
+  wire [23:0] adr;            // address bus
+  wire [31:0] inbus;          // data to RISC core
+  wire [31:0] inbus0;         // data & code from RAM
+  wire [31:0] romout;         // code to RISC core from PROM
+  wire [31:0] codebus;        // code to RISC core from RAM
+  wire [31:0] outbus;         // data from RISC core
+  wire [31:0] io_out;         // io devices output
+  wire rd;                    // CPU read
+  wire wr;                    // CPU write
+  wire ben;                   // CPU byte enable
+  wire irq_req;               // interrupt request to CPU
   // cpu extensions
-  wire cpu_intack;          // CPU out: interrupt ack
-  wire cpu_rti;             // CPU out: return from interrupt
-  wire cpu_intabort;        // CPU in: abort interrupt, "return" to addr 0, not interrupted code
-  wire [31:0] cpu_sp;       // CPU out: stack pointer
-  wire [31:0] cpu_lnk;      // CPU out: link register
-  wire [31:0] cpu_ir;       // CPU out: instruction register
-  wire [23:0] cpu_spc;      // CPU out: SPC register (saved PC on interrupt * 4)
-  wire [21:0] cpu_pc;       // CPU out: current PC
-  // lsb
-  wire lsb_wr;
-  wire [31:0] lsb_dout;
-  wire [3:0] lsb_btn;
-  wire [3:0] lsb_swi;
-  // start tables
-  wire start_wr;
-  wire [31:0] start_dout;
-  // sys ctrl reg
-  wire scr_wr;
-  wire [31:0] scr_dout;
-  wire scr_sysrst;
-  // proc periodic timing
-  wire ptmr_wr;
-  wire [31:0] ptmr_dout;
-  // // proc delay
-  // wire pdel_wr;
-  // wire [31:0] pdel_dout;
-  // rs232
-  wire rs232_0_rdd;           // read data (receive)
-  wire rs232_0_wrd;           // write data (send)
-  wire rs232_0_wrc;           // write control
-  wire [31:0] rs232_0_dout;   // rx data
-  wire [31:0] rs232_0_status; // status
+  wire cpu_intack;            // CPU out: interrupt ack
+  wire cpu_rti;               // CPU out: return from interrupt
+  wire cpu_intabort;          // CPU in: abort interrupt, "return" to addr 0, not interrupted code
+  wire [31:0] cpu_sp;         // CPU out: stack pointer
+  wire [31:0] cpu_lnk;        // CPU out: link register
+  wire [31:0] cpu_ir;         // CPU out: instruction register
+  wire [23:0] cpu_spc;        // CPU out: SPC register (saved PC on interrupt * 4)
+  wire [21:0] cpu_pc;         // CPU out: current PC
+
+  // io
+  wire ioenb;                 // IO enable
   // ms timer
-  wire [31:0] tmr_dout;
-  wire tmr_ms_tick;
+  wire tmr_stb;
+  wire [31:0] tmr_dout;       // data out: running milliseconds since reset
+  wire tmr_ms_tick;           // millisecond timer tick
+  wire tmr_ack;
+  // lsb
+  wire lsb_stb;
+  wire [31:0] lsb_dout;       // data out: buttons, switches
+  wire [3:0] lsb_btn;         // button signals out
+  wire [3:0] lsb_swi;         // switch signals out
+  wire lsb_ack;
+  // start tables
+  wire start_stb;
+  wire [31:0] start_dout;     // data out: start-up table number, armed bit
+  wire start_ack;
+  // sys ctrl reg
+  wire scr_stb;
+  wire [31:0] scr_dout;       // data out: register content
+  wire scr_sysrst;            // system reset signal out
+  wire scr_ack;
+  // rs232
+  wire rs232_0_stb;
+  wire [31:0] rs232_0_dout;   // data out: received data, status
+  wire rs232_0_ack;
   // spi
-  wire spi_0_wrd;
-  wire spi_0_wrc;
-  wire [31:0] spi_0_dout;
-  wire [31:0] spi_0_status;
+  wire spi_0_stb;
+  wire [31:0] spi_0_dout;     // data out: received data, status
+  wire spi_0_sclk_d;          // sclk signal from device
+  wire spi_0_mosi_d;          // mosi signal from device
+  wire spi_0_miso_d;          // miso signals to device
+  wire [2:0] spi_0_cs_n_d;    // chip selects from device
+  wire spi_0_ack;
+  // proc periodic timing
+  wire ptmr_stb;
+  wire [31:0] ptmr_dout;      // proc timers data output (ready signals)
+  wire ptmr_ack;
 
   // clocks
   clocks clocks_0 (
@@ -133,6 +150,16 @@ module RISC5Top (
     .outclk_0(clk),
     .outclk_1(clk2x),
     .locked(clk_ok)
+  );
+
+  // reset
+  assign rst_trig = lsb_btn[0] | scr_sysrst;
+  rst rst_0 (
+    .clk(clk),
+    .clk_ok(clk_ok),
+    .rst_in(rst_trig),
+    .rst_n(rst_n),
+    .rst(rst)
   );
 
   // CPU
@@ -157,7 +184,14 @@ module RISC5Top (
     .pcx(cpu_pc)
   );
 
-  // RAM 512k (8 blocks of 64k)
+  // boot ROM
+  prom #(.memfile(`PROM_FILE)) prom_0 (
+    .clk(~clk),
+    .adr(adr[10:2]),
+    .data_out(romout)
+  );
+
+  // BRAM 512k (8 blocks of 64k)
   ramg #(.mem_blocks(8)) ram_0 (
     .clk(clk2x),
     .wr(wr),
@@ -167,234 +201,156 @@ module RISC5Top (
     .rdata(inbus0)
   );
 
-  // Boot ROM
-  prom #(.memfile(`PROM_FILE)) prom_0 (
-    .adr(adr[10:2]),
-    .data(romout),
-    .clk(~clk)
-  );
-
-  // reset
-  rst rst_0 (
-    .clk(clk),
-    .clk_ok(clk_ok),
-    .rst_in(lsb_btn[0] | scr_sysrst),
-    .rst_n(rst_n)
-  );
-
   // ms timer
   tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
+    // in
     .clk(clk),
-    .rst_n(rst_n),
-    .data_out(tmr_dout),
-    .ms_tick(tmr_ms_tick)
+    .rst(rst),
+    .stb(tmr_stb),
+    .we(wr),
+    // out
+    .data_out(tmr_dout[31:0]),
+    .ms_tick(tmr_ms_tick),
+    .ack(tmr_ack)
   );
 
   // LEDs, switches, buttons
   lsb lsb_0 (
+    // in
     .clk(clk),
     .rst_n(rst_n),
-    .wr(lsb_wr),
+    .stb(lsb_stb),
+    .we(wr),
     .btn_in(btn_in),
     .swi_in(swi_in),
     .data_in(outbus[7:0]),
+    // out
     .data_out(lsb_dout),
     .leds(sys_leds),
-    .btn(lsb_btn),
-    .swi(lsb_swi)
+    .btn_out(lsb_btn),
+    .swi_out(lsb_swi),
+    .ack(lsb_ack)
   );
 
-  // start tables
-  wire [8:0] start_dout0;
+  // (re-) start tables
   start start_0 (
-    .rst_n(rst_n),
+    // in
     .clk(clk),
-    .wr(start_wr),
+    .rst(rst),
+    .stb(start_stb),
+    .we(wr),
     .data_in(outbus[15:0]),
-    .data_out(start_dout0)
+    // out
+    .data_out(start_dout),
+    .ack(start_ack)
   );
-  assign start_dout[31:0] = {23'b0, start_dout0};
 
-  // sys ctrl reg
-  // only implements system reset
-  wire [15:0] scr_dout0;
+  // sys ctrl register
   sysctrl sysctrl_0 (
+    // in
     .clk(clk),
-    .rst_n(rst_n),
-    .wr(scr_wr),
+    .rst(rst),
+    .stb(scr_stb),
+    .we(wr),
     .data_in(outbus[15:0]),
-    .data_out(scr_dout0),
-    .sysrst(scr_sysrst)
+    // out
+    .data_out(scr_dout),
+    .sysrst(scr_sysrst),
+    .ack(scr_ack)
   );
-  assign scr_dout[31:0] = {16'b0, scr_dout0};
-
-  // process timing
-  wire [15:0] ptmr_dout0;
-  proctimers #(.num_proc_tmr(16)) ptmr_0 (
-    .clk(clk),
-    .rst_n(rst_n),
-    .tick(tmr_ms_tick),
-    .wr(ptmr_wr),
-    .data_in(outbus[31:0]),
-    .procRdy(ptmr_dout0)
-  );
-  assign ptmr_dout[31:0] = {16'b0, ptmr_dout0};
-
-  // process delay
-  // wire [15:0] pdel_dout0;
-  // PROCDELBLK1 #(.num_proc_del(16)) pdel_0 (
-  //   .clk(clk),
-  //   .rst_n(rst_n),
-  //   .tick(mstick),
-  //   .wr(pdel_wr),
-  //   .data_in(outbus[31:0]),
-  //   .procRdy(pdel_dout0)
-  // );
-  // assign pdel_dout = {16'b0, pdel_dout0};
 
   // RS232 buffered
-  // max 2048 slots
-  // put into one module
-  wire rs232_0_rx_empty;
-  wire rs232_0_rx_full;
-  wire rs232_0_tx_empty;
-  wire rs232_0_tx_full;
-
-  reg [0:0] rs232_0_ctrl = 0;
-  wire rs232_0_fsel = rs232_0_ctrl[0]; // 0 = fast = default;
-
-  always @(posedge clk) begin
-    rs232_0_ctrl <= ~rst_n ? 1'b0 : rs232_0_wrc ? outbus[0:0] : rs232_0_ctrl;
-  end
-
-  localparam rs232_0_tx_slots = 128;
-  // wire [$clog2(rs232_0_tx_slots):0] rs232_0_tx_count;
-  rs232_txb #(.clock_freq(`CLOCK_FREQ), .num_slots(rs232_0_tx_slots)) rs232_0_tx (
+  rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
+    // in
     .clk(clk),
-    .rst_n(rst_n),
-    .fsel(rs232_0_fsel),
-    .wr(rs232_0_wrd),
+    .rst(rst),
+    .stb(rs232_0_stb),
+    .we(wr),
+    .addr(adr[2]),
     .data_in(outbus[7:0]),
-    .empty(rs232_0_tx_empty),
-    .full(rs232_0_tx_full),
-    // .count(rs232_0_tx_count),
+    // out
+    .data_out(rs232_0_dout[31:0]),
+    .ack(rs232_0_ack),
+    // external
+    .rxd(rs232_0_rxd),
     .txd(rs232_0_txd)
   );
 
-  wire [7:0] rs232_0_dout0;
-
-  localparam rs232_0_rx_slots = 256;
-  // wire [$clog2(rs232_0_rx_slots):0] rs232_0_rx_count;
-  rs232_rxb #(.clock_freq(`CLOCK_FREQ), .num_slots(rs232_0_rx_slots)) rs232_0_rx (
-    .clk(clk),
-    .rst_n(rst_n),
-    .fsel(rs232_0_fsel),
-    .rd(rs232_0_rdd),
-    .data_out(rs232_0_dout0),
-    .empty(rs232_0_rx_empty),
-    .full(rs232_0_rx_full),
-    // .count(rs232_0_rx_count),
-    .rxd(rs232_0_rxd)
-  );
-
-  assign rs232_0_dout[31:0] = {24'b0, rs232_0_dout0};
-  assign rs232_0_status[31:0] =
-    {28'b0, ~rs232_0_tx_full, rs232_0_rx_full, rs232_0_tx_empty, ~rs232_0_rx_empty};
-  // end RS232 module
-
   // SPI
-  // Put into proper module
-
-  // control register
-  reg [8:0] spi_0_ctrl = 0;
-  // [2:0] chip select
-  // [3:3] fast transmit (default: slow)
-  // [5:4] data width (default: 8 bits)
-  // [6:6] ms byte first (default: ls byte first)
-
-  // data width:
-  // 2'b00 => 8 bits
-  // 2'b01 => 32 bits
-  // 2'b10 => 16 bits
-
-  always @(posedge clk) begin
-    spi_0_ctrl <= ~rst_n ? 8'b0 : spi_0_wrc ? outbus[8:0] : spi_0_ctrl;
-  end
-
-  assign spi_0_cs_n[1:0] = ~spi_0_ctrl[1:0];
-  wire spi_0_fast = spi_0_ctrl[3];
-  wire [1:0] spi_0_width = spi_0_ctrl[5:4];
-  wire spi_0_msb_first = spi_0_ctrl[6];
-
-  spie #(.clock_freq(`CLOCK_FREQ)) spi_0 (
+  spie #(.clock_freq(`CLOCK_FREQ)) spie_0 (
     .clk(clk),
-    .rst_n(rst_n),
-    .start(spi_0_wrd),
-    .fast(spi_0_fast),
-    .datasize(spi_0_width),
-    .msbytefirst(spi_0_msb_first),
-    .dataTx(outbus[31:0]),
-    .dataRx(spi_0_dout),
-    .rdy(spi_0_rdy),
-    .SCLK(spi_0_sclk[0]),
-    .MOSI(spi_0_mosi[0]),
-    .MISO(spi_0_miso[0] & spi_0_miso[1])
+    .rst(rst),
+    .stb(spi_0_stb),
+    .we(wr),
+    .addr(adr[2]),
+    .data_in(outbus[31:0]),
+    // out
+    .data_out(spi_0_dout[31:0]),
+    .ack(spi_0_ack),
+    // external
+    .cs_n(spi_0_cs_n_d[2:0]),
+    .sclk(spi_0_sclk_d),
+    .mosi(spi_0_mosi_d),
+    .miso(spi_0_miso_d)
   );
 
-  assign spi_0_mosi[1] = spi_0_mosi[0];
-  assign spi_0_sclk[1] = spi_0_sclk[0];
+  assign sdcard_cs_n = spi_0_cs_n_d[0];
+  assign sdcard_sclk = spi_0_sclk_d;
+  assign sdcard_mosi = spi_0_mosi_d;
 
-  wire spi_0_rdy;
-  assign spi_0_status[31:0] = {31'b0, spi_0_rdy};
+  assign spi_0_cs_n[1] = spi_0_cs_n_d[1];
+  assign spi_0_sclk[1] = spi_0_sclk_d;
+  assign spi_0_mosi[1] = spi_0_mosi_d;
 
-// end SPI module
+  assign spi_0_miso_d = sdcard_miso & spi_0_miso;   // active low, pulled-up
 
+  // process periodc timing
+  proctimers ptmr_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(ptmr_stb),
+    .we(wr),
+    .tick(tmr_ms_tick),
+    .data_in(outbus[31:0]),
+    // out
+    .data_out(ptmr_dout[31:0]),
+    .ack(ptmr_ack)
+  );
 
-  // ============================================
-  // codebus multiplexer:
-  // 'cpu_intack': use address from interrupt controller, ie. set codebus to 'intc1_intout' from interrupt controller
-  // 'romswitch': for startup, use high address "above" RAM
-  // else 'inbus0'
+  // address decoding
+  // ----------------
 
-  wire romswitch = (adr[20] == 1'b1);
-  assign codebus = romswitch ? romout : inbus0;
+  // codebus demultiplexer
+  // PROM: 2 kB @ 0FFE000H => initial code address for CPU
+  wire promswitch = (adr[23:12] == 12'hFFE && adr[11] == 1'b0) ? 1'b1 : 1'b0;
+  assign codebus = promswitch ? romout : inbus0;
 
-  // Upon reset, start address 'StartAdr' (defined in RISC5.v) is assigned to register PC.
-  // PC is [21:0], corresponding to [23:2] on the address bus, ie. 4-bytes aligned.
-  // Hence StartAdr is also [21:0], corresponding to [23:2] on the actual bus.
-  // Currently, StartAdr = 22'b100_0000_0000_0000_0000 (4000H), 2^18)
-  // Consequently, adr[20] == 1'b1 means the ROM is allocated at address 100000H (4000H * 4)
+  // inbus demultiplexer
+  // I/O: 256 bytes (64 words) @ 0FFFF00H
+  assign inbus = ~ioenb ? inbus0 : io_out;
+  assign ioenb = (adr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
-  // ============================================
-  // 1024 IO addresses
-  assign iowadr = adr[9:2];   // 10 bits = 1024 addresses, ie. 256 4-byte addresses via [9:2]
-  assign ioenb = (adr[23:10] == 14'b11_1111_1111_1111);      // 1024 bytes IO space, adr[23:0] = 0FFFC00H
+  assign spi_0_stb   = (ioenb == 1'b1 && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48
+  assign rs232_0_stb = (ioenb == 1'b1 && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56
+  assign lsb_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60
+  assign tmr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
-  assign inbus = ~ioenb ? inbus0 : iomap;
-  assign iomap =
-    (iowadr == 206) ? `CLOCK_FREQ :       // -200
-    (iowadr == 209) ? start_dout :        // -188
-    (iowadr == 223) ? ptmr_dout :         // -132
-    (iowadr == 239) ? scr_dout :          // -68
-    (iowadr == 240) ? tmr_dout :          // -64
-    (iowadr == 241) ? lsb_dout :          // -60
-    (iowadr == 242) ? rs232_0_dout :      // -56
-    (iowadr == 243) ? rs232_0_status :    // -52
-    (iowadr == 244) ? spi_0_dout :        // -48
-    (iowadr == 245) ? spi_0_status :      // -44
-    0;
+  assign scr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign ptmr_stb    = (ioenb == 1'b1 && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
+  assign start_stb   = (ioenb == 1'b1 && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
 
-  assign start_wr = wr & ioenb & (iowadr == 209);
-  assign ptmr_wr = wr & ioenb & (iowadr == 223);
-  assign scr_wr = wr & ioenb & (iowadr == 239);
-  assign lsb_wr = wr & ioenb & (iowadr == 241);
-  assign rs232_0_wrd = wr & ioenb & (iowadr == 242);
-  assign rs232_0_rdd = rd & ioenb & (iowadr == 242);
-  assign rs232_0_wrc = wr & ioenb & (iowadr == 243);
-  assign spi_0_wrd = wr & ioenb & (iowadr == 244);
-  assign spi_0_wrc = wr & ioenb & (iowadr == 245);
-
-// assign pdel_wr = wr & ioenb & (iowadr == 222);
+  // data out demultiplexing
+  // -----------------------
+  assign io_out[31:0] =
+    spi_0_stb   ? spi_0_dout :
+    rs232_0_stb ? rs232_0_dout[31:0] :
+    lsb_stb     ? lsb_dout[31:0] :
+    tmr_stb     ? tmr_dout[31:0] :
+    scr_stb     ? scr_dout[31:0] :
+    ptmr_stb    ? ptmr_dout[31:0] :
+    start_stb   ? start_dout[31:0] :
+    32'b0;
 
 endmodule
 

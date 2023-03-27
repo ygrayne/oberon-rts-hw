@@ -47,3 +47,5 @@ module prom #(parameter memfile) (
   end
 
 endmodule
+
+`resetall

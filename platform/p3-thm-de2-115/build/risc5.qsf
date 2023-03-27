@@ -409,8 +409,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rs232_0_rxd
 set_location_assignment PIN_G9 -to rs232_0_txd
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rs232_0_txd
 
-set_location_assignment PIN_AC14 -to sdcard_ss_n
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_ss_n
 set_location_assignment PIN_AE13 -to sdcard_sclk
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_sclk
 set_location_assignment PIN_AD14 -to sdcard_mosi
@@ -422,29 +420,28 @@ set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/base/sysctrl.v
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/gen/fifo.v
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/base/start.v
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/io/rs232_txb.v
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/io/rs232_tx.v
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/io/rs232_rxb.v
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/io/rs232_rx.v
-set_global_assignment -name VERILOG_FILE ../../../lib/eth/ext/proctimers.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/io/spie_rctr.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/io/spie.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/io/rs232.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/ext/proctim1.v
+set_location_assignment PIN_AC14 -to sdcard_cs_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_cs_n
+set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/ramctrl.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie_rxtx.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/rs232_txb.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/rs232_tx.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/rs232_rxb.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/rs232_rx.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/rs232.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/gen/fifo.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/ext/proctimers.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/base/tmr.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/base/sysctrl.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/base/start.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/base/rst.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/shift.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/muldiv.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/fpu.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/cpu_core.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/cpu_bus.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/cpu.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/tmr.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/sysctrl.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/start.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/rst.v
-set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/ramctrl.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/ram.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/prom.v
 set_global_assignment -name VERILOG_FILE "../../../lib/tech/thm/cyclone-iv/base/clk.v"

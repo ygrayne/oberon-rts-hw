@@ -1,7 +1,7 @@
 /**
   Serial Line Device (RS232)
   --
-  Architecture: THM
+  Architecture: ANY
   ---
   Control data:
   data_in [0:0]:
@@ -17,17 +17,17 @@
 
 module rs232 #(parameter clock_freq = 50_000_000, buf_slots = 63) (
   // internal interface
-  input clk,
-  input rst,
-  input stb,
-  input we,
-  input addr,
-  input [7:0] data_in,
-  output [31:0] data_out,
-  output ack,
+  input wire clk,
+  input wire rst,
+  input wire stb,
+  input wire we,
+  input wire addr,
+  input wire [7:0] data_in,
+  output wire [31:0] data_out,
+  output wire ack,
   // external interface
-  input rxd,
-  output txd
+  input wire rxd,
+  output wire txd
 );
 
   wire rd_data = stb & ~we & ~addr; // read received data
@@ -90,3 +90,5 @@ module rs232 #(parameter clock_freq = 50_000_000, buf_slots = 63) (
   assign ack = stb;
 
 endmodule
+
+`resetall

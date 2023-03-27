@@ -1,7 +1,7 @@
 /**
   Button/switch debouncer
   --
-  Architecture: gen
+  Architecture: ANY
   --
   Parameter:
     polarity: 1 => btn_in is active high, 0 => low
