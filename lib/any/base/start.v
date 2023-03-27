@@ -50,10 +50,6 @@ module start (
 
   assign ack = stb;
 
-//  always @(*) begin
-//    data_out = {armed, selected_table};
-//  end
-
 endmodule
 
 `resetall

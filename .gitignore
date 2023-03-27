@@ -10,13 +10,13 @@
 !/platform/
 !/doc/
 !/orig/
-!/epo_base/
+!/epo-base/
 
 # ignore contents of build dirs within platform
 /platform/**/build/*
 /platform/**/promfiles/*
-/epo_base/platform/**/build/*
-/epo_base/platform/**/promfiles/*
+/epo-base/platform/**/build/*
+/epo-base/platform/**/promfiles/*
 
 ## add files
 !*.mod
@@ -29,17 +29,17 @@
 
 ## add *.runs directories
 !/platform/**/build/*.runs/
-!epo_base/platform/**/build/*.runs/
+!epo-base/platform/**/build/*.runs/
 
 ## ignore completely
 /platform/**/build/*.runs/.jobs
 /platform/**/build/*.runs/synth_*
-/epo_base/platform/**/build/*.runs/.jobs
-/epo_base/platform/**/build/*.runs/synth_*
+/epo-base/platform/**/build/*.runs/.jobs
+/epo-base/platform/**/build/*.runs/synth_*
 
 ## ignore dir contents
 /platform/**/build/*.runs/impl_*/*
-/epo_base/platform/**/build/*.runs/impl_*/*
+/epo-base/platform/**/build/*.runs/impl_*/*
 
 ## but add fpga memory config files (inside impl_*)
 #!*.mcs
@@ -52,11 +52,11 @@
 
 # add output_files directory
 !/platform/**/build/output_files/
-!epo_base/platform/**/build/output_files/
+!epo-base/platform/**/build/output_files/
 
 # ignore everything inside this dir
 /platform/**/build/output_files/*
-/epo_base/platform/**/build/output_files/*
+/epo-base/platform/**/build/output_files/*
 
 # but add fpga programming files
 #!*.sof

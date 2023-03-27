@@ -5,6 +5,8 @@
   --
   Original RS232 transmitter design by NW 4.5.09 / 15.8.10 / 15.11.10
   --
+  Note: needs design review
+  --
   2020 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -20,7 +22,6 @@ module rs232_txb #(parameter clock_freq = 50000000, num_slots = 63) (
   input wire [7:0] data_in,
   output wire empty,
   output wire full,
-  // output wire [$clog2(BufNumSlots):0] count,
   output wire txd
 );
 
@@ -56,7 +57,6 @@ module rs232_txb #(parameter clock_freq = 50000000, num_slots = 63) (
     .data_out(fifo_out),
     .empty(empty),
     .full(full)
-    // .count(count)
   );
 
 endmodule

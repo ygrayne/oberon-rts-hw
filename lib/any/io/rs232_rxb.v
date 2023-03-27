@@ -5,6 +5,8 @@
   --
   Original RS232 receiver design by NW 4.5.09 / 15.8.10 / 15.11.10 / 13.8.15
   --
+  Note: needs design review
+  --
   2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -21,7 +23,6 @@ module rs232_rxb #(parameter clock_freq = 50000000, num_slots = 63) (
   output wire [7:0] data_out,
   output wire empty,
   output wire full
-  // output wire [$clog2(BufNumSlots):0] count
 );
 
   reg rx_rdy_0;
@@ -56,7 +57,6 @@ module rs232_rxb #(parameter clock_freq = 50000000, num_slots = 63) (
     .data_out(data_out),
     .empty(empty),
     .full(full)
-    // .count(count)
   );
 
 endmodule
