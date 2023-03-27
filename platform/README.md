@@ -7,4 +7,4 @@ Add two platforms with minimum functionality to support a stripped down version 
 * p3-eth-arty-a7-100
 * p4-thm-de2-115
 
-Shall support the same version of Oberon RTS, ie. swapping the SD card is possible. Then, both the software and hardware are "brought back" to full functionality, in lock-step, with careful re-consideration of all concepts and their implementation.
+Support the same version of Oberon RTS, ie. swapping the SD card is possible. Then, both the software and hardware are "brought back" to full functionality, in lock-step, with careful re-consideration of all concepts and their implementation.

@@ -19,12 +19,12 @@
 #
 # Quartus Prime
 # Version 22.1std.0 Build 915 10/25/2022 SC Lite Edition
-# Date created = 15:48:07  March 13, 2023
+# Date created = 17:46:27  March 27, 2023
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "22.1"
-DATE = "15:48:07  March 13, 2023"
+DATE = "17:46:27  March 27, 2023"
 
 # Revisions
 
