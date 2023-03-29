@@ -6,19 +6,23 @@
 
 The purpose of the contents of this repo is to develop and provide hardware platforms for embedded Oberon systems, either Embedded Project Oberon, or Oberon RTS.
 
-There is (or will be shortly) another repo for the corresponding software, oberon-rts-sw.
+Here is the sister repo for the corresponding software: [oberon-rts-sw](https://github.com/ygrayne/oberon-rts-sw).
+
+Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but it's the best there is for now, apart from this repository. As the saying goes, only debug code, don't get deceived by the comments.
+
 
 ## Current Status
 
-Two platforms, P3 and P4, implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
+2023-03-29:: two platforms, P3 and P4, each implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
 
 Most on-chip devices, such as process timers, reset circuits, or SPI and RS232 interfaces, can now directly be (and are) used by either architecture without adaptations or specific configurations.
+
 
 ## Overview
 
 There are two different architectures:
 * ETH: as defined and implemented by
-  * Project Oberon (N. Wirth)
+  * Project Oberon (Niklaus Wirth)
   * Embedded Project Oberon (Chris Burrows)
 * THM: as defined and implemented by
   * THM-Oberon (Hellwig Geisse)
@@ -42,6 +46,7 @@ A platform is denoted as follows, for example:
 * p1-eth-arty-a7-100
 * p2-thm-de2-115
 
+
 ## Technologies
 
 Two FPGA technologies are used:
@@ -52,6 +57,7 @@ Tools:
 * for Xilinx FPGA: Vivado
 * for Altera FPGA: Quartus
 
+
 ## Boards
 
 * Digilent Arty A7-100 (Artix-7), "arty-a7-100"
@@ -60,6 +66,7 @@ Tools:
 * Terasic Cyclone V GX Starter Kit (Cyclone V), "cvgx-sk"
 
 The focus is currently on the Arty and the DE2-115.
+
 
 ## Directory Structure
 
@@ -129,6 +136,7 @@ With directories
 * 'mon' in addition, the processor for RTS can be instrumented for monitoring
   * logging, process performance monitoring, calltracing
 
+
 ## Platforms
 
 See the README file in the platform directory.
@@ -143,8 +151,8 @@ See the README file in the platform directory.
 "Same" means the SD card can be swapped.
 
 
-## Licences
+## Licences and Copyright
 
-All files that were edited refer to their base. The respective copyrights apply.
+The repo contains unaltered original files, as well as altered ones to implement adaptations and extensions. All files that were edited refer to their base and origin. The respective copyrights apply.
 
 Please refer to COPYRIGHT.

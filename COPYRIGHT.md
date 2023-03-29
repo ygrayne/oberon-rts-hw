@@ -3,7 +3,7 @@
 * Project Oberon: the original works and its further development
 * Astrobe for RISC5 and Embedded Project Oberon: adaptations and extensions
 * THM-Oberon: adaptations and extensions
-* My adaptations and extensions, referred to as Oberon RTS
+* Oberon RTS: adaptations and extensions
 
 By using any part of the software and its documentation you accept the corresponding licence agreements and disclaimers.
 
