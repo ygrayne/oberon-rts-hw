@@ -30,6 +30,7 @@
 `define CLOCK_FREQ 50_000_000
 `define PROM_FILE "../../../platform/p3-thm-de2-115/promfiles/BootLoad-512k-64k.mem"  // for PROM
 `define RS232_BUF_SLOTS 255
+`define LOGBUF_ENTRIES 32
 
 module risc5 (
   // clock
@@ -130,6 +131,10 @@ module risc5 (
   wire ptmr_stb;
   wire [31:0] ptmr_dout;  // proc timers data output (ready signals)
   wire ptmr_ack;
+  // log buffer
+  wire log_stb;
+  wire [31:0] log_dout;
+  wire log_ack;
 
   // clocks
   clk clk_0 (
@@ -322,7 +327,19 @@ module risc5 (
     .data_out(ptmr_dout[31:0]),
     .ack(ptmr_ack)
   );
-
+  
+  // log buffer
+  logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
+    // in
+    .clk(clk),
+    .stb(log_stb),
+    .we(bus_we),
+    .addr(bus_addr[2]),
+    .data_in(bus_dout[31:0]),
+    // out
+    .data_out(log_dout[31:0]),
+    .ack(log_ack)
+  );
 
   // address decoding
   // ----------------
@@ -341,13 +358,14 @@ module risc5 (
 
   assign spi_0_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
   assign rs232_0_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
-  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0; // -60 note: system LEDs via LED()
-  assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0; // -64
+  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
+  assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
   // the current addresses of P4 for compatibility
   assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
   assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
+  assign log_stb     = (io_stb == 1'b1 && bus_addr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
 
 
   // data out demultiplexing
@@ -362,10 +380,11 @@ module risc5 (
     ptmr_stb    ? ptmr_dout[31:0]  :
     start_stb   ? start_dout[31:0]  :
     scr_stb     ? scr_dout[31:0] :
+    log_stb     ? log_dout[31:0] :
     32'h0;
 
   // bus ack demultiplexing
-  // ======================
+  // ----------------------
   assign bus_ack =
     prom_stb    ? prom_ack :
     ram_stb     ? ram_ack  :
@@ -376,6 +395,7 @@ module risc5 (
     ptmr_stb    ? ptmr_ack  :
     start_stb   ? start_ack :
     scr_stb     ? scr_ack :
+    log_stb     ? log_ack :
     1'b0;
 
 endmodule

@@ -16,7 +16,7 @@
 
   Note: these control settings are compatible with Astrobe's design.
   --
-  2023 Gray, gray@grayraven.org
+  2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
 
@@ -78,7 +78,7 @@ module spie #(parameter clock_freq = 50_000_000) (
 
   assign data_out[31:0] =
     rd_data ? dataRx[31:0] :
-    rd_ctrl ? {28'h0, 3'b0, spi_rdy}:
+    rd_ctrl ? {28'h0, 3'b0, spi_rdy} :
     32'h0;
 
   assign ack = stb;
