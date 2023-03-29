@@ -41,6 +41,10 @@
   * add sys ctrl reg
   * add reset device
   * add milliseconds timer device
+  --
+  Notes:
+  * all ack signals are unused, they are for THM compatibility only
+  * apart from the CPU, all modules use the active high reset signal
 **/
 
 `timescale 1ns / 1ps
@@ -94,7 +98,7 @@ module RISC5Top (
   wire wr;                    // CPU write
   wire ben;                   // CPU byte enable
   wire irq_req;               // interrupt request to CPU
-  // cpu extensions
+  // cpu extensions (currently unused)
   wire cpu_intack;            // CPU out: interrupt ack
   wire cpu_rti;               // CPU out: return from interrupt
   wire cpu_intabort;          // CPU in: abort interrupt, "return" to addr 0, not interrupted code
@@ -155,9 +159,11 @@ module RISC5Top (
   // reset
   assign rst_trig = lsb_btn[0] | scr_sysrst;
   rst rst_0 (
+    // in
     .clk(clk),
     .clk_ok(clk_ok),
     .rst_in(rst_trig),
+    // out
     .rst_n(rst_n),
     .rst(rst)
   );
@@ -218,18 +224,20 @@ module RISC5Top (
   lsb lsb_0 (
     // in
     .clk(clk),
-    .rst_n(rst_n),
+    .rst(rst),
     .stb(lsb_stb),
     .we(wr),
-    .btn_in(btn_in),
-    .swi_in(swi_in),
     .data_in(outbus[7:0]),
     // out
     .data_out(lsb_dout),
-    .leds(sys_leds),
     .btn_out(lsb_btn),
     .swi_out(lsb_swi),
-    .ack(lsb_ack)
+    .ack(lsb_ack),
+    // external in
+    .btn_in(btn_in),
+    .swi_in(swi_in),
+    // external out
+    .leds(sys_leds)
   );
 
   // (re-) start tables
@@ -331,9 +339,9 @@ module RISC5Top (
   assign inbus = ~ioenb ? inbus0 : io_out;
   assign ioenb = (adr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
-  assign spi_0_stb   = (ioenb == 1'b1 && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48
-  assign rs232_0_stb = (ioenb == 1'b1 && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56
-  assign lsb_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60
+  assign spi_0_stb   = (ioenb == 1'b1 && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
+  assign rs232_0_stb = (ioenb == 1'b1 && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
+  assign lsb_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
   assign tmr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
   assign scr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68

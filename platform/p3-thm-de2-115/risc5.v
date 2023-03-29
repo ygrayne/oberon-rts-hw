@@ -73,7 +73,8 @@ module risc5 (
   wire mclk;              // memory clock, 100 MHz
   wire clk;               // system clock, 50 MHz
   // reset
-  wire rst;               // system reset
+  wire rst;               // active high
+  wire rst_n;             // active low
   wire rst_trig;          // reset triggers
   // cpu
   wire bus_stb;
@@ -147,7 +148,8 @@ module risc5 (
     .clk_ok(clk_ok),
     .rst_in(rst_trig),
     // out
-    .rst(rst)
+    .rst(rst),
+    .rst_n(rst_n)
   );
 
   // CPU
@@ -217,12 +219,16 @@ module risc5 (
     .rst(rst),
     .stb(lsb_stb),
     .we(bus_we),
-    .btn_in_n(btn_in_n[3:0]),
-    .swi_in(swi_in[17:0]),
     .data_in(bus_dout[25:0]),
     // out
     .data_out(lsb_dout[31:0]),
     .ack(lsb_ack),
+    .btn(lsb_btn[3:0]),
+    .swi(lsb_swi[17:0]),
+    // external in
+    .btn_in_n(btn_in_n[3:0]),
+    .swi_in(swi_in[17:0]),
+    // external out
     .led_g(led_g[8:0]),
     .led_r(led_r[17:0]),
     .hex7_n(hex7_n[6:0]),
@@ -232,9 +238,7 @@ module risc5 (
     .hex3_n(hex3_n[6:0]),
     .hex2_n(hex2_n[6:0]),
     .hex1_n(hex1_n[6:0]),
-    .hex0_n(hex0_n[6:0]),
-    .btn(lsb_btn[3:0]),
-    .swi(lsb_swi[17:0])
+    .hex0_n(hex0_n[6:0])
   );
 
   // (-re) start tables
@@ -323,7 +327,7 @@ module risc5 (
   // address decoding
   // ----------------
 
-  // PROM: 2 KB @ 0xFFE000
+  // PROM: 2 KB @ 0xFFE000 => initial code address for CPU
   assign prom_stb =
     (bus_stb == 1'b1 && bus_addr[23:12] == 12'hFFE
                      && bus_addr[11] == 1'b0) ? 1'b1 : 1'b0;
@@ -335,20 +339,15 @@ module risc5 (
   // I/O: 256 bytes (64 words) @ 0FFFF00H
   assign io_stb = (bus_stb == 1'b1 && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
-  assign spi_0_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010) ? 1'b1 : 1'b0;  // -48 (data 000), -44 (ctrl/status 100)
-  assign rs232_0_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001) ? 1'b1 : 1'b0;  // -56 (data 000), -52 (ctrl/status 100)
-  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0; // -60 note: system LEDs via LED() procedure must be at this address
+  assign spi_0_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
+  assign rs232_0_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
+  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0; // -60 note: system LEDs via LED()
   assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0; // -64
 
   // the current addresses of P4 for compatibility
   assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
   assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
-
-
-//  assign ptmr_stb = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
-//  assign start_stb = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101110) ? 1'b1 : 1'b0;  // -72
-//  assign scr_stb = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101101) ? 1'b1 : 1'b0;  // -76
 
 
   // data out demultiplexing

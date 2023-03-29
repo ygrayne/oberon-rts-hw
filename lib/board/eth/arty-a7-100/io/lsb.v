@@ -13,7 +13,7 @@
 
 module lsb (
   input wire clk,
-  input wire rst_n,
+  input wire rst,
   input wire stb,
   input wire we,
   input wire [3:0] btn_in,
@@ -41,7 +41,7 @@ module lsb (
   dbnc #(.polarity(1)) dbnc_swi3 (.clk(clk), .btn_in(swi_in[3]), .btn_out(swi_out[3]));
 
   always @(posedge clk) begin
-    leds <= ~rst_n ? 8'b0 : wr_data ? data_in[7:0] : leds;
+    leds <= rst ? 8'b0 : wr_data ? data_in[7:0] : leds;
   end
 
   assign data_out[31:0] =
