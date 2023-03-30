@@ -14,7 +14,7 @@
   * no keyboard and mouse
   * separate clock and reset, move clock into tech directory
   * move bio into board directory as lsb
-  * extended SPI device
+  * improved SPI device
   * extended IO address space
   * 16 MB SDRAM
   * parameterised clock frequency for perpiherals
@@ -23,6 +23,7 @@
   * system control (simplified)
   * buffered RS232 device
   * log buffer
+  * watchdog (not doing anything useful yet)
 **/
 
 `timescale 1ns / 1ps
@@ -103,6 +104,7 @@ module risc5 (
   wire tmr_ack;
   // lsb
   wire lsb_stb;
+  wire [17:0] lsb_led_r_in;   // signals in for red LEDs
   wire [31:0] lsb_dout;       // data out: buttons, switches
   wire [3:0] lsb_btn;         // button signals out
   wire [17:0] lsb_swi;        // button signals out
@@ -136,6 +138,11 @@ module risc5 (
   wire log_stb;
   wire [31:0] log_dout;       // log data output, log indices output
   wire log_ack;
+  // watchdog
+  wire wd_stb;
+  wire [31:0] wd_dout;        // timeout value output
+  wire wd_trig;               // watchdog trigger output
+  wire wd_ack;
 
   // clocks
   clk clk_0 (
@@ -219,12 +226,14 @@ module risc5 (
   );
 
   // LEDs, switches, buttons
-  lsb lsb_0 (
+  assign lsb_led_r_in[17:0] = {17'b0, wd_trig};
+  lsb_s lsb_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(lsb_stb),
     .we(bus_we),
+    .led_r_in(lsb_led_r_in[17:0]),
     .data_in(bus_dout[25:0]),
     // out
     .data_out(lsb_dout[31:0]),
@@ -328,7 +337,7 @@ module risc5 (
     .data_out(ptmr_dout[31:0]),
     .ack(ptmr_ack)
   );
-  
+
   // log buffer
   logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
     // in
@@ -336,10 +345,25 @@ module risc5 (
     .stb(log_stb),
     .we(bus_we),
     .addr(bus_addr[2]),
-    .data_in(bus_dout[31:0]),
+    .data_in(bus_dout[15:0]),
     // out
     .data_out(log_dout[31:0]),
     .ack(log_ack)
+  );
+
+  // watchdog
+  watchdog watchdog_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .tick(tmr_ms_tick),
+    .stb(wd_stb),
+    .we(bus_we),
+    .data_in(bus_dout[15:0]),
+    // out
+    .data_out(wd_dout[31:0]),
+    .trig(wd_trig),
+    .ack(wd_ack)
   );
 
   // address decoding
@@ -357,35 +381,39 @@ module risc5 (
   // I/O: 256 bytes (64 words) @ 0FFFF00H
   assign io_stb = (bus_stb == 1'b1 && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
+  // the traditional 16 IO addresses of (Embedded) Project Oberon
   assign spi_0_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
   assign rs232_0_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
   assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
   assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
-  // the current addresses of P4 for compatibility
+  // extended IO address range (pretty random allocation for now)
   assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign wd_stb      = (io_stb == 1'b1 && bus_addr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
   assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
   assign log_stb     = (io_stb == 1'b1 && bus_addr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
 
 
-  // data out demultiplexing
-  // -----------------------
+  // data out multiplexing
+  // ---------------------
   assign bus_din[31:0] =
     prom_stb    ? prom_dout[31:0] :
     ram_stb     ? ram_dout[31:0]  :
-    tmr_stb     ? tmr_dout[31:0]  :
-    lsb_stb     ? lsb_dout[31:0]  :
-    rs232_0_stb ? rs232_0_dout[31:0]  :
     spi_0_stb   ? spi_0_dout[31:0]  :
+    rs232_0_stb ? rs232_0_dout[31:0]  :
+    lsb_stb     ? lsb_dout[31:0]  :
+    tmr_stb     ? tmr_dout[31:0]  :
+    scr_stb     ? scr_dout[31:0] :
+    wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0]  :
     start_stb   ? start_dout[31:0]  :
-    scr_stb     ? scr_dout[31:0] :
     log_stb     ? log_dout[31:0] :
     32'h0;
 
-  // bus ack demultiplexing
-  // ----------------------
+
+  // bus ack multiplexing
+  // --------------------
   assign bus_ack =
     prom_stb    ? prom_ack :
     ram_stb     ? ram_ack  :
@@ -397,6 +425,7 @@ module risc5 (
     start_stb   ? start_ack :
     scr_stb     ? scr_ack :
     log_stb     ? log_ack :
+    wd_stb      ? wd_ack :
     1'b0;
 
 endmodule
