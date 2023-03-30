@@ -11,7 +11,7 @@
   Adaptations and extensions by Gray, gray@grayraven.org
   https://oberon-rts.org/licences
   --
-  Changes/extensions:
+  Changes/extensions (before stripping...):
   * extension of the IO address space to 1024 bytes
   * three RS232 devices, buffered
   * three SPI devices, two unbuffered, one buffered
@@ -22,7 +22,7 @@
   * interrupt controller with eight interrupt lines
   * program/command start tables
   --
-  Stripping down for building the equivalant for THM
+  Stripping down for building the equivalant for THM (March 2023)
   * remove two SPI devices
   * remove two RS232 devices
   * remove cycle counter
@@ -33,14 +33,17 @@
   * remove stack monitor (also in prom file)
   * remove call tracing (also in prom file)
   * remove watchdog
-  * remove interrupt ctrl (also romswitch)
+  * remove interrupt ctrl
   * remove dev sig selector
-  * remove log buffers
+  * remove log buffers (*)
   --
   Adding some new modules, replacing direct top level functionality
-  * add sys ctrl reg
-  * add reset device
-  * add milliseconds timer device
+  * sys ctrl reg
+  * reset device
+  * milliseconds timer device
+  --
+  Re-adding stuff
+  * log buffer
   --
   Notes:
   * all ack signals are unused, they are for THM compatibility only

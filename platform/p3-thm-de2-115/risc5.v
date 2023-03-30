@@ -3,8 +3,8 @@
   --
   Architecture: THM
   --
-  Base:
-    * TMM-oberon
+  Base/origin:
+    * THM-oberon
     * Project Oberon
   --
   2023 Gray, gray@grayraven.org
@@ -18,10 +18,11 @@
   * extended IO address space
   * 16 MB SDRAM
   * parameterised clock frequency for perpiherals
-  * process timers
-  * start tables
-  * system control
+  * process timers (periodic)
+  * (re-) start tables
+  * system control (simplified)
   * buffered RS232 device
+  * log buffer
 **/
 
 `timescale 1ns / 1ps
@@ -65,24 +66,24 @@ module risc5 (
   output [6:0] hex2_n,
   output [6:0] hex1_n,
   output [6:0] hex0_n,
-  input [3:0] btn_in_n, // includes reset button
+  input [3:0] btn_in_n,
   input [17:0] swi_in
 );
 
   // clk
-  wire clk_ok;            // clocks stable
-  wire mclk;              // memory clock, 100 MHz
-  wire clk;               // system clock, 50 MHz
+  wire clk_ok;                // clocks stable
+  wire mclk;                  // memory clock, 100 MHz
+  wire clk;                   // system clock, 50 MHz
   // reset
-  wire rst;               // active high
-  wire rst_n;             // active low
-  wire rst_trig;          // reset triggers
+  wire rst;                   // active high
+  wire rst_n;                 // active low
+  wire rst_trig;              // reset triggers
   // cpu
   wire bus_stb;
-  wire bus_we;            // bus write enable
-  wire [23:2] bus_addr;   // bus address (word address)
-  wire [31:0] bus_din;    // bus data input, for reads
-  wire [31:0] bus_dout;   // bus data output, for writes
+  wire bus_we;                // bus write enable
+  wire [23:2] bus_addr;       // bus address (word address)
+  wire [31:0] bus_din;        // bus data input, for reads
+  wire [31:0] bus_dout;       // bus data output, for writes
   wire bus_ack;
   // prom
   wire prom_stb;
@@ -94,34 +95,34 @@ module risc5 (
   wire [31:0] ram_dout;
   wire ram_ack;
   // i/o
-  wire io_stb;            // i/o strobe
+  wire io_stb;                // i/o strobe
   // ms timer
   wire tmr_stb;
-  wire [31:0] tmr_dout;   // data out: running milliseconds since reset
-  wire tmr_ms_tick;       // millisecond timer tick
+  wire [31:0] tmr_dout;       // data out: running milliseconds since reset
+  wire tmr_ms_tick;           // millisecond timer tick
   wire tmr_ack;
   // lsb
   wire lsb_stb;
-  wire [31:0] lsb_dout;   // data out: buttons, switches
-  wire [3:0] lsb_btn;     // button signals out
-  wire [17:0] lsb_swi;    // button signals out
+  wire [31:0] lsb_dout;       // data out: buttons, switches
+  wire [3:0] lsb_btn;         // button signals out
+  wire [17:0] lsb_swi;        // button signals out
   wire lsb_ack;
   // start tables
   wire start_stb;
-  wire [31:0] start_dout; // data out: start-up table number, armed bit
+  wire [31:0] start_dout;     // data out: start-up table number, armed bit
   wire start_ack;
   // sys ctrl reg
   wire scr_stb;
-  wire [31:0] scr_dout;   // data out: register content
-  wire scr_sysrst;        // system reset signal out
+  wire [31:0] scr_dout;       // data out: register content
+  wire scr_sysrst;            // system reset signal out
   wire scr_ack;
   // rs232
   wire rs232_0_stb;
-  wire [31:0] rs232_0_dout; // data out: received data, status
+  wire [31:0] rs232_0_dout;   // data out: received data, status
   wire rs232_0_ack;
   // spi
   wire spi_0_stb;
-  wire [31:0] spi_0_dout;   // data out: received data, status
+  wire [31:0] spi_0_dout;     // data out: received data, status
   wire spi_0_sclk_d;          // sclk signal from device
   wire spi_0_mosi_d;          // mosi signal from device
   wire spi_0_miso_d;          // miso signals to device
@@ -129,11 +130,11 @@ module risc5 (
   wire spi_0_ack;
   // proc periodic timing
   wire ptmr_stb;
-  wire [31:0] ptmr_dout;  // proc timers data output (ready signals)
+  wire [31:0] ptmr_dout;      // proc timers data output (ready signals)
   wire ptmr_ack;
   // log buffer
   wire log_stb;
-  wire [31:0] log_dout;
+  wire [31:0] log_dout;       // log data output, log indices output
   wire log_ack;
 
   // clocks

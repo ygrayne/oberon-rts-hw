@@ -24,21 +24,9 @@ module fifo #(parameter data_width = 8, num_slots = 8) (
   output wire [data_width-1:0] data_out
 );
 
-  // localparam ptr_width = $clog2(Slots);
-  // localparam count_width = $clog2(Slots) + 1;
-
-  // localparam ptr_zero = {(ptr_width){1'b0}};
-  // localparam count_zero = {(count_width){1'b0}};
-
-  // localparam slots = Slots[$clog2(Slots):0];
-
-
   reg [data_width-1:0] mem[num_slots-1:0];
   reg [14:0] rd_ptr, wr_ptr;        // num_slots can be max 0800H (32k)
   reg [15:0] count;
-
-  // output reg [$clog2(Slots):0] count,   // number of items in fifo
-  // reg [$clog2(Slots)-1:0] rd_ptr, wr_ptr;
 
   assign empty = (count == 16'b0);
   assign full = (count == num_slots[16:0]);

@@ -2,7 +2,8 @@
   Log buffer
   --
   Stores 'num_entries' of log entries, each with 'entry_slots' 8 bit slots.
-  The current software will attempt to store 'entry_slots' = 64.
+  The current software will attempt to store and retrieve 64 'entry_slots',
+  hence each entry memory needs at least 64 bytes.
   --
   Architecture: ANY
   --
@@ -36,10 +37,10 @@ module logbuf #(num_entries = 32, entry_slots = 64) (
     put_ix <= wr_index ? data_in[31:16] : put_ix;
   end
 
-  wire init_entry = wr_index;
-  wire [num_entries-1:0] wr_entry;
-  wire [num_entries-1:0] rd_entry;
-  wire [7:0] rd_demux [0:num_entries-1];
+  wire init_entry = wr_index | rd_index;      // reset mem pointer in entry buffer to zero
+  wire [num_entries-1:0] wr_entry;            // mux for write signal to entry buffer
+  wire [num_entries-1:0] rd_entry;            // mux for read signal from entry buffer
+  wire [7:0] dout_demux [0:num_entries-1];    // data out demux from entry buffers
 
   genvar i;
   generate
@@ -50,7 +51,7 @@ module logbuf #(num_entries = 32, entry_slots = 64) (
         .rd(rd_entry[i]),
         .init(init_entry),
         .din(data_in[7:0]),
-        .dout(rd_demux[i])
+        .dout(dout_demux[i])
       );
 
       assign wr_entry[i] = wr_data & (put_ix == i);
@@ -59,7 +60,7 @@ module logbuf #(num_entries = 32, entry_slots = 64) (
   endgenerate
 
   assign data_out[31:0] =
-    rd_data ? {24'b0, rd_demux[get_ix]} :
+    rd_data ? {24'b0, dout_demux[get_ix]} :
     rd_index ? {put_ix, get_ix} :
     32'b0;
 
