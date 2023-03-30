@@ -3,8 +3,8 @@
   --
   Architecture: THM
   --
-  Base:
-    * TMM-oberon
+  Base/origin:
+    * THM-oberon
     * Project Oberon
   --
   2023 Gray, gray@grayraven.org
@@ -18,10 +18,11 @@
   * extended IO address space
   * 16 MB SDRAM
   * parameterised clock frequency for perpiherals
-  * process timers
-  * start tables
-  * system control
+  * process timers (periodic)
+  * (re-) start tables
+  * system control (simplified)
   * buffered RS232 device
+  * log buffer
 **/
 
 `timescale 1ns / 1ps
@@ -30,6 +31,7 @@
 `define CLOCK_FREQ 50_000_000
 `define PROM_FILE "../../../platform/p3-thm-de2-115/promfiles/BootLoad-512k-64k.mem"  // for PROM
 `define RS232_BUF_SLOTS 255
+`define LOGBUF_ENTRIES 32
 
 module risc5 (
   // clock
@@ -64,24 +66,24 @@ module risc5 (
   output [6:0] hex2_n,
   output [6:0] hex1_n,
   output [6:0] hex0_n,
-  input [3:0] btn_in_n, // includes reset button
+  input [3:0] btn_in_n,
   input [17:0] swi_in
 );
 
   // clk
-  wire clk_ok;            // clocks stable
-  wire mclk;              // memory clock, 100 MHz
-  wire clk;               // system clock, 50 MHz
+  wire clk_ok;                // clocks stable
+  wire mclk;                  // memory clock, 100 MHz
+  wire clk;                   // system clock, 50 MHz
   // reset
-  wire rst;               // active high
-  wire rst_n;             // active low
-  wire rst_trig;          // reset triggers
+  wire rst;                   // active high
+  wire rst_n;                 // active low
+  wire rst_trig;              // reset triggers
   // cpu
   wire bus_stb;
-  wire bus_we;            // bus write enable
-  wire [23:2] bus_addr;   // bus address (word address)
-  wire [31:0] bus_din;    // bus data input, for reads
-  wire [31:0] bus_dout;   // bus data output, for writes
+  wire bus_we;                // bus write enable
+  wire [23:2] bus_addr;       // bus address (word address)
+  wire [31:0] bus_din;        // bus data input, for reads
+  wire [31:0] bus_dout;       // bus data output, for writes
   wire bus_ack;
   // prom
   wire prom_stb;
@@ -93,34 +95,34 @@ module risc5 (
   wire [31:0] ram_dout;
   wire ram_ack;
   // i/o
-  wire io_stb;            // i/o strobe
+  wire io_stb;                // i/o strobe
   // ms timer
   wire tmr_stb;
-  wire [31:0] tmr_dout;   // data out: running milliseconds since reset
-  wire tmr_ms_tick;       // millisecond timer tick
+  wire [31:0] tmr_dout;       // data out: running milliseconds since reset
+  wire tmr_ms_tick;           // millisecond timer tick
   wire tmr_ack;
   // lsb
   wire lsb_stb;
-  wire [31:0] lsb_dout;   // data out: buttons, switches
-  wire [3:0] lsb_btn;     // button signals out
-  wire [17:0] lsb_swi;    // button signals out
+  wire [31:0] lsb_dout;       // data out: buttons, switches
+  wire [3:0] lsb_btn;         // button signals out
+  wire [17:0] lsb_swi;        // button signals out
   wire lsb_ack;
   // start tables
   wire start_stb;
-  wire [31:0] start_dout; // data out: start-up table number, armed bit
+  wire [31:0] start_dout;     // data out: start-up table number, armed bit
   wire start_ack;
   // sys ctrl reg
   wire scr_stb;
-  wire [31:0] scr_dout;   // data out: register content
-  wire scr_sysrst;        // system reset signal out
+  wire [31:0] scr_dout;       // data out: register content
+  wire scr_sysrst;            // system reset signal out
   wire scr_ack;
   // rs232
   wire rs232_0_stb;
-  wire [31:0] rs232_0_dout; // data out: received data, status
+  wire [31:0] rs232_0_dout;   // data out: received data, status
   wire rs232_0_ack;
   // spi
   wire spi_0_stb;
-  wire [31:0] spi_0_dout;   // data out: received data, status
+  wire [31:0] spi_0_dout;     // data out: received data, status
   wire spi_0_sclk_d;          // sclk signal from device
   wire spi_0_mosi_d;          // mosi signal from device
   wire spi_0_miso_d;          // miso signals to device
@@ -128,8 +130,12 @@ module risc5 (
   wire spi_0_ack;
   // proc periodic timing
   wire ptmr_stb;
-  wire [31:0] ptmr_dout;  // proc timers data output (ready signals)
+  wire [31:0] ptmr_dout;      // proc timers data output (ready signals)
   wire ptmr_ack;
+  // log buffer
+  wire log_stb;
+  wire [31:0] log_dout;       // log data output, log indices output
+  wire log_ack;
 
   // clocks
   clk clk_0 (
@@ -322,7 +328,19 @@ module risc5 (
     .data_out(ptmr_dout[31:0]),
     .ack(ptmr_ack)
   );
-
+  
+  // log buffer
+  logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
+    // in
+    .clk(clk),
+    .stb(log_stb),
+    .we(bus_we),
+    .addr(bus_addr[2]),
+    .data_in(bus_dout[31:0]),
+    // out
+    .data_out(log_dout[31:0]),
+    .ack(log_ack)
+  );
 
   // address decoding
   // ----------------
@@ -341,13 +359,14 @@ module risc5 (
 
   assign spi_0_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
   assign rs232_0_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
-  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0; // -60 note: system LEDs via LED()
-  assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0; // -64
+  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
+  assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
   // the current addresses of P4 for compatibility
   assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
   assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
+  assign log_stb     = (io_stb == 1'b1 && bus_addr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
 
 
   // data out demultiplexing
@@ -362,10 +381,11 @@ module risc5 (
     ptmr_stb    ? ptmr_dout[31:0]  :
     start_stb   ? start_dout[31:0]  :
     scr_stb     ? scr_dout[31:0] :
+    log_stb     ? log_dout[31:0] :
     32'h0;
 
   // bus ack demultiplexing
-  // ======================
+  // ----------------------
   assign bus_ack =
     prom_stb    ? prom_ack :
     ram_stb     ? ram_ack  :
@@ -376,6 +396,7 @@ module risc5 (
     ptmr_stb    ? ptmr_ack  :
     start_stb   ? start_ack :
     scr_stb     ? scr_ack :
+    log_stb     ? log_ack :
     1'b0;
 
 endmodule

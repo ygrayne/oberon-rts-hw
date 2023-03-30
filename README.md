@@ -1,6 +1,6 @@
 # Oberon RTS Hardware
 
-**Work in progress!**
+**Experimental work in progress!**
 
 ## Introduction
 
@@ -8,26 +8,43 @@ The purpose of the contents of this repo is to develop and provide hardware plat
 
 Here is the sister repo for the corresponding software: [oberon-rts-sw](https://github.com/ygrayne/oberon-rts-sw).
 
-Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but it's the best there is for now, apart from this repository. As the saying goes, only debug code, don't get deceived by the comments.
+Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but it's the best there is for now, apart from this and the corresponding software repository. As the saying goes, only debug code, don't get deceived by the comments.
 
 
 ## Current Status
 
-2023-03-29:: two platforms, P3 and P4, each implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
+* 2023-03-29:: two platforms, P3 and P4, each implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
+* 2023-03-30: Added log buffer
 
 Most on-chip devices, such as process timers, reset circuits, or SPI and RS232 interfaces, can now directly be (and are) used by either architecture without adaptations or specific configurations.
 
 
-## Overview
+## Next Up
 
-There are two different architectures:
+* Watchdog
+* Stack overflow monitor (maybe not yet)
+
+The stack overflow monitor will need a change in the CPU to "pull out" the stack register on hardware level. Not sure if I am ready and sufficiently confident with the THM architecture yet. :)
+
+
+## Architectures
+
+There are two different architectures for the RISC5 CPU and its environment:
+
 * ETH: as defined and implemented by
-  * Project Oberon (Niklaus Wirth)
-  * Embedded Project Oberon (Chris Burrows)
+  * [Project Oberon](http://projectoberon.net) (Niklaus Wirth)
+  * [Embedded Project Oberon](https://astrobe.com/RISC5/ReadMe.htm) (Chris Burrows)
 * THM: as defined and implemented by
-  * THM-Oberon (Hellwig Geisse)
+  * [THM architecture](https://github.com/hgeisse/THM-Oberon) (Hellwig Geisse)
 
-As used, implemented and extended here, both architectures are to be used with the Oberon compiler by Astrobe for RISC5.
+As used, implemented and extended here, both architectures are to be used with the Oberon cross compiler by Astrobe for RISC5.
+
+Basis:
+* ETH: Embedded Project Oberon v8.0
+* THM: the THM variant was forked from an older commit and status, as I have run into issues with the latest version. Specifically, the handling (or even existence?) of the H special register has tripped the software generated with the Astrobe compiler. I have not fully investigated this yet.
+
+
+## Platforms
 
 A platform is based on:
 * a specific FPGA board
@@ -137,7 +154,7 @@ With directories
   * logging, process performance monitoring, calltracing
 
 
-## Platforms
+## Specific Platforms
 
 See the README file in the platform directory.
 

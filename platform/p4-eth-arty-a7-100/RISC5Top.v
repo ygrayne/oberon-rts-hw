@@ -11,7 +11,7 @@
   Adaptations and extensions by Gray, gray@grayraven.org
   https://oberon-rts.org/licences
   --
-  Changes/extensions:
+  Changes/extensions (before stripping...):
   * extension of the IO address space to 1024 bytes
   * three RS232 devices, buffered
   * three SPI devices, two unbuffered, one buffered
@@ -22,7 +22,7 @@
   * interrupt controller with eight interrupt lines
   * program/command start tables
   --
-  Stripping down for building the equivalant for THM
+  Stripping down for building the equivalant for THM (March 2023)
   * remove two SPI devices
   * remove two RS232 devices
   * remove cycle counter
@@ -33,14 +33,17 @@
   * remove stack monitor (also in prom file)
   * remove call tracing (also in prom file)
   * remove watchdog
-  * remove interrupt ctrl (also romswitch)
+  * remove interrupt ctrl
   * remove dev sig selector
-  * remove log buffers
+  * remove log buffers (*)
   --
   Adding some new modules, replacing direct top level functionality
-  * add sys ctrl reg
-  * add reset device
-  * add milliseconds timer device
+  * sys ctrl reg
+  * reset device
+  * milliseconds timer device
+  --
+  Re-adding stuff
+  * log buffer
   --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
@@ -55,6 +58,7 @@
 `define MEM_BLK_SIZE 'h10000    // 64k
 `define PROM_FILE "../../../platform/p4-eth-arty-a7-100/promfiles/BootLoad-512k-64k.mem"
 `define RS232_BUF_SLOTS 256
+`define LOGBUF_ENTRIES 32
 
 module RISC5Top (
   // clock
@@ -146,6 +150,10 @@ module RISC5Top (
   wire ptmr_stb;
   wire [31:0] ptmr_dout;      // proc timers data output (ready signals)
   wire ptmr_ack;
+  // log buffer
+  wire log_stb;
+  wire [31:0] log_dout;       // log data output, log indices output
+  wire log_ack;
 
   // clocks
   clocks clocks_0 (
@@ -325,6 +333,19 @@ module RISC5Top (
     .data_out(ptmr_dout[31:0]),
     .ack(ptmr_ack)
   );
+  
+  // log buffer
+  logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
+    // in
+    .clk(clk),
+    .stb(log_stb),
+    .we(wr),
+    .addr(adr[2]),
+    .data_in(outbus[31:0]),
+    // out
+    .data_out(log_dout[31:0]),
+    .ack(log_ack)
+  );
 
   // address decoding
   // ----------------
@@ -347,6 +368,8 @@ module RISC5Top (
   assign scr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
   assign ptmr_stb    = (ioenb == 1'b1 && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (ioenb == 1'b1 && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
+  assign log_stb     = (ioenb == 1'b1 && adr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
+
 
   // data out demultiplexing
   // -----------------------
@@ -358,8 +381,21 @@ module RISC5Top (
     scr_stb     ? scr_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :
     start_stb   ? start_dout[31:0] :
-    32'b0;
+    log_stb     ? log_dout[31:0] :
+    32'h0A0A0A0A;
 
 endmodule
 
 `resetall
+
+//  echo echo_0 (
+//    // in
+//    .clk(clk),
+//    .stb(log_stb),
+//    .we(wr),
+//    .addr(adr[2]),
+//    .data_in(outbus[31:0]),
+//    // out
+//    .data_out(log_dout[31:0]),
+//    .ack(log_ack)
+//  );    
