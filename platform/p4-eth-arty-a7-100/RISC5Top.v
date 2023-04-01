@@ -44,6 +44,7 @@
   --
   Re-adding stuff
   * log buffer
+  * watchdog (not doing anything useful yet)
   --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
@@ -60,7 +61,7 @@
 `define RS232_BUF_SLOTS 256
 `define LOGBUF_ENTRIES 32
 
-module RISC5Top (
+  module RISC5Top (
   // clock
   input wire clk_in,
   // RS 232
@@ -79,7 +80,8 @@ module RISC5Top (
   // LEDs, switches, buttons
   input wire [3:0] btn_in,
   input wire [3:0] swi_in,
-  output wire [7:0] sys_leds
+  output wire [7:0] sys_leds,       // on Pmod board
+  output wire [3:0] led_g           // on Arty board
  );
 
   // clk
@@ -121,6 +123,7 @@ module RISC5Top (
   wire tmr_ack;
   // lsb
   wire lsb_stb;
+  wire [3:0] lsb_led_g_in;    // signals in for greed LEDs on board
   wire [31:0] lsb_dout;       // data out: buttons, switches
   wire [3:0] lsb_btn;         // button signals out
   wire [3:0] lsb_swi;         // switch signals out
@@ -154,6 +157,11 @@ module RISC5Top (
   wire log_stb;
   wire [31:0] log_dout;       // log data output, log indices output
   wire log_ack;
+  // watchdog
+  wire wd_stb;
+  wire [31:0] wd_dout;
+  wire wd_trig;
+  wire wd_ack;
 
   // clocks
   clocks clocks_0 (
@@ -229,12 +237,14 @@ module RISC5Top (
   );
 
   // LEDs, switches, buttons
-  lsb lsb_0 (
+  assign lsb_led_g_in[3:0] = {3'b0, wd_trig};
+  lsb_s lsb_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(lsb_stb),
     .we(wr),
+    .led_g_in(lsb_led_g_in),
     .data_in(outbus[7:0]),
     // out
     .data_out(lsb_dout),
@@ -245,7 +255,8 @@ module RISC5Top (
     .btn_in(btn_in),
     .swi_in(swi_in),
     // external out
-    .leds(sys_leds)
+    .leds(sys_leds),
+    .led_g(led_g)
   );
 
   // (re-) start tables
@@ -333,7 +344,7 @@ module RISC5Top (
     .data_out(ptmr_dout[31:0]),
     .ack(ptmr_ack)
   );
-  
+
   // log buffer
   logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
     // in
@@ -341,48 +352,67 @@ module RISC5Top (
     .stb(log_stb),
     .we(wr),
     .addr(adr[2]),
-    .data_in(outbus[31:0]),
+    .data_in(outbus[15:0]),
     // out
     .data_out(log_dout[31:0]),
     .ack(log_ack)
   );
 
+  // watchdog
+  watchdog watchdog_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .tick(tmr_ms_tick),
+    .stb(wd_stb),
+    .we(wr),
+    .data_in(outbus[15:0]),
+    // out
+    .data_out(wd_dout[31:0]),
+    .trig(wd_trig),
+    .ack(wd_ack)
+  );
+
   // address decoding
   // ----------------
 
-  // codebus demultiplexer
+  // codebus multiplexer
   // PROM: 2 kB @ 0FFE000H => initial code address for CPU
   wire promswitch = (adr[23:12] == 12'hFFE && adr[11] == 1'b0) ? 1'b1 : 1'b0;
   assign codebus = promswitch ? romout : inbus0;
 
-  // inbus demultiplexer
+  // inbus multiplexer
   // I/O: 256 bytes (64 words) @ 0FFFF00H
   assign inbus = ~ioenb ? inbus0 : io_out;
   assign ioenb = (adr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
+  // the traditional 16 IO addresses of (Embedded) Project Oberon
   assign spi_0_stb   = (ioenb == 1'b1 && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
   assign rs232_0_stb = (ioenb == 1'b1 && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
   assign lsb_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
   assign tmr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
+  // extended IO address range (pretty random allocation for now)
   assign scr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign wd_stb      = (ioenb == 1'b1 && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
   assign ptmr_stb    = (ioenb == 1'b1 && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (ioenb == 1'b1 && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
   assign log_stb     = (ioenb == 1'b1 && adr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
 
 
-  // data out demultiplexing
-  // -----------------------
+  // data out multiplexing
+  // ---------------------
   assign io_out[31:0] =
     spi_0_stb   ? spi_0_dout :
     rs232_0_stb ? rs232_0_dout[31:0] :
     lsb_stb     ? lsb_dout[31:0] :
     tmr_stb     ? tmr_dout[31:0] :
     scr_stb     ? scr_dout[31:0] :
+    wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :
     start_stb   ? start_dout[31:0] :
     log_stb     ? log_dout[31:0] :
-    32'h0A0A0A0A;
+    32'h0;
 
 endmodule
 
@@ -398,4 +428,4 @@ endmodule
 //    // out
 //    .data_out(log_dout[31:0]),
 //    .ack(log_ack)
-//  );    
+//  );

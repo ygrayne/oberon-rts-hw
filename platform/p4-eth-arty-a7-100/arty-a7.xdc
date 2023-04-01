@@ -24,10 +24,10 @@ set_property -dict {PACKAGE_PIN B9 IOSTANDARD LVCMOS33} [get_ports {btn_in[2]}]
 set_property -dict {PACKAGE_PIN B8 IOSTANDARD LVCMOS33} [get_ports {btn_in[3]}]
 
 ## Green LEDs
-#set_property -dict {PACKAGE_PIN H5 IOSTANDARD LVCMOS33}  [get_ports {greenLeds[0]}]
-#set_property -dict {PACKAGE_PIN J5 IOSTANDARD LVCMOS33}  [get_ports {greenLeds[1]}]
-#set_property -dict {PACKAGE_PIN T9 IOSTANDARD LVCMOS33}  [get_ports {greenLeds[2]}]
-#set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports {greenLeds[3]}]
+set_property -dict {PACKAGE_PIN H5 IOSTANDARD LVCMOS33}  [get_ports {led_g[0]}]
+set_property -dict {PACKAGE_PIN J5 IOSTANDARD LVCMOS33}  [get_ports {led_g[1]}]
+set_property -dict {PACKAGE_PIN T9 IOSTANDARD LVCMOS33}  [get_ports {led_g[2]}]
+set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS33} [get_ports {led_g[3]}]
 
 ## RGB LEDs
 #set_property -dict { PACKAGE_PIN E1    IOSTANDARD LVCMOS33 } [get_ports {rgbLeds[2]}]; # RGB LED 0, blue
