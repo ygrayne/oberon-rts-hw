@@ -11,19 +11,20 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module lsb (
+module lsb_s (
   input wire clk,
   input wire rst,
   input wire stb,
   input wire we,
   input wire [3:0] btn_in,
   input wire [3:0] swi_in,
-  input wire [15:0] data_in,
+  input wire [7:0] data_in,
+  input wire [3:0] led_g_in,
   output wire [31:0] data_out,
   output reg [7:0] leds = 0,
+  output reg [3:0] led_g = 0,
   output wire [3:0] btn_out,
   output wire [3:0] swi_out,
-  output reg [3:0] led_g,
   output wire ack
 );
 
@@ -43,7 +44,7 @@ module lsb (
 
   always @(posedge clk) begin
     leds <= rst ? 8'b0 : wr_data ? data_in[7:0] : leds;
-    led_g <= rst ? 4'b0 :  wr_data ? data_in[11:8] : led_g;
+    led_g <= rst ? 4'b0 : led_g_in[3:0];
   end
 
   assign data_out[31:0] =
