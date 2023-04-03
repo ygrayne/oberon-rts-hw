@@ -1,10 +1,12 @@
 /**
   Simple watchdog
   --
-  * 'ticker' counts from zero to 'timeoutval', sets 'trig' when ticker > timoutval.
+  * 'trig' is set high when 'ticker' > 'timeoutval'.
   * 'ticker' is driven by 'tick', usually a one-millisecond signal.
-  * If 'timeoutval' = 0, counting is stopped, ie. the watchdog is disabled.
-  * When 'timeoutval' is written, the ticker counter is reset.
+  * The watchdog is enabled when 'timeoutval' > 0.
+  * Whenever 'timeoutval' is set, 'ticker' and 'trig' get reset.
+  * Note: since 'ticker' and 'timeoutval' are both 16 bits, don't set a
+    'timoutval' > 2^16 - 1, else 'ticker' > 'timeoutval' will not work (roll-over).
   --
   Architecture: ANY
   --
@@ -29,18 +31,43 @@ module watchdog (
 
   wire wr_data = stb & we;
   wire rd_data = stb & ~we;
-
-  reg trigger = 0;
+ 
   reg [15:0] timeoutval = 0;
   reg [15:0] ticker = 0;
-  wire stop = (timeoutval == 0);
+  reg trigger = 0;
+  
+  wire ticking = (timeoutval > 16'b0) ? 1'b1 : 1'b0;
 
+  
   always @ (posedge clk) begin
-    timeoutval <= rst ? 16'b0 : wr_data ? data_in[15:0] : timeoutval;
-    ticker <= rst ? 16'b0 : stop ? 16'b0 : wr_data ? 16'b0 : ticker + tick;
-    trigger <= rst ? 1'b0 : ~wr_data & (ticker > timeoutval);
+    if (rst) begin
+      timeoutval <= 16'b0;
+      ticker <= 16'b0;
+      trigger <= 1'b0;
+    end
+    else begin
+      if (wr_data) begin
+        timeoutval <= data_in[15:0];
+        ticker <= 16'b0;
+        trigger <= 1'b0;
+      end
+      else begin
+        if (ticking) begin
+          if (ticker >= timeoutval) begin
+            trigger <= 1'b1;
+            timeoutval <= 16'b0;
+            ticker <= 16'b0;
+          end
+          else begin
+            if (tick) begin
+              ticker <= ticker + 16'b1;
+            end
+          end
+        end
+      end
+    end
   end
-
+  
   // outputs
   assign data_out[31:0] =
     rd_data ? {16'b0, timeoutval} :
