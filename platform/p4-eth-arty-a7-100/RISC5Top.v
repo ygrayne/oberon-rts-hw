@@ -162,6 +162,12 @@
   wire [31:0] wd_dout;
   wire wd_trig;
   wire wd_ack;
+  // stack mmonitor
+  wire stm_stb;
+  wire [31:0] stm_dout;
+  wire stm_trig_lim;
+  wire stm_trig_hot;
+  wire stm_ack;
 
   // clocks
   clocks clocks_0 (
@@ -173,7 +179,7 @@
   );
 
   // reset
-  assign rst_trig = lsb_btn[0] | scr_sysrst;
+  assign rst_trig = lsb_btn[0];
   rst rst_0 (
     // in
     .clk(clk),
@@ -237,7 +243,7 @@
   );
 
   // LEDs, switches, buttons
-  assign lsb_led_g_in[3:0] = {3'b0, wd_trig};
+  assign lsb_led_g_in[3:0] = {1'b0, stm_trig_hot, stm_trig_lim, wd_trig};
   lsb_s lsb_0 (
     // in
     .clk(clk),
@@ -287,6 +293,7 @@
   );
 
   // RS232 buffered
+  // uses two consecutive IO addresses
   rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
     // in
     .clk(clk),
@@ -304,6 +311,7 @@
   );
 
   // SPI
+  // uses two consecutive IO addresses
   spie #(.clock_freq(`CLOCK_FREQ)) spie_0 (
     .clk(clk),
     .rst(rst),
@@ -346,6 +354,7 @@
   );
 
   // log buffer
+  // uses two consecutive IO addresses
   logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
     // in
     .clk(clk),
@@ -373,6 +382,22 @@
     .ack(wd_ack)
   );
 
+  // stack monitor
+  // uses four consecutive IO addresses
+  stackmon stackmon_0 (
+    .clk(clk),
+    .rst(rst),
+    .stb(stm_stb),
+    .we(wr),
+    .addr(adr[3:2]),
+    .sp_in(cpu_sp[23:0]),
+    .data_in(outbus[23:0]),
+    .data_out(stm_dout),
+    .trig_lim(stm_trig_lim),
+    .trig_hot(stm_trig_hot),
+    .ack(stm_ack)
+  );
+
   // address decoding
   // ----------------
 
@@ -394,6 +419,7 @@
 
   // extended IO address range (pretty random allocation for now)
   assign scr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign stm_stb     = (ioenb == 1'b1 && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
   assign wd_stb      = (ioenb == 1'b1 && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
   assign ptmr_stb    = (ioenb == 1'b1 && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (ioenb == 1'b1 && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
@@ -408,6 +434,7 @@
     lsb_stb     ? lsb_dout[31:0] :
     tmr_stb     ? tmr_dout[31:0] :
     scr_stb     ? scr_dout[31:0] :
+    stm_stb     ? stm_dout[31:0]  :
     wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :
     start_stb   ? start_dout[31:0] :

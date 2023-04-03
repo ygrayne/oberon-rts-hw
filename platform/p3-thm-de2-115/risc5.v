@@ -85,6 +85,7 @@ module risc5 (
   wire [23:2] bus_addr;       // bus address (word address)
   wire [31:0] bus_din;        // bus data input, for reads
   wire [31:0] bus_dout;       // bus data output, for writes
+  wire [31:0] cpu_spx;
   wire bus_ack;
   // prom
   wire prom_stb;
@@ -143,6 +144,12 @@ module risc5 (
   wire [31:0] wd_dout;        // timeout value output
   wire wd_trig;               // watchdog trigger output
   wire wd_ack;
+  // stack mmonitor
+  wire stm_stb;
+  wire [31:0] stm_dout;
+  wire stm_trig_lim;
+  wire stm_trig_hot;
+  wire stm_ack;
 
   // clocks
   clk clk_0 (
@@ -154,7 +161,7 @@ module risc5 (
   );
 
   // reset
-  assign rst_trig = lsb_btn[0] | scr_sysrst;
+  assign rst_trig = lsb_btn[0];
   rst rst_0 (
     // in
     .clk(clk),
@@ -166,7 +173,7 @@ module risc5 (
   );
 
   // CPU
-  cpu cpu_0 (
+  cpu_x cpu_0 (
     .clk(clk),
     .rst(rst),
     .bus_stb(bus_stb),
@@ -174,7 +181,8 @@ module risc5 (
     .bus_addr(bus_addr[23:2]),
     .bus_din(bus_din[31:0]),
     .bus_dout(bus_dout[31:0]),
-    .bus_ack(bus_ack)
+    .bus_ack(bus_ack),
+    .spx(cpu_spx)
   );
 
   // boot ROM
@@ -226,7 +234,7 @@ module risc5 (
   );
 
   // LEDs, switches, buttons
-  assign lsb_led_r_in[17:0] = {17'b0, wd_trig};
+  assign lsb_led_r_in[17:0] = {15'b0, stm_trig_hot, stm_trig_lim, wd_trig};
   lsb_s lsb_0 (
     // in
     .clk(clk),
@@ -284,6 +292,7 @@ module risc5 (
   );
 
   // RS232 buffered
+  // uses two consecutive IO addresses
   rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
     // in
     .clk(clk),
@@ -301,6 +310,7 @@ module risc5 (
   );
 
   // SPI
+  // uses two consecutive IO addresses
   spie #(.clock_freq(`CLOCK_FREQ)) spie_0 (
     // in
     .clk(clk),
@@ -339,6 +349,7 @@ module risc5 (
   );
 
   // log buffer
+  // uses two consecutive IO addresses
   logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
     // in
     .clk(clk),
@@ -366,6 +377,24 @@ module risc5 (
     .ack(wd_ack)
   );
 
+  // stack monitor
+  // uses four consecutive IO addresses
+  stackmon stackmon_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(stm_stb),
+    .we(bus_we),
+    .addr(bus_addr[3:2]),
+    .sp_in(cpu_spx[23:0]),
+    .data_in(bus_dout[23:0]),
+    // out
+    .data_out(stm_dout[31:0]),
+    .trig_lim(stm_trig_lim),
+    .trig_hot(stm_trig_hot),
+    .ack(stm_ack)
+  );
+
   // address decoding
   // ----------------
 
@@ -389,6 +418,7 @@ module risc5 (
 
   // extended IO address range (pretty random allocation for now)
   assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign stm_stb     = (io_stb == 1'b1 && bus_addr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
   assign wd_stb      = (io_stb == 1'b1 && bus_addr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
   assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
   assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
@@ -405,6 +435,7 @@ module risc5 (
     lsb_stb     ? lsb_dout[31:0]  :
     tmr_stb     ? tmr_dout[31:0]  :
     scr_stb     ? scr_dout[31:0] :
+    stm_stb     ? stm_dout[31:0]  :
     wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0]  :
     start_stb   ? start_dout[31:0]  :
@@ -417,15 +448,16 @@ module risc5 (
   assign bus_ack =
     prom_stb    ? prom_ack :
     ram_stb     ? ram_ack  :
-    tmr_stb     ? tmr_ack  :
-    lsb_stb     ? lsb_ack  :
-    rs232_0_stb ? rs232_0_ack  :
     spi_0_stb   ? spi_0_ack  :
+    rs232_0_stb ? rs232_0_ack  :
+    lsb_stb     ? lsb_ack  :
+    tmr_stb     ? tmr_ack  :
+    scr_stb     ? scr_ack :
+    stm_stb     ? stm_ack :
+    wd_stb      ? wd_ack :
     ptmr_stb    ? ptmr_ack  :
     start_stb   ? start_ack :
-    scr_stb     ? scr_ack :
     log_stb     ? log_ack :
-    wd_stb      ? wd_ack :
     1'b0;
 
 endmodule
