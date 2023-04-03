@@ -1,5 +1,6 @@
 //
-// cpu_core.v -- the RISC5 CPU core
+// cpu_core_x.v -- the RISC5 CPU core
+// extended, search for "gray"
 //
 
 
@@ -8,11 +9,13 @@
 
 
 `define CPU_ID  { 16'h4847, 8'h54 }  // Mfr. = HG, Version = 5.4
+`define SP 14
 
 
-module cpu_core(clk, rst,
+module cpu_core_x (clk, rst,
                 bus_stb, bus_we, bus_ben, bus_addr,
-                bus_din, bus_dout, bus_ack);
+                bus_din, bus_dout, bus_ack,
+                spx_out); // gray
     input clk;                // system clock
     input rst;                // system reset
     output bus_stb;           // bus strobe
@@ -22,6 +25,9 @@ module cpu_core(clk, rst,
     input [31:0] bus_din;     // bus data input, for reads
     output [31:0] bus_dout;   // bus data output, for writes
     input bus_ack;            // bus acknowledge
+    // gray
+    output [31:0] spx_out;    // stack pointer register value
+    // end
 
   // program counter
   wire pc_src;                // pc source selector
@@ -63,6 +69,11 @@ module cpu_core(clk, rst,
   wire reg_set_NZ;            // set flags N, Z
   wire reg_set_CV;            // set flags C, V
   wire reg_set_H;             // set register H
+
+  // gray
+  reg [31:0] reg_spx;         // stack pointer register
+  // end
+
   // alu
   wire alu_run;               // signal to start alu running
   wire alu_stall;             // alu needs additional clock cycles
@@ -159,6 +170,17 @@ module cpu_core(clk, rst,
       H <= alu_out_H;
     end
   end
+
+  // gray
+  always @(posedge clk) begin
+    if (reg_we2) begin
+      if (reg_a2 == `SP) begin       // stack pointer register (R14))
+        reg_spx <= reg_di2;
+      end
+    end
+  end
+  assign spx_out[31:0] = reg_spx[31:0];
+  // end
 
   // alu
   assign alu_op1 =

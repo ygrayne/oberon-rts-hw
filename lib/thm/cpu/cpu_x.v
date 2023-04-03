@@ -1,5 +1,6 @@
 //
-// cpu.v -- the RISC5 CPU
+// cpu_x.v -- the RISC5 CPU
+// extended, search for "gray"
 //
 
 
@@ -7,9 +8,10 @@
 `default_nettype none
 
 
-module cpu(clk, rst,
+module cpu_x (clk, rst,
            bus_stb, bus_we, bus_addr,
-           bus_din, bus_dout, bus_ack);
+           bus_din, bus_dout, bus_ack,
+           spx); // gray
     input clk;                  // system clock
     input rst;                  // system reset
     output bus_stb;             // bus strobe
@@ -18,6 +20,8 @@ module cpu(clk, rst,
     input [31:0] bus_din;       // bus data input, for reads
     output [31:0] bus_dout;     // bus data output, for writes
     input bus_ack;              // bus acknowledge
+    // gray
+    output [31:0] spx;         // stack pointer value
 
   wire cpu_stb;
   wire cpu_we;
@@ -45,7 +49,7 @@ module cpu(clk, rst,
     .cpu_ack(cpu_ack)
   );
 
-  cpu_core cpu_core_0(
+  cpu_core_x cpu_core_0( // gray
     .clk(clk),
     .rst(rst),
     .bus_stb(cpu_stb),
@@ -54,7 +58,9 @@ module cpu(clk, rst,
     .bus_addr(cpu_addr[23:0]),
     .bus_din(cpu_din[31:0]),
     .bus_dout(cpu_dout[31:0]),
-    .bus_ack(cpu_ack)
+    .bus_ack(cpu_ack),
+    // gray
+    .spx_out(spx[31:0])
   );
 
 endmodule
