@@ -22,10 +22,10 @@ MODULE* BootLoad;
     CARD0 = 1; SPIFAST = 8; SPIWORD = 16;
     FSoffset = 80000H;   (*block offset*)
 
-    (***
     (* stack monitor *)
-    StackMonMaxAdr = -204;
+    StackMonMinAdr = -96 + 8;
 
+    (***
     (* call trace *)
     CalltraceStatusAdr = -272;
     SelectCtrl = 1;
@@ -130,8 +130,10 @@ MODULE* BootLoad;
 
 BEGIN
   SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(MT, MTOrg);
+
+  SYSTEM.PUT(StackMonMinAdr, stackOrg); (* set min address to start to monitor stack usage for system start *)
+
   (***
-  SYSTEM.PUT(StackMonMaxAdr, stackOrg); (* set max address to start to monitor stack usage for system start *)
   SYSTEM.PUT(CalltraceStatusAdr, SelectCtrl); (* select call trace stack 0 *)
   SYSTEM.PUT(CalltraceStatusAdr, ClearCtrl);
   *)
