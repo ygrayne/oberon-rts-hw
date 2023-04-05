@@ -23,6 +23,9 @@ MODULE* BootLoad;
 
     (* stack monitor *)
     StackMonMinAdr = -96 + 8;
+    (* sys ctrl *)
+    SysCtrlAdr = -72;
+    SysCtrlNoReload = 0;
 
     (***
     (* call trace *)
@@ -134,17 +137,23 @@ MODULE* BootLoad;
 
 BEGIN
   LED(080H + 0CH);
-  SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(MT, MTOrg);
+  SYSTEM.LDREG(SP, stackOrg);
+  SYSTEM.LDREG(MT, MTOrg);
 
-  SYSTEM.PUT(StackMonMinAdr, stackOrg); (* set min address to start to monitor stack usage for system start *)
+  IF ~SYSTEM.BIT(SysCtrlAdr, SysCtrlNoReload) THEN
+    SYSTEM.PUT(StackMonMinAdr, stackOrg); (* set min address to start to monitor stack usage for system start *)
 
-  (***
-  SYSTEM.PUT(CalltraceStatusAdr, SelectCtrl); (* select call trace stack 0 *)
-  SYSTEM.PUT(CalltraceStatusAdr, ClearCtrl);
-  *)
-  InitSPI;
-  LoadFromDisk;
-  LED(080H + 0DH);
-  SYSTEM.PUT(12, MemLim); SYSTEM.PUT(24, stackOrg);
+    (***
+    SYSTEM.PUT(CalltraceStatusAdr, SelectCtrl); (* select call trace stack 0 *)
+    SYSTEM.PUT(CalltraceStatusAdr, ClearCtrl);
+    *)
+
+    InitSPI;
+    LoadFromDisk;
+    LED(080H + 0DH);
+  END;
+
+  SYSTEM.PUT(12, MemLim);
+  SYSTEM.PUT(24, stackOrg);
   LED(080H + 0FH)
 END BootLoad.
