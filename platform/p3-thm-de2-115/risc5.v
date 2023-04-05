@@ -20,10 +20,11 @@
   * parameterised clock frequency for perpiherals
   * process timers (periodic)
   * (re-) start tables
-  * system control (simplified)
+  * system control
   * buffered RS232 device
   * log buffer
-  * watchdog (not doing anything useful yet)
+  * watchdog
+  * stack monitor
 **/
 
 `timescale 1ns / 1ps
@@ -85,7 +86,8 @@ module risc5 (
   wire [23:2] bus_addr;       // bus address (word address)
   wire [31:0] bus_din;        // bus data input, for reads
   wire [31:0] bus_dout;       // bus data output, for writes
-  wire [31:0] cpu_spx;
+  wire [31:0] cpu_spx;        // SP register value (for stack monitor)
+  wire [23:0] cpu_pcx;        // PC value (for aborts, see sys ctrl)
   wire bus_ack;
   // prom
   wire prom_stb;
@@ -114,10 +116,11 @@ module risc5 (
   wire start_stb;
   wire [31:0] start_dout;     // data out: start-up table number, armed bit
   wire start_ack;
-  // sys ctrl reg
+  // sys control
   wire scr_stb;
   wire [31:0] scr_dout;       // data out: register content
-  wire scr_sys_rst;            // system reset signal out
+  wire scr_sys_rst;           // system reset signal out
+  wire [7:0] scr_err_sig_in;  // error signals in
   wire scr_ack;
   // rs232
   wire rs232_0_stb;
@@ -161,7 +164,7 @@ module risc5 (
   );
 
   // reset
-  assign rst_trig = lsb_btn[0] | scr_sys_rst | wd_trig | stm_trig_lim;
+  assign rst_trig = scr_sys_rst;
   rst rst_0 (
     // in
     .clk(clk),
@@ -182,7 +185,8 @@ module risc5 (
     .bus_din(bus_din[31:0]),
     .bus_dout(bus_dout[31:0]),
     .bus_ack(bus_ack),
-    .spx(cpu_spx)
+    .spx(cpu_spx),
+    .pcx(cpu_pcx)
   );
 
   // boot ROM
@@ -280,15 +284,19 @@ module risc5 (
     .ack(start_ack)
   );
 
-  // sys ctrl register
-  // uses one IO address
+  // sys control
+  // uses two consecutive IO addresses
+  assign scr_err_sig_in[7:0] = {5'b0, stm_trig_lim, lsb_btn[0], wd_trig}; // must correspond with values in SysCtrl.mod
   sysctrl sysctrl_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(scr_stb),
     .we(bus_we),
-    .data_in(bus_dout[15:0]),
+    .addr(bus_addr[2]),
+    .err_sig_in(scr_err_sig_in),
+    .err_addr_in(cpu_pcx),
+    .data_in(bus_dout[31:0]),
     // out
     .data_out(scr_dout[31:0]),
     .sys_rst(scr_sys_rst),
@@ -423,7 +431,7 @@ module risc5 (
   assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
   // extended IO address range (pretty random allocation for now)
-  assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
   assign stm_stb     = (io_stb == 1'b1 && bus_addr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
   assign wd_stb      = (io_stb == 1'b1 && bus_addr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
   assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
