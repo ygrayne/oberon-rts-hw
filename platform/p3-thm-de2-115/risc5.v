@@ -117,7 +117,7 @@ module risc5 (
   // sys ctrl reg
   wire scr_stb;
   wire [31:0] scr_dout;       // data out: register content
-  wire scr_sysrst;            // system reset signal out
+  wire scr_sys_rst;            // system reset signal out
   wire scr_ack;
   // rs232
   wire rs232_0_stb;
@@ -161,7 +161,7 @@ module risc5 (
   );
 
   // reset
-  assign rst_trig = lsb_btn[0];
+  assign rst_trig = lsb_btn[0] | scr_sys_rst | wd_trig | stm_trig_lim;
   rst rst_0 (
     // in
     .clk(clk),
@@ -221,6 +221,7 @@ module risc5 (
   );
 
   // ms timer
+  // uses one IO address
   tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
     // in
     .clk(clk),
@@ -234,6 +235,7 @@ module risc5 (
   );
 
   // LEDs, switches, buttons
+  // uses one IO address
   assign lsb_led_r_in[17:0] = {15'b0, stm_trig_hot, stm_trig_lim, wd_trig};
   lsb_s lsb_0 (
     // in
@@ -265,6 +267,7 @@ module risc5 (
   );
 
   // (-re) start tables
+  // uses one IO address
   start start_0 (
     // in
     .clk(clk),
@@ -278,6 +281,7 @@ module risc5 (
   );
 
   // sys ctrl register
+  // uses one IO address
   sysctrl sysctrl_0 (
     // in
     .clk(clk),
@@ -287,7 +291,7 @@ module risc5 (
     .data_in(bus_dout[15:0]),
     // out
     .data_out(scr_dout[31:0]),
-    .sysrst(scr_sysrst),
+    .sys_rst(scr_sys_rst),
     .ack(scr_ack)
   );
 
@@ -335,6 +339,7 @@ module risc5 (
   assign spi_0_miso_d = sdcard_miso;
 
   // process periodic timers
+  // uses one IO address
   proctimers ptmr_0 (
     // in
     .clk(clk),
@@ -363,6 +368,7 @@ module risc5 (
   );
 
   // watchdog
+  // uses one IO address
   watchdog watchdog_0 (
     // in
     .clk(clk),

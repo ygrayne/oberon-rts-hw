@@ -422,11 +422,12 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 set_location_assignment PIN_AC14 -to sdcard_cs_n
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_cs_n
+set_global_assignment -name VERILOG_FILE ../../../lib/any/base/start.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/ext/watchdog.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/mon/stackmon.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/cpu_x.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/cpu_core_x.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/mon/logbuf.v
-set_global_assignment -name VERILOG_FILE ../../../lib/any/ext/watchdog.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/ramctrl.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie_rxtx.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie.v
@@ -439,7 +440,6 @@ set_global_assignment -name VERILOG_FILE ../../../lib/any/gen/fifo.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/ext/proctimers.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/base/tmr.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/base/sysctrl.v
-set_global_assignment -name VERILOG_FILE ../../../lib/any/base/start.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/base/rst.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/shift.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/muldiv.v

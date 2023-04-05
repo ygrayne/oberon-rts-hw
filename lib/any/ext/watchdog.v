@@ -31,14 +31,14 @@ module watchdog (
 
   wire wr_data = stb & we;
   wire rd_data = stb & ~we;
- 
-  reg [15:0] timeoutval = 0;
-  reg [15:0] ticker = 0;
-  reg trigger = 0;
-  
+
+  reg [15:0] timeoutval;
+  reg [15:0] ticker;
+  reg trigger;
+
   wire ticking = (timeoutval > 16'b0) ? 1'b1 : 1'b0;
 
-  
+
   always @ (posedge clk) begin
     if (rst) begin
       timeoutval <= 16'b0;
@@ -67,7 +67,7 @@ module watchdog (
       end
     end
   end
-  
+
   // outputs
   assign data_out[31:0] =
     rd_data ? {16'b0, timeoutval} :

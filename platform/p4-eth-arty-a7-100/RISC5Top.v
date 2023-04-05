@@ -135,7 +135,7 @@
   // sys ctrl reg
   wire scr_stb;
   wire [31:0] scr_dout;       // data out: register content
-  wire scr_sysrst;            // system reset signal out
+  wire scr_sys_rst;            // system reset signal out
   wire scr_ack;
   // rs232
   wire rs232_0_stb;
@@ -179,7 +179,7 @@
   );
 
   // reset
-  assign rst_trig = lsb_btn[0];
+  assign rst_trig = lsb_btn[0] | scr_sys_rst | wd_trig | stm_trig_lim;
   rst rst_0 (
     // in
     .clk(clk),
@@ -230,6 +230,7 @@
   );
 
   // ms timer
+  // uses one IO address
   tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
     // in
     .clk(clk),
@@ -243,6 +244,7 @@
   );
 
   // LEDs, switches, buttons
+  // uses one IO address
   assign lsb_led_g_in[3:0] = {1'b0, stm_trig_hot, stm_trig_lim, wd_trig};
   lsb_s lsb_0 (
     // in
@@ -266,6 +268,7 @@
   );
 
   // (re-) start tables
+  // uses one IO address
   start start_0 (
     // in
     .clk(clk),
@@ -279,6 +282,7 @@
   );
 
   // sys ctrl register
+  // uses one IO address
   sysctrl sysctrl_0 (
     // in
     .clk(clk),
@@ -288,7 +292,7 @@
     .data_in(outbus[15:0]),
     // out
     .data_out(scr_dout),
-    .sysrst(scr_sysrst),
+    .sys_rst(scr_sys_rst),
     .ack(scr_ack)
   );
 
@@ -340,6 +344,7 @@
   assign spi_0_miso_d = sdcard_miso & spi_0_miso;   // active low, pulled-up
 
   // process periodc timing
+  // uses one IO address
   proctimers ptmr_0 (
     // in
     .clk(clk),
@@ -368,6 +373,7 @@
   );
 
   // watchdog
+  // uses one IO address
   watchdog watchdog_0 (
     // in
     .clk(clk),

@@ -27,25 +27,40 @@ module start (
   wire rd_data = stb & ~we;
 
   // split input data
-  wire [7:0] ctrl = data_in[7:0];
-  wire [7:0] data = data_in[15:8];
+  wire [7:0] ctrl = data_in[15:8];
+  wire [7:0] din = data_in[7:0];
 
-  // selected table
-  reg [7:0] selected_table = 0;
-  reg armed = 0;
+  // table selection, arming
+  reg [5:0] table_no;     // table number
+  reg mode;               // which table: reload or recover
+  reg armed;              // table will be read upon restart and recover
 
   // control signals
-  wire set_table = wr_data & ctrl[0];
-  wire set_armed = wr_data & ctrl[1];
-  wire set_disarmed = wr_data & ctrl[2];
+  wire set_table = ctrl[0];
+  wire set_armed = ctrl[1];
+  wire set_mode = ctrl[2];
+
+  initial begin
+    table_no = 6'b0;
+    mode = 1'b0;
+  end
 
   always @ (posedge clk) begin
-    selected_table <= set_table ? data[7:0] : selected_table;
-    armed <= rst ? 1'b1 : ~set_disarmed & (set_armed | armed);
+    if (rst) begin
+      armed <= 1'b1;
+    end
+    else begin
+      if (wr_data) begin
+        if (set_table) table_no <= din[5:0];
+        if (set_mode) mode <= din[6:6];
+        if (set_armed) armed <= din[7:7];
+      end
+    end
+
   end
 
   assign data_out[31:0] =
-    rd_data ? {16'b0, 7'b0, armed, selected_table[7:0]} :
+    rd_data ? {16'b0, 8'b0, armed, mode, table_no[5:0]} :
     32'b0;
 
   assign ack = stb;
