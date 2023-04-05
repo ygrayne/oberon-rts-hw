@@ -44,7 +44,8 @@
   --
   Re-adding stuff
   * log buffer
-  * watchdog (not doing anything useful yet)
+  * watchdog
+  * stack monitor
   --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
@@ -108,11 +109,11 @@
   wire cpu_intack;            // CPU out: interrupt ack
   wire cpu_rti;               // CPU out: return from interrupt
   wire cpu_intabort;          // CPU in: abort interrupt, "return" to addr 0, not interrupted code
-  wire [31:0] cpu_sp;         // CPU out: stack pointer
-  wire [31:0] cpu_lnk;        // CPU out: link register
-  wire [31:0] cpu_ir;         // CPU out: instruction register
-  wire [23:0] cpu_spc;        // CPU out: SPC register (saved PC on interrupt * 4)
-  wire [21:0] cpu_pc;         // CPU out: current PC
+  wire [31:0] cpu_spx;        // CPU out: stack pointer
+  wire [31:0] cpu_lnkx;       // CPU out: link register
+  wire [31:0] cpu_irx;        // CPU out: instruction register
+  wire [23:0] cpu_spcx;       // CPU out: SPC register (saved PC on interrupt * 4)
+  wire [21:0] cpu_pcx;        // CPU out: current PC
 
   // io
   wire ioenb;                 // IO enable
@@ -132,10 +133,11 @@
   wire start_stb;
   wire [31:0] start_dout;     // data out: start-up table number, armed bit
   wire start_ack;
-  // sys ctrl reg
+  // sys ctrl
   wire scr_stb;
   wire [31:0] scr_dout;       // data out: register content
-  wire scr_sysrst;            // system reset signal out
+  wire scr_sys_rst;           // system reset signal out
+  wire [7:0] scr_err_sig_in;  // error signals in
   wire scr_ack;
   // rs232
   wire rs232_0_stb;
@@ -179,7 +181,7 @@
   );
 
   // reset
-  assign rst_trig = lsb_btn[0];
+  assign rst_trig = scr_sys_rst;
   rst rst_0 (
     // in
     .clk(clk),
@@ -205,11 +207,11 @@
     .intackx(cpu_intack),
     .rtix(cpu_rti),
     .intabort(cpu_intabort),
-    .spx(cpu_sp),
-    .spcx(cpu_spc),
-    .lnkx(cpu_lnk),
-    .irx(cpu_ir),
-    .pcx(cpu_pc)
+    .spx(cpu_spx),
+    .spcx(cpu_spcx),
+    .lnkx(cpu_lnkx),
+    .irx(cpu_irx),
+    .pcx(cpu_pcx)
   );
 
   // boot ROM
@@ -230,6 +232,7 @@
   );
 
   // ms timer
+  // uses one IO address
   tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
     // in
     .clk(clk),
@@ -243,6 +246,7 @@
   );
 
   // LEDs, switches, buttons
+  // uses one IO address
   assign lsb_led_g_in[3:0] = {1'b0, stm_trig_hot, stm_trig_lim, wd_trig};
   lsb_s lsb_0 (
     // in
@@ -266,6 +270,7 @@
   );
 
   // (re-) start tables
+  // uses one IO address
   start start_0 (
     // in
     .clk(clk),
@@ -278,17 +283,22 @@
     .ack(start_ack)
   );
 
-  // sys ctrl register
+  // sys control
+  // uses two consecutive IO addresses
+  assign scr_err_sig_in[7:0] = {5'b0, stm_trig_lim, lsb_btn[0], wd_trig}; // must correspond with values in SysCtrl.mod
   sysctrl sysctrl_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(scr_stb),
     .we(wr),
-    .data_in(outbus[15:0]),
+    .addr(adr[2]),
+    .err_sig_in(scr_err_sig_in),
+    .err_addr_in({cpu_pcx, 2'b0}), // PC is 22 bit word aligned
+    .data_in(outbus[31:0]),
     // out
-    .data_out(scr_dout),
-    .sysrst(scr_sysrst),
+    .data_out(scr_dout[31:0]),
+    .sys_rst(scr_sys_rst),
     .ack(scr_ack)
   );
 
@@ -340,6 +350,7 @@
   assign spi_0_miso_d = sdcard_miso & spi_0_miso;   // active low, pulled-up
 
   // process periodc timing
+  // uses one IO address
   proctimers ptmr_0 (
     // in
     .clk(clk),
@@ -368,6 +379,7 @@
   );
 
   // watchdog
+  // uses one IO address
   watchdog watchdog_0 (
     // in
     .clk(clk),
@@ -390,7 +402,7 @@
     .stb(stm_stb),
     .we(wr),
     .addr(adr[3:2]),
-    .sp_in(cpu_sp[23:0]),
+    .sp_in(cpu_spx[23:0]),
     .data_in(outbus[23:0]),
     .data_out(stm_dout),
     .trig_lim(stm_trig_lim),
@@ -418,7 +430,7 @@
   assign tmr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
   // extended IO address range (pretty random allocation for now)
-  assign scr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b101111) ? 1'b1 : 1'b0;  // -68
+  assign scr_stb     = (ioenb == 1'b1 && adr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
   assign stm_stb     = (ioenb == 1'b1 && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
   assign wd_stb      = (ioenb == 1'b1 && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
   assign ptmr_stb    = (ioenb == 1'b1 && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132

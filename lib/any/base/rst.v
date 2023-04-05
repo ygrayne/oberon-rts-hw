@@ -21,7 +21,7 @@ module rst (
 );
 
   reg [23:0] rst_counter;
-  wire rst_counting = (rst_counter[23:0] == 24'h0FFFFF) ? 1'b0 : 1'b1;
+  wire rst_counting = (rst_counter[23:0] == 24'hFFFFFF) ? 1'b0 : 1'b1;
 
   always @(posedge clk) begin
     if (rst_in | ~clk_ok) begin

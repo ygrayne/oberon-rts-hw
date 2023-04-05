@@ -1,6 +1,5 @@
 /**
-  System control register
-  Stripped down... only implements system reset
+  System control and status
   --
   Architecture: ANY
   --
@@ -16,25 +15,76 @@ module sysctrl (
   input wire rst,
   input wire stb,
   input wire we,
-  input wire [15:0] data_in,
+  input wire addr,
+  input wire [7:0] err_sig_in,
+  input wire [23:0] err_addr_in,
+  input wire [31:0] data_in,
   output wire [31:0] data_out,
-  output wire sysrst,
+  output wire sys_rst,
   output wire ack
 );
 
-  wire wr_data = stb & we;
-  wire rd_data = stb & ~we;
+  wire wr_scr = stb &  we & ~addr;
+  wire rd_scr = stb & ~we & ~addr;
+  wire wr_err = stb &  we &  addr;
+  wire rd_err = stb & ~we &  addr;
 
-  reg [15:0] scr = 0;
+  reg [31:0] scr;
+  reg [23:0] err_addr;
+  reg [3:0] abort_no;
+  reg [3:0] trap_no;
 
-  always @(posedge clk) begin
-    scr <= rst ? {1'b1, 15'b0} : wr_data ? data_in[15:0] : scr;
+
+  initial begin
+    scr = 32'b0;
+    err_addr = 24'b0;
+    abort_no = 4'b0;
+    trap_no = 4'b0;
   end
 
+//  always @(posedge clk) begin
+//    scr <= rst ? {24'b0, 7'b0, scr[0]} : wr_scr ? data_in[31:0] : scr;
+//    err <= wr_err ? data_in[31:0] : err;
+//  end
+//
+  integer i;
+  always @(posedge clk) begin
+    if (rst) begin
+      scr <= {24'b0, 7'b0, scr[0]};
+    end
+    else begin
+      if (wr_scr) begin
+        scr <= data_in[31:0];
+      end
+      else begin
+        if (wr_err) begin
+          err_addr <= data_in[31:8];
+          abort_no <= data_in[7:4];
+          trap_no <= data_in[3:0];
+        end
+        else begin
+          i = 0;
+          while(~scr[1] && i < 8) begin
+            if (err_sig_in[i]) begin
+              scr[1] <= 1'b1;
+              err_addr <= err_addr_in;
+              abort_no <= i[3:0];
+              trap_no <= 4'b0;
+            end
+            i = i + 1;
+          end
+        end
+      end
+    end
+  end
+
+
   assign data_out[31:0] =
-    rd_data ? {16'b0, scr[15:0]} :
+    rd_scr ? scr[31:0] :
+    rd_err ? {err_addr[23:0], abort_no[3:0], trap_no[3:0]} :
     32'b0;
-  assign sysrst = scr[0];
+
+  assign sys_rst = scr[1];
 
   assign ack = stb;
 
