@@ -15,7 +15,7 @@
 module cpu_core_x (clk, rst,
                 bus_stb, bus_we, bus_ben, bus_addr,
                 bus_din, bus_dout, bus_ack,
-                spx_out); // gray
+                spx_out, pcx_out); // gray
     input clk;                // system clock
     input rst;                // system reset
     output bus_stb;           // bus strobe
@@ -25,8 +25,10 @@ module cpu_core_x (clk, rst,
     input [31:0] bus_din;     // bus data input, for reads
     output [31:0] bus_dout;   // bus data output, for writes
     input bus_ack;            // bus acknowledge
+
     // gray
     output [31:0] spx_out;    // stack pointer register value
+    output [23:0] pcx_out;    // pc value
     // end
 
   // program counter
@@ -34,6 +36,11 @@ module cpu_core_x (clk, rst,
   wire [23:0] pc_next;        // value written into pc
   wire pc_we;                 // pc write enable
   reg [23:0] pc;              // program counter
+
+  // gray
+  assign pcx_out[23:0] = pc[23:0];   // pc value
+  // end
+
   // bus
   wire bus_addr_src;          // bus address source selector
   // instruction register & decoder
