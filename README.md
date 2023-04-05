@@ -13,6 +13,8 @@ Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but
 
 ## Current Status
 
+* 2023-04-05: (re-) implemented the watchdog and the stack overflow monitor. Their error signals result in an error handling that is unified together with the trap handling.
+
 * 2023-03-29:: two platforms, P3 and P4, each implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
 * 2023-03-30: Added log buffer
 
@@ -21,10 +23,7 @@ Most on-chip devices, such as process timers, reset circuits, or SPI and RS232 i
 
 ## Next Up
 
-* Watchdog
-* Stack overflow monitor (maybe not yet)
-
-The stack overflow monitor will need a change in the CPU to "pull out" the stack register on hardware level. Not sure if I am ready and sufficiently confident with the THM architecture yet. :)
+* Rethink processes and their control and monitoring elements in the hardware.
 
 
 ## Architectures
