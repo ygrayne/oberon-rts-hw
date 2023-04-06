@@ -42,15 +42,10 @@ module sysctrl (
     trap_no = 4'b0;
   end
 
-//  always @(posedge clk) begin
-//    scr <= rst ? {24'b0, 7'b0, scr[0]} : wr_scr ? data_in[31:0] : scr;
-//    err <= wr_err ? data_in[31:0] : err;
-//  end
-//
   integer i;
   always @(posedge clk) begin
     if (rst) begin
-      scr <= {24'b0, 7'b0, scr[0]};
+      scr <= {19'b0, scr[12:8], 7'b0, scr[0]};
     end
     else begin
       if (wr_scr) begin
