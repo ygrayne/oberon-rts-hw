@@ -348,7 +348,7 @@
   assign spi_0_sclk[1] = spi_0_sclk_d;
   assign spi_0_mosi[1] = spi_0_mosi_d;
 
-  assign spi_0_miso_d = sdcard_miso & spi_0_miso;   // active low, pulled-up
+  assign spi_0_miso_d = sdcard_miso & spi_0_miso;
 
   // process periodc timing
   // uses one IO address

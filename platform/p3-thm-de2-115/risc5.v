@@ -52,11 +52,16 @@ module risc5 (
   // RS-232
   input rs232_0_rxd,
   output rs232_0_txd,
-  // SD card
+  // SD card (SPI)
   output sdcard_cs_n,
   output sdcard_sclk,
   output sdcard_mosi,
   input sdcard_miso,
+  // RTC (SPI)
+  output rtc_cs_n,
+  output rtc_sclk,
+  output rtc_mosi,
+  input rtc_miso,
   // LEDs, switches, buttons, 7-segment
   output [8:0] led_g,
   output [17:0] led_r,
@@ -335,17 +340,23 @@ module risc5 (
     // out
     .data_out(spi_0_dout[31:0]),
     .ack(spi_0_ack),
-    // external
+    // external out
     .cs_n(spi_0_cs_n_d[2:0]),
     .sclk(spi_0_sclk_d),
     .mosi(spi_0_mosi_d),
+    // external in
     .miso(spi_0_miso_d)
   );
 
   assign sdcard_cs_n = spi_0_cs_n_d[0];
   assign sdcard_sclk = spi_0_sclk_d;
   assign sdcard_mosi = spi_0_mosi_d;
-  assign spi_0_miso_d = sdcard_miso;
+
+  assign rtc_cs_n = spi_0_cs_n_d[1];
+  assign rtc_sclk = spi_0_sclk_d;
+  assign rtc_mosi = spi_0_mosi_d;
+
+  assign spi_0_miso_d = sdcard_miso & rtc_miso;
 
   // process periodic timers
   // uses one IO address

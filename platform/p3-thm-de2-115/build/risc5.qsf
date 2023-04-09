@@ -1,41 +1,3 @@
-# -------------------------------------------------------------------------- #
-#
-# Copyright (C) 2022  Intel Corporation. All rights reserved.
-# Your use of Intel Corporation's design tools, logic functions
-# and other software and tools, and any partner logic
-# functions, and any output files from any of the foregoing
-# (including device programming or simulation files), and any
-# associated documentation or information are expressly subject
-# to the terms and conditions of the Intel Program License
-# Subscription Agreement, the Intel Quartus Prime License Agreement,
-# the Intel FPGA IP License Agreement, or other applicable license
-# agreement, including, without limitation, that your use is for
-# the sole purpose of programming logic devices manufactured by
-# Intel and sold by Intel or its authorized distributors.  Please
-# refer to the applicable agreement for further details, at
-# https://fpgasoftware.intel.com/eula.
-#
-# -------------------------------------------------------------------------- #
-#
-# Quartus Prime
-# Version 22.1std.0 Build 915 10/25/2022 SC Lite Edition
-# Date created = 15:48:07  March 13, 2023
-#
-# -------------------------------------------------------------------------- #
-#
-# Notes:
-#
-# 1) The default values for assignments are stored in the file:
-#		risc5_assignment_defaults.qdf
-#    If this file doesn't exist, see file:
-#		assignment_defaults.qdf
-#
-# 2) Intel recommends that you do not modify this file. This
-#    file is updated automatically by the Quartus Prime software
-#    and any changes you make may be lost or overwritten.
-#
-# -------------------------------------------------------------------------- #
-
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE115F29C7
@@ -60,19 +22,13 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 10
 
 
+# Clock
+# -----
 set_location_assignment PIN_Y2 -to clk_in
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_in
 
-#set_location_assignment PIN_M23 -to rst_in_n
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to rst_in_n
-
-#set_location_assignment PIN_M21 -to btn1_n
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to btn1_n
-#set_location_assignment PIN_N21 -to btn2_n
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to btn2_n
-#set_location_assignment PIN_R24 -to btn3_n
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to btn3_n
-
+# Buttons
+# -------
 set_location_assignment PIN_M23 -to btn_in_n[0]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to btn_in_n[0]
 set_location_assignment PIN_M21 -to btn_in_n[1]
@@ -82,6 +38,8 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to btn_in_n[2]
 set_location_assignment PIN_R24 -to btn_in_n[3]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to btn_in_n[3]
 
+# Green LEDs
+# ----------
 set_location_assignment PIN_F17 -to led_g[8]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to led_g[8]
 set_location_assignment PIN_G21 -to led_g[7]
@@ -101,6 +59,8 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to led_g[1]
 set_location_assignment PIN_E21 -to led_g[0]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to led_g[0]
 
+# Red LEDs
+# --------
 set_location_assignment PIN_H15 -to led_r[17]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to led_r[17]
 set_location_assignment PIN_G16 -to led_r[16]
@@ -138,6 +98,8 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to led_r[1]
 set_location_assignment PIN_G19 -to led_r[0]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to led_r[0]
 
+# 7-Segment displays
+# ------------------
 set_location_assignment PIN_AA14 -to hex7_n[6]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to hex7_n[6]
 set_location_assignment PIN_AG18 -to hex7_n[5]
@@ -251,7 +213,8 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to hex0_n[1]
 set_location_assignment PIN_G18 -to hex0_n[0]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to hex0_n[0]
 
-
+# Switches
+# --------
 set_location_assignment PIN_Y23 -to swi_in[17]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to swi_in[17]
 set_location_assignment PIN_Y24 -to swi_in[16]
@@ -289,6 +252,19 @@ set_instance_assignment -name IO_STANDARD "2.5 V" -to swi_in[1]
 set_location_assignment PIN_AB28 -to swi_in[0]
 set_instance_assignment -name IO_STANDARD "2.5 V" -to swi_in[0]
 
+# SD card (SPI CS = 0)
+# --------------------
+set_location_assignment PIN_AE13 -to sdcard_sclk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_sclk
+set_location_assignment PIN_AD14 -to sdcard_mosi
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_mosi
+set_location_assignment PIN_AC14 -to sdcard_cs_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_cs_n
+set_location_assignment PIN_AE14 -to sdcard_miso
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_miso
+
+# SDRAM
+# -----
 set_location_assignment PIN_AE5 -to sdram_clk
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdram_clk
 set_location_assignment PIN_AA6 -to sdram_cke
@@ -404,24 +380,34 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdram_dq[1]
 set_location_assignment PIN_W3 -to sdram_dq[0]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdram_dq[0]
 
+# RS232
+# -----
 set_location_assignment PIN_G12 -to rs232_0_rxd
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rs232_0_rxd
 set_location_assignment PIN_G9 -to rs232_0_txd
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rs232_0_txd
 
-set_location_assignment PIN_AE13 -to sdcard_sclk
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_sclk
-set_location_assignment PIN_AD14 -to sdcard_mosi
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_mosi
-set_location_assignment PIN_AE14 -to sdcard_miso
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_miso
+# Expansion Header
+# ----------------
+# RTC
+# pin 0
+set_location_assignment PIN_AB22 -to rtc_cs_n
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rtc_cs_n
+# pin 1
+set_location_assignment PIN_AC15 -to rtc_sclk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rtc_sclk
+# pin 2
+set_location_assignment PIN_AB21 -to rtc_mosi
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rtc_mosi
+# pin 3
+set_location_assignment PIN_Y17 -to rtc_miso
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rtc_miso
+
 
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
-set_location_assignment PIN_AC14 -to sdcard_cs_n
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sdcard_cs_n
 set_global_assignment -name VERILOG_FILE ../../../lib/any/base/start.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/ext/watchdog.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/mon/stackmon.v
@@ -451,4 +437,5 @@ set_global_assignment -name VERILOG_FILE "../../../lib/tech/thm/cyclone-iv/base/
 set_global_assignment -name SDC_FILE ../risc5.sdc
 set_global_assignment -name VERILOG_FILE ../risc5.v
 set_global_assignment -name VERILOG_FILE "../../../lib/board/thm/de2-115/io/lsb_s.v"
+
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
