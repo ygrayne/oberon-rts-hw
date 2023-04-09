@@ -1,16 +1,21 @@
 /**
   LSB: LEDs, Switches, Buttons
   --
-  Red LEDs are switched by hardware input signals.
+  Architecture: AMY
+  Board: DE2-115
   --
-  Architecture: THM
+  * Red LEDs are also switched by hardware input signals.
+  * Red LEDs use "toggle" mechanism for on/off
   --
   Based on THM bio.v
   --
-  Seven segment display not accessible
+  Seven segment display not accessible yet
   --
-  data_in [25:0]:
+  data_in [31:0]:
     [7:0]: green LEDs (8 of 9 total)
+    [25:8]: greed LEDs (18)
+    [30:26]: unused
+    [31:31]: green LEDs toggle
   --
   2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
@@ -29,15 +34,15 @@ module lsb_s (
   input rst,
   input stb,
   input we,
-  input [25:0] data_in,
-  input [17:0] led_r_in,
+  input [31:0] data_in,
+  input [17:0] leds_r_in,
   output [31:0] data_out,
   output ack,
   // external interface,
   input [3:0] btn_in_n,
   input [17:0] swi_in,
-  output reg [8:0] led_g,
-  output reg [17:0] led_r,
+  output [17:0] leds_r,
+  output reg [8:0] leds_g,
   output reg [6:0] hex7_n,
   output reg [6:0] hex6_n,
   output reg [6:0] hex5_n,
@@ -46,22 +51,29 @@ module lsb_s (
   output reg [6:0] hex2_n,
   output reg [6:0] hex1_n,
   output reg [6:0] hex0_n,
-  output [3:0] btn,
-  output [17:0] swi
+  output [3:0] btn_out,
+  output [17:0] swi_out
 );
 
   wire wr_data = stb & we;
   wire rd_data = stb & ~we;
+
+  wire leds_r_on = data_in[31];
 
   reg [3:0] btn_p_n;
   reg [3:0] btn_s_n;
   reg [17:0] swi_p;
   reg [17:0] swi_s;
 
+  reg [17:0] leds_r_s;
+  reg [17:0] leds_r_d;
+  assign leds_r[17:0] = leds_r_s[17:0] | leds_r_d[17:0];
+
   always @(posedge clk) begin
     if (rst) begin
-      led_g[8:0] <= 9'h0;
-      led_r[17:0] <= 18'h0;
+      leds_r_s[17:0] <= 18'h0;
+      leds_r_d[17:0] <= 18'h0;
+      leds_g[8:0] <= 9'h0;
       hex7_n[6:0] <= ~7'h0;
       hex6_n[6:0] <= ~7'h0;
       hex5_n[6:0] <= ~7'h0;
@@ -72,9 +84,15 @@ module lsb_s (
       hex0_n[6:0] <= ~7'h0;
     end else begin
       if (wr_data) begin
-        led_g[7:0] <= data_in[7:0];
+        leds_g[7:0] <= data_in[7:0];
+        if (leds_r_on) begin
+          leds_r_d[17:0] <= leds_r_d[17:0] | data_in[25:8];
+        end
+        else begin
+          leds_r_d[17:0] <= leds_r_d[17:0] & ~data_in[25:8];
+        end
       end
-      led_r[17:0] <= led_r_in[17:0];
+      leds_r_s[17:0] <= leds_r_in[17:0];
     end
   end
 
@@ -85,11 +103,11 @@ module lsb_s (
     swi_s[17:0] <= swi_p[17:0];
   end
 
-  assign btn[3:0] = ~btn_s_n[3:0];
-  assign swi[17:0] = swi_s[17:0];
+  assign btn_out[3:0] = ~btn_s_n[3:0];
+  assign swi_out[17:0] = swi_s[17:0];
 
   assign data_out[31:0] =
-    rd_data ? {6'b0, swi[17:8], 4'b0, btn[3:0], swi[7:0]} :
+    rd_data ? {6'b0, swi_out[17:8], 4'b0, btn_out[3:0], swi[7:0]} :
     32'b0;
 
   assign ack = stb;
