@@ -23,7 +23,14 @@ MODULE* BootLoad;
     FSoffset = 80000H;   (*block offset*)
 
     (* stack monitor *)
-    StackMonMinAdr = -96 + 8;
+    StackMonBaseAdr = -96;
+    StackMonLimAdr = StackMonBaseAdr;
+    StackMonHotAdr = StackMonBaseAdr + 4;
+    StackMonMinAdr = StackMonBaseAdr + 8;
+
+    (* watchdog *)
+    WatchdogAdr = -112;
+
     (* sys ctrl *)
     SysCtrlAdr = -72;
     SysCtrlNoReload = 0;
@@ -133,11 +140,18 @@ MODULE* BootLoad;
 
 BEGIN
   LED(080H + 0CH);
+  (* set registers to run the boot loader *)
   SYSTEM.LDREG(SP, stackOrg);
   SYSTEM.LDREG(MT, MTOrg);
+  (* set min address to monitor stack usage for system start and error handling *)
+  SYSTEM.PUT(StackMonMinAdr, stackOrg);
+  (* but disable stack monitor errors *)
+  SYSTEM.PUT(StackMonLimAdr, 0);
+  SYSTEM.PUT(StackMonHotAdr, 0);
+  (* disable watchdog *)
+  SYSTEM.PUT(WatchdogAdr, 0);
 
   IF ~SYSTEM.BIT(SysCtrlAdr, SysCtrlNoReload) THEN
-    SYSTEM.PUT(StackMonMinAdr, stackOrg); (* set min address to start to monitor stack usage for system start *)
 
     (***
     SYSTEM.PUT(CalltraceStatusAdr, SelectCtrl); (* select call trace stack 0 *)
@@ -149,6 +163,9 @@ BEGIN
     LED(080H + 0DH);
   END;
 
+  (* put the memory info for Modules and Kernel *)
+  (* note: the statically linked boot file adds some more *)
+  (* eg. for AllocPtr *)
   SYSTEM.PUT(12, MemLim);
   SYSTEM.PUT(24, stackOrg);
   LED(080H + 0FH)
