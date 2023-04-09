@@ -13,9 +13,12 @@ Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but
 
 ## Current Status
 
+* 2023-04-09: extended the system control and status register for the new error handling.
+
 * 2023-04-05: (re-) implemented the watchdog and the stack overflow monitor. Their error signals result in an error handling that is unified together with the trap handling.
 
 * 2023-03-29:: two platforms, P3 and P4, each implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
+
 * 2023-03-30: Added log buffer
 
 Most on-chip devices, such as process timers, reset circuits, or SPI and RS232 interfaces, can now directly be (and are) used by either architecture without adaptations or specific configurations.
