@@ -31,26 +31,18 @@ module sysctrl (
 
   reg [31:0] scr;
   reg [23:0] err_addr;
-  reg [3:0] abort_no;
-  reg [3:0] trap_no;
-
+  reg [7:0] err_no;
 
   initial begin
     scr = 32'b0;
     err_addr = 24'b0;
-    abort_no = 4'b0;
-    trap_no = 4'b0;
+    err_no = 8'b0;
   end
 
-//  always @(posedge clk) begin
-//    scr <= rst ? {24'b0, 7'b0, scr[0]} : wr_scr ? data_in[31:0] : scr;
-//    err <= wr_err ? data_in[31:0] : err;
-//  end
-//
   integer i;
   always @(posedge clk) begin
     if (rst) begin
-      scr <= {24'b0, 7'b0, scr[0]};
+      scr <= {14'b0, scr[12:8], scr[12:8], 7'b0, scr[0]};
     end
     else begin
       if (wr_scr) begin
@@ -59,8 +51,7 @@ module sysctrl (
       else begin
         if (wr_err) begin
           err_addr <= data_in[31:8];
-          abort_no <= data_in[7:4];
-          trap_no <= data_in[3:0];
+          err_no <= data_in[7:0];
         end
         else begin
           i = 0;
@@ -68,8 +59,7 @@ module sysctrl (
             if (err_sig_in[i]) begin
               scr[1] <= 1'b1;
               err_addr <= err_addr_in;
-              abort_no <= i[3:0];
-              trap_no <= 4'b0;
+              err_no <= {1'b1, i[2:0]};
             end
             i = i + 1;
           end
@@ -81,7 +71,7 @@ module sysctrl (
 
   assign data_out[31:0] =
     rd_scr ? scr[31:0] :
-    rd_err ? {err_addr[23:0], abort_no[3:0], trap_no[3:0]} :
+    rd_err ? {err_addr[23:0], err_no[7:0]} :
     32'b0;
 
   assign sys_rst = scr[1];

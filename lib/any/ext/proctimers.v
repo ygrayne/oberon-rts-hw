@@ -25,6 +25,9 @@
   for process timers:
   [15:0]: individual timer number
   --
+  The 'en' enable and ticker assignment 'ticker_no' of the individual timers are not
+  reset upon the reset signal, so they keep their values across a system reset.
+  --
   2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -117,18 +120,24 @@ module proctim (
 );
 
   reg [2:0] ticker_no;
-  reg en = 0;
+  reg en;
   wire set_ticker = wr & ctrl[0];
   wire clear_ready = wr & ctrl[1];
   wire set_enabled = wr & ctrl[2];
   wire set_disabled = wr & ctrl[3];
   wire set_rdy = wr & ctrl[4];
-
+  
+  initial begin
+    en = 0;
+    ticker_no = 0;
+  end
+  
   always @(posedge clk) begin
-    ticker_no <= rst ? 3'b0 : set_ticker ? data_in[2:0] : ticker_no;
-    en <= rst ? 1'b0 : ~set_disabled & (set_enabled | set_ticker | en);
+    ticker_no <= set_ticker ? data_in[2:0] : ticker_no;
+    en <= ~set_disabled & (set_enabled | set_ticker | en);
     proc_rdy  <= rst ? 1'b0 : ~(set_ticker | set_enabled | set_disabled | clear_ready) & (en & (period_done[ticker_no] | set_rdy | proc_rdy));
   end
+  
 endmodule
 
 `resetall

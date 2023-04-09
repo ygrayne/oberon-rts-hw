@@ -20,7 +20,7 @@
   * parameterised clock frequency for perpiherals
   * process timers (periodic)
   * (re-) start tables
-  * system control
+  * system control and status, incl. error handling
   * buffered RS232 device
   * log buffer
   * watchdog
@@ -107,7 +107,7 @@ module risc5 (
   wire tmr_ack;
   // lsb
   wire lsb_stb;
-  wire [17:0] lsb_led_r_in;   // signals in for red LEDs
+  wire [17:0] lsb_leds_r_in;  // signals in for red LEDs
   wire [31:0] lsb_dout;       // data out: buttons, switches
   wire [3:0] lsb_btn;         // button signals out
   wire [17:0] lsb_swi;        // button signals out
@@ -240,26 +240,26 @@ module risc5 (
 
   // LEDs, switches, buttons
   // uses one IO address
-  assign lsb_led_r_in[17:0] = {15'b0, stm_trig_hot, stm_trig_lim, wd_trig};
+  assign lsb_leds_r_in[17:0] = 18'b0;
   lsb_s lsb_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(lsb_stb),
     .we(bus_we),
-    .led_r_in(lsb_led_r_in[17:0]),
-    .data_in(bus_dout[25:0]),
+    .leds_r_in(lsb_leds_r_in[17:0]),
+    .data_in(bus_dout[31:0]),
     // out
     .data_out(lsb_dout[31:0]),
     .ack(lsb_ack),
-    .btn(lsb_btn[3:0]),
-    .swi(lsb_swi[17:0]),
+    .btn_out(lsb_btn[3:0]),
+    .swi_out(lsb_swi[17:0]),
     // external in
     .btn_in_n(btn_in_n[3:0]),
     .swi_in(swi_in[17:0]),
     // external out
-    .led_g(led_g[8:0]),
-    .led_r(led_r[17:0]),
+    .leds_g(led_g[8:0]),
+    .leds_r(led_r[17:0]),
     .hex7_n(hex7_n[6:0]),
     .hex6_n(hex6_n[6:0]),
     .hex5_n(hex5_n[6:0]),
@@ -286,7 +286,8 @@ module risc5 (
 
   // sys control
   // uses two consecutive IO addresses
-  assign scr_err_sig_in[7:0] = {5'b0, stm_trig_lim, lsb_btn[0], wd_trig}; // must correspond with values in SysCtrl.mod
+  // order must correspond with values in SysCtrl.mod for correct logging
+  assign scr_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], lsb_btn[0]};
   sysctrl sysctrl_0 (
     // in
     .clk(clk),

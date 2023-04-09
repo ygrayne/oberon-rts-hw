@@ -82,7 +82,7 @@
   input wire [3:0] btn_in,
   input wire [3:0] swi_in,
   output wire [7:0] sys_leds,       // on Pmod board
-  output wire [3:0] led_g           // on Arty board
+  output wire [3:0] leds_g          // on Arty board
  );
 
   // clk
@@ -124,7 +124,7 @@
   wire tmr_ack;
   // lsb
   wire lsb_stb;
-  wire [3:0] lsb_led_g_in;    // signals in for greed LEDs on board
+  wire [3:0] lsb_leds_g_in;   // signals in for greed LEDs on board
   wire [31:0] lsb_dout;       // data out: buttons, switches
   wire [3:0] lsb_btn;         // button signals out
   wire [3:0] lsb_swi;         // switch signals out
@@ -164,7 +164,7 @@
   wire [31:0] wd_dout;
   wire wd_trig;
   wire wd_ack;
-  // stack mmonitor
+  // stack monitor
   wire stm_stb;
   wire [31:0] stm_dout;
   wire stm_trig_lim;
@@ -247,15 +247,15 @@
 
   // LEDs, switches, buttons
   // uses one IO address
-  assign lsb_led_g_in[3:0] = {1'b0, stm_trig_hot, stm_trig_lim, wd_trig};
+  assign lsb_leds_g_in[3:0] = 4'b0;
   lsb_s lsb_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(lsb_stb),
     .we(wr),
-    .led_g_in(lsb_led_g_in),
-    .data_in(outbus[7:0]),
+    .leds_g_in(lsb_leds_g_in),
+    .data_in(outbus[31:0]),
     // out
     .data_out(lsb_dout),
     .btn_out(lsb_btn),
@@ -265,8 +265,8 @@
     .btn_in(btn_in),
     .swi_in(swi_in),
     // external out
-    .leds(sys_leds),
-    .led_g(led_g)
+    .leds_sys(sys_leds),
+    .leds_g(leds_g)
   );
 
   // (re-) start tables
@@ -285,7 +285,8 @@
 
   // sys control
   // uses two consecutive IO addresses
-  assign scr_err_sig_in[7:0] = {5'b0, stm_trig_lim, lsb_btn[0], wd_trig}; // must correspond with values in SysCtrl.mod
+  // order must correspond with values in SysCtrl.mod for correct logging
+  assign scr_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], lsb_btn[0]};
   sysctrl sysctrl_0 (
     // in
     .clk(clk),
