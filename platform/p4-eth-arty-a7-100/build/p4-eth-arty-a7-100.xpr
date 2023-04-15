@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="54" Path="C:/Users/gray/Projects/Oberon/RISC5/WORK/oberon-rts-hw/platform/p4-eth-arty-a7-100/build/p4-eth-arty-a7-100.xpr">
+<Project Version="7" Minor="54" Path="C:/Users/gray/Projects/Oberon/WORK/oberon-rts-hw/platform/p4-eth-arty-a7-100/build/p4-eth-arty-a7-100.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="f4244d4cee2d40b19d3221b8d1b0861b"/>
@@ -32,8 +32,8 @@
     <Option Name="SimulatorGccInstallDirRiviera" Val=""/>
     <Option Name="SimulatorGccInstallDirActiveHdl" Val=""/>
     <Option Name="BoardPart" Val="digilentinc.com:arty-a7-100:part0:1.0"/>
-    <Option Name="BoardPartRepoPaths" Val="$PPRDIR/../../../../../../../../AppData/Roaming/Xilinx/Vivado/2020.2/xhub/board_store/xilinx_board_store"/>
-    <Option Name="BoardPartRepoPaths" Val="$PPRDIR/../../../../../../../../AppData/Roaming/Xilinx/Vivado/2020.2/xhub/board_store/xilinx_board_store/XilinxBoardStore"/>
+    <Option Name="BoardPartRepoPaths" Val="$PPRDIR/../../../../../../../AppData/Roaming/Xilinx/Vivado/2020.2/xhub/board_store/xilinx_board_store"/>
+    <Option Name="BoardPartRepoPaths" Val="$PPRDIR/../../../../../../../AppData/Roaming/Xilinx/Vivado/2020.2/xhub/board_store/xilinx_board_store/XilinxBoardStore"/>
     <Option Name="ActiveSimSet" Val="sim_1"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="ProjectType" Val="Default"/>
@@ -43,7 +43,7 @@
     <Option Name="IPCachePermission" Val="write"/>
     <Option Name="EnableCoreContainer" Val="FALSE"/>
     <Option Name="CreateRefXciForCoreContainers" Val="FALSE"/>
-    <Option Name="IPUserFilesDir" Val="$PPRDIR/../../../../../develop/oberon-rts-hw/platform/p4-eth-arty-a7-100/build/p4-eth-arty-a7-100.ip_user_files"/>
+    <Option Name="IPUserFilesDir" Val="$PPRDIR/../../../../../RISC5/develop/oberon-rts-hw/platform/p4-eth-arty-a7-100/build/p4-eth-arty-a7-100.ip_user_files"/>
     <Option Name="IPStaticSourceDir" Val="$PIPUSERFILESDIR/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
     <Option Name="DSABoardId" Val="arty-a7-100"/>
@@ -126,6 +126,13 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../../../lib/eth/cpu/RightShifter.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../../../lib/any/mon/calltrace.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -258,6 +265,13 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../../../lib/any/gen/stackx.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PPRDIR/../../../lib/any/base/start.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -361,7 +375,7 @@
     </Simulator>
   </Simulators>
   <Runs Version="1" Minor="15">
-    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7a100tcsg324-1" ConstrsSet="constrs_1" Description="Trades off Performance and Area for better Runtime." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/synth_1" IncludeInArchive="true" AutoIncrementalDir="$PPRDIR/../../../../../develop/hdl/platform/p1-arty-a7-100/build/p1-arty-a7-100.srcs/utils_1/imports/synth_1">
+    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7a100tcsg324-1" ConstrsSet="constrs_1" Description="Trades off Performance and Area for better Runtime." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/synth_1" IncludeInArchive="true" AutoIncrementalDir="$PPRDIR/../../../../../RISC5/develop/hdl/platform/p1-arty-a7-100/build/p1-arty-a7-100.srcs/utils_1/imports/synth_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Flow_RuntimeOptimized" Flow="Vivado Synthesis 2020"/>
         <Step Id="synth_design">
@@ -375,7 +389,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7a100tcsg324-1" ConstrsSet="constrs_1" Description="Similar to the Implementation Run Defaults, but enables the physical optimization step (phys_opt_design) before and after routing." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true" AutoIncrementalDir="$PPRDIR/../../../../../develop/hdl/platform/p1-arty-a7-100/build/p1-arty-a7-100.srcs/utils_1/imports/impl_1">
+    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7a100tcsg324-1" ConstrsSet="constrs_1" Description="Similar to the Implementation Run Defaults, but enables the physical optimization step (phys_opt_design) before and after routing." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true" AutoIncrementalDir="$PPRDIR/../../../../../RISC5/develop/hdl/platform/p1-arty-a7-100/build/p1-arty-a7-100.srcs/utils_1/imports/impl_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Flow_RunPostRoutePhysOpt" Flow="Vivado Implementation 2020"/>
         <Step Id="init_design"/>
