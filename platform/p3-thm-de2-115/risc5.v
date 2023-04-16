@@ -92,7 +92,9 @@ module risc5 (
   wire [31:0] bus_din;        // bus data input, for reads
   wire [31:0] bus_dout;       // bus data output, for writes
   wire [31:0] cpu_spx;        // SP register value (for stack monitor)
+  wire [31:0] cpu_lnkx;       // LNK register value (for calltrace)
   wire [23:0] cpu_pcx;        // PC value (for aborts, see sys ctrl)
+  wire [31:0] cpu_irx;        // instruction register value (for calltrace)
   wire bus_ack;
   // prom
   wire prom_stb;
@@ -155,9 +157,13 @@ module risc5 (
   // stack mmonitor
   wire stm_stb;
   wire [31:0] stm_dout;
-  wire stm_trig_lim;
-  wire stm_trig_hot;
+  wire stm_trig_lim;          // stack limit trigger signal out
+  wire stm_trig_hot;          // hot zone trigger signal out
   wire stm_ack;
+  // call trace stacks
+  wire cts_stb;
+  wire [31:0] cts_dout;
+  wire cts_ack;
 
   // clocks
   clk clk_0 (
@@ -191,7 +197,9 @@ module risc5 (
     .bus_dout(bus_dout[31:0]),
     .bus_ack(bus_ack),
     .spx(cpu_spx),
-    .pcx(cpu_pcx)
+    .pcx(cpu_pcx),
+    .irx(cpu_irx),
+    .lnkx(cpu_lnkx)
   );
 
   // boot ROM
@@ -421,34 +429,49 @@ module risc5 (
     .ack(stm_ack)
   );
 
+ // call trace stacks
+ // uses two consecutive IO addresses
+ calltrace calltrace_0 (
+   // in
+   .clk(clk),
+   .stb(cts_stb),
+   .we(bus_we),
+   .addr(bus_addr[2]),
+   .ir_in(cpu_irx),
+   .lnk_in(cpu_lnkx[23:0]),
+   .data_in(bus_dout[23:0]),
+   // out
+   .data_out(cts_dout[31:0]),
+   .ack(cts_ack)
+ );
+
+
   // address decoding
   // ----------------
 
   // PROM: 2 KB @ 0xFFE000 => initial code address for CPU
-  assign prom_stb =
-    (bus_stb == 1'b1 && bus_addr[23:12] == 12'hFFE
-                     && bus_addr[11] == 1'b0) ? 1'b1 : 1'b0;
+  assign prom_stb = (bus_stb && bus_addr[23:12] == 12'hFFE && bus_addr[11] == 1'b0) ? 1'b1 : 1'b0;
 
   // RAM: (16 MB - 8 kB) @ 000000H
-  assign ram_stb =
-    (bus_stb == 1'b1 && bus_addr[23:13] != 11'h7FF) ? 1'b1 : 1'b0;
+  assign ram_stb = (bus_stb && bus_addr[23:13] != 11'h7FF) ? 1'b1 : 1'b0;
 
   // I/O: 256 bytes (64 words) @ 0FFFF00H
-  assign io_stb = (bus_stb == 1'b1 && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
+  assign io_stb = (bus_stb && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
-  assign spi_0_stb   = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
-  assign rs232_0_stb = (io_stb == 1'b1 && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
-  assign lsb_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
-  assign tmr_stb     = (io_stb == 1'b1 && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
+  assign spi_0_stb   = (io_stb && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
+  assign rs232_0_stb = (io_stb && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
+  assign lsb_stb     = (io_stb && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
+  assign tmr_stb     = (io_stb && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
-  // extended IO address range (pretty random allocation for now)
-  assign scr_stb     = (io_stb == 1'b1 && bus_addr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
-  assign stm_stb     = (io_stb == 1'b1 && bus_addr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
-  assign wd_stb      = (io_stb == 1'b1 && bus_addr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
-  assign ptmr_stb    = (io_stb == 1'b1 && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
-  assign start_stb   = (io_stb == 1'b1 && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
-  assign log_stb     = (io_stb == 1'b1 && bus_addr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
+  // extended IO address range
+  assign scr_stb     = (io_stb && bus_addr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
+  assign cts_stb     = (io_stb && bus_addr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80 (data), -76 (ctrl/status)
+  assign stm_stb     = (io_stb && bus_addr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
+  assign wd_stb      = (io_stb && bus_addr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
+  assign ptmr_stb    = (io_stb && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
+  assign start_stb   = (io_stb && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
+  assign log_stb     = (io_stb && bus_addr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
 
 
   // data out multiplexing
@@ -461,6 +484,7 @@ module risc5 (
     lsb_stb     ? lsb_dout[31:0]  :
     tmr_stb     ? tmr_dout[31:0]  :
     scr_stb     ? scr_dout[31:0] :
+    cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
     wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0]  :
@@ -479,6 +503,7 @@ module risc5 (
     lsb_stb     ? lsb_ack  :
     tmr_stb     ? tmr_ack  :
     scr_stb     ? scr_ack :
+    cts_stb     ? cts_ack :
     stm_stb     ? stm_ack :
     wd_stb      ? wd_ack :
     ptmr_stb    ? ptmr_ack  :

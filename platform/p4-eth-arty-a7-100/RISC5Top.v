@@ -170,6 +170,10 @@
   wire stm_trig_lim;
   wire stm_trig_hot;
   wire stm_ack;
+  // calltrace stacks
+  wire cts_stb;
+  wire [31:0] cts_dout;
+  wire cts_ack;
 
   // clocks
   clocks clocks_0 (
@@ -411,6 +415,22 @@
     .ack(stm_ack)
   );
 
+  // call trace stacks
+  // uses two consecutive IO addresses
+  calltrace calltrace_0 (
+    // in
+    .clk(clk),
+    .stb(cts_stb),
+    .we(wr),
+    .addr(adr[2]),
+    .ir_in(cpu_irx),
+    .lnk_in(cpu_lnkx[23:0]),
+    .data_in(outbus[23:0]),
+    // out
+    .data_out(cts_dout[31:0]),
+    .ack(cts_ack)
+  );
+
   // address decoding
   // ----------------
 
@@ -425,18 +445,19 @@
   assign ioenb = (adr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
-  assign spi_0_stb   = (ioenb == 1'b1 && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
-  assign rs232_0_stb = (ioenb == 1'b1 && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
-  assign lsb_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
-  assign tmr_stb     = (ioenb == 1'b1 && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
+  assign spi_0_stb   = (ioenb && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
+  assign rs232_0_stb = (ioenb && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
+  assign lsb_stb     = (ioenb && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
+  assign tmr_stb     = (ioenb && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
-  // extended IO address range (pretty random allocation for now)
-  assign scr_stb     = (ioenb == 1'b1 && adr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
-  assign stm_stb     = (ioenb == 1'b1 && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
-  assign wd_stb      = (ioenb == 1'b1 && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
-  assign ptmr_stb    = (ioenb == 1'b1 && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
-  assign start_stb   = (ioenb == 1'b1 && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
-  assign log_stb     = (ioenb == 1'b1 && adr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
+  // extended IO address range
+  assign scr_stb     = (ioenb && adr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
+  assign cts_stb     = (ioenb && adr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80, -76 (ctrl/status)
+  assign stm_stb     = (ioenb && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
+  assign wd_stb      = (ioenb && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
+  assign ptmr_stb    = (ioenb && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
+  assign start_stb   = (ioenb && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
+  assign log_stb     = (ioenb && adr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
 
 
   // data out multiplexing
@@ -447,6 +468,7 @@
     lsb_stb     ? lsb_dout[31:0] :
     tmr_stb     ? tmr_dout[31:0] :
     scr_stb     ? scr_dout[31:0] :
+    cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
     wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :

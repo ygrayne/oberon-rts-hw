@@ -11,7 +11,7 @@
 module cpu_x (clk, rst,
            bus_stb, bus_we, bus_addr,
            bus_din, bus_dout, bus_ack,
-           spx, pcx); // gray
+           spx, lnkx, pcx, irx); // gray
     input clk;                  // system clock
     input rst;                  // system reset
     output bus_stb;             // bus strobe
@@ -22,7 +22,9 @@ module cpu_x (clk, rst,
     input bus_ack;              // bus acknowledge
     // gray
     output [31:0] spx;         // stack pointer value
+    output [31:0] lnkx;        // link register value
     output [23:0] pcx;         // program counter value
+    output [31:0] irx;         // instruction register value
 
   wire cpu_stb;
   wire cpu_we;
@@ -62,7 +64,9 @@ module cpu_x (clk, rst,
     .bus_ack(cpu_ack),
     // gray
     .spx_out(spx[31:0]),
-    .pcx_out(pcx[23:0])
+    .lnkx_out(lnkx[31:0]),
+    .pcx_out(pcx[23:0]),
+    .irx_out(irx[31:0])
   );
 
 endmodule

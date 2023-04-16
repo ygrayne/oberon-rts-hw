@@ -3,19 +3,18 @@
 // extended, search for "gray"
 //
 
-
 `timescale 1ns / 1ps
 `default_nettype none
 
-
 `define CPU_ID  { 16'h4847, 8'h54 }  // Mfr. = HG, Version = 5.4
 `define SP 14
-
+`define LNK 15
 
 module cpu_core_x (clk, rst,
                 bus_stb, bus_we, bus_ben, bus_addr,
                 bus_din, bus_dout, bus_ack,
-                spx_out, pcx_out); // gray
+                spx_out, lnkx_out, pcx_out, irx_out);  // gray
+                
     input clk;                // system clock
     input rst;                // system reset
     output bus_stb;           // bus strobe
@@ -28,7 +27,9 @@ module cpu_core_x (clk, rst,
 
     // gray
     output [31:0] spx_out;    // stack pointer register value
+    output [31:0] lnkx_out;   // slink register value
     output [23:0] pcx_out;    // pc value
+    output [31:0] irx_out;    // instruction register value
     // end
 
   // program counter
@@ -36,10 +37,6 @@ module cpu_core_x (clk, rst,
   wire [23:0] pc_next;        // value written into pc
   wire pc_we;                 // pc write enable
   reg [23:0] pc;              // program counter
-
-  // gray
-  assign pcx_out[23:0] = pc[23:0];   // pc value
-  // end
 
   // bus
   wire bus_addr_src;          // bus address source selector
@@ -78,7 +75,8 @@ module cpu_core_x (clk, rst,
   wire reg_set_H;             // set register H
 
   // gray
-  reg [31:0] reg_spx;         // stack pointer register
+  assign pcx_out[23:0] = pc[23:0];   // pc value
+  assign irx_out[31:0] = ir[31:0];   // instruction register
   // end
 
   // alu
@@ -177,16 +175,25 @@ module cpu_core_x (clk, rst,
       H <= alu_out_H;
     end
   end
-
+  
   // gray
+  reg [31:0] reg_spx;                 // stack pointer register
+  reg [31:0] reg_lnkx;                // link register
+  
   always @(posedge clk) begin
     if (reg_we2) begin
-      if (reg_a2 == `SP) begin       // stack pointer register (R14))
+      if (reg_a2 == `SP) begin       // stack pointer register = R14
         reg_spx <= reg_di2;
+      end
+      else begin
+        if (reg_a2 == `LNK) begin    // link register = R15
+          reg_lnkx <= reg_di2;
+        end
       end
     end
   end
   assign spx_out[31:0] = reg_spx[31:0];
+  assign lnkx_out[31:0] = reg_lnkx[31:0];
   // end
 
   // alu
