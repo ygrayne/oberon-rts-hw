@@ -16,11 +16,12 @@ module scs (
   input wire stb,
   input wire we,
   input wire addr,
-  input wire [7:0] err_sig_in,      // hardware error signals
-  input wire [23:0] err_addr_in,    // program counter
+  input wire [7:0] err_sig,         // hardware error signals
+  input wire [23:0] err_addr,       // program counter
   input wire [31:0] data_in,
   output wire [31:0] data_out,
-  output wire sys_rst,              // reset the hardware ('rst')
+  output wire sys_rst,              // reset the hardware (global 'rst')
+  output wire [4:0] cp_pid,         // current process pid for other hardware to tap
   output wire ack
 );
 
@@ -30,55 +31,55 @@ module scs (
   wire rd_err = stb & ~we &  addr;
   
   reg [7:0] scs;        // control and status
-  reg [4:0] cp_pid;     // current process pid
-  reg [4:0] err_pid;    // error process pid
-  reg [23:0] err_addr;  // error address
-  reg [7:0] err_no;     // error number
+  reg [4:0] cp_pid_r;     // current process pid
+  reg [4:0] err_pid_r;    // error process pid
+  reg [23:0] err_addr_r;  // error address
+  reg [7:0] err_no_r;     // error number
   reg rst_trig;         // reset trigger from software
+  reg rst_trig0;
   
-//  initial begin
-//    scs[7:0] = 8'b0;
-//    cp_pid[4:0] = 5'b0;
-//    err_pid[4:0] = 5'b0;
-//    err_addr[23:0] = 24'b0;
-//    err_no[7:0] = 8'b0;
-//  end
-
+  
   integer i;
   always @(posedge clk) begin
     if (restart) begin
       scs[7:0] = 8'b0;
-      cp_pid[4:0] = 5'b0;
-      err_pid[4:0] = 5'b0;
-      err_addr[23:0] = 24'b0;
-      err_no[7:0] = 8'b0;
+      cp_pid_r[4:0] = 5'b0;
+      err_pid_r[4:0] = 5'b0;
+      err_addr_r[23:0] = 24'b0;
+      err_no_r[7:0] = 8'b0;
       rst_trig = 1'b0;
     end
     else begin
       if (scs[1]) begin
+        rst_trig0 <= 1'b1;
         rst_trig <= 1'b1;
         scs[1] <= 1'b0;
       end
       else begin
-        rst_trig <= 1'b0;
+        if (rst_trig0) begin
+          rst_trig0 <= 1'b0;
+        end
+        else begin
+          rst_trig <= 1'b0;
+        end
       end
       if (wr_scs) begin
         scs <= data_in[7:0];
-        cp_pid <= data_in[12:8];
-        err_pid <= data_in[17:13];
+        cp_pid_r <= data_in[12:8];
+        err_pid_r <= data_in[17:13];
       end
       else begin
         if (wr_err) begin
-          err_addr <= data_in[31:8];
-          err_no <= data_in[7:0];
+          err_addr_r <= data_in[31:8];
+          err_no_r <= data_in[7:0];
         end
         else begin
           i = 0;
           while (~scs[1] && (i < 8)) begin
-            if (err_sig_in[i]) begin
+            if (err_sig[i]) begin
               scs[1] <= 1'b1;           // reset
-              err_addr <= err_addr_in;
-              err_no <= {1'b1, i[2:0]};
+              err_addr_r <= err_addr;
+              err_no_r <= {1'b1, i[2:0]};
             end
             i = i + 1;
           end
@@ -87,50 +88,13 @@ module scs (
     end
   end
     
-//    else begin
-//      if (rst) begin
-//        scs <= {7'b0, scs[0]}; // keep other status regs across resets
-//      end
-//      else begin
-//        if (wr_scs) begin
-//          if (wr_fast == 2'b00) begin
-//            scs <= data_in[7:0];
-//            cp_pid <= data_in[12:8];
-//            err_pid <= data_in[17:13];
-//          end
-//          else begin
-//            if (wr_fast == 2'b01) begin
-//              cp_pid <= data_in[4:0];     // no need to read-modify-write
-//            end
-//          end
-//        end
-//        else begin
-//          if (wr_err) begin
-//            err_addr <= data_in[31:8];
-//            err_no <= data_in[7:0];
-//          end
-//          else begin
-//            i = 0;
-//            while (~scs[1] && (i < 8)) begin
-//              if (err_sig_in[i]) begin
-//                scs[1] <= 1'b1;           // reset
-//                err_addr <= err_addr_in;
-//                err_no <= {1'b1, i[2:0]};
-//              end
-//              i = i + 1;
-//            end
-//          end
-//        end
-//      end
-//    end
-
-
   assign data_out[31:0] =
-    rd_scs ? {14'b0, err_pid[4:0], cp_pid[4:0], scs[7:0]} :
-    rd_err ? {err_addr[23:0], err_no[7:0]} :
+    rd_scs ? {14'b0, err_pid_r[4:0], cp_pid_r[4:0], scs[7:0]} :
+    rd_err ? {err_addr_r[23:0], err_no_r[7:0]} :
     32'b0;
 
   assign sys_rst = restart | rst_trig;
+  assign cp_pid = cp_pid_r;
 
   assign ack = stb;
 

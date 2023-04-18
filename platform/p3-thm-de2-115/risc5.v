@@ -127,6 +127,7 @@ module risc5 (
   wire rst;
   wire [31:0] scs_dout;       // data out: register content
   wire [7:0] scs_err_sig_in;  // error signals in
+  wire [4:0] scs_cp_pid;      // current process' pid
   wire scs_ack;
   // rs232
   wire rs232_0_stb;
@@ -306,12 +307,13 @@ module risc5 (
     .stb(scs_stb),
     .we(bus_we),
     .addr(bus_addr[2]),
-    .err_sig_in(scs_err_sig_in),
-    .err_addr_in(cpu_pcx),
+    .err_sig(scs_err_sig_in),
+    .err_addr(cpu_pcx),
     .data_in(bus_dout[31:0]),
     // out
     .data_out(scs_dout[31:0]),
     .sys_rst(rst),
+    .cp_pid(scs_cp_pid),
     .ack(scs_ack)
   );
 
@@ -437,6 +439,7 @@ module risc5 (
    .addr(bus_addr[2]),
    .ir_in(cpu_irx),
    .lnk_in(cpu_lnkx[23:0]),
+   .cp_pid(scs_cp_pid),
    .data_in(bus_dout[23:0]),
    // out
    .data_out(cts_dout[31:0]),
