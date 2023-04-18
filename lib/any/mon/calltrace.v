@@ -53,14 +53,16 @@ module calltrace (
   wire wr_ctrl = stb &  we & addr;      // write control data
   wire rd_ctrl = stb & ~we & addr;      // read control/status data
 
-// split ctrl data_in
+  // split ctrl data_in
   wire [7:0] ctrl = data_in[7:0];
   wire [5:0] ctrl_data = data_in[13:8];
 
   // controls
-  wire wr_clear     = wr_ctrl & (ctrl[1]);    // clear a stack
-  wire wr_freeze    = wr_ctrl & (ctrl[2]);    // freeze a stack
-  wire wr_unfreeze  = wr_ctrl & (ctrl[3]);    // unfreeze a stack
+  wire wr_clear     = wr_ctrl & ctrl[1];    // clear a stack
+  wire wr_freeze    = wr_ctrl & ctrl[2];    // freeze current stack
+  wire wr_unfreeze  = wr_ctrl & ctrl[3];    // unfreeze current stack
+  wire wr_block     = wr_ctrl & ctrl[4];    // block all hw-registering of calls
+  wire wr_unblock   = wr_ctrl & ctrl[5];    // unblock hw-registering of calls
 
   // push and pop signals
   wire push_trig = (ir_in == 32'hAFE00000) ? 1'b1 : 1'b0;  // push trigger: STW LNK, SP, 0
@@ -70,9 +72,12 @@ module calltrace (
   wire push_p = push_trig & ~push_trig0;     // push edge pulse
   wire pop_p = pop_trig & ~pop_trig0;        // pop edge pulse
 
+  reg blocked;
+  initial blocked = 1'b0;
+  
   // actual push and pop signals
-  wire push_c = (wr_data | push_p);
-  wire pop_c = (rd_data | pop_p);
+  wire push_c = wr_data | (~blocked & push_p);
+  wire pop_c = rd_data | (~blocked & pop_p);
 
   // stacks input data
   wire [23:0] stack_din = wr_data ? data_in[23:0] : lnk_in[23:0];
@@ -90,6 +95,7 @@ module calltrace (
   always @(posedge clk) begin
     push_trig0 <= push_trig;
     pop_trig0 <= pop_trig;
+    blocked <= wr_block ? 1'b1 : wr_unblock ? 1'b0 : blocked;
   end
 
   // generate the stacks
@@ -99,8 +105,8 @@ module calltrace (
       assign push[j] = push_c & (cp_pid == j);
       assign pop[j] = pop_c & (cp_pid == j);
       assign read[j] = rd_data & (cp_pid == j);
-      assign freeze[j] = wr_freeze & (ctrl_data == j);
-      assign unfreeze[j] = wr_unfreeze & (ctrl_data == j);
+      assign freeze[j] = wr_freeze & (cp_pid == j);
+      assign unfreeze[j] = wr_unfreeze & (cp_pid == j);
       assign rst[j] = wr_clear & (ctrl_data == j);
 
       stackx #(.data_width(data_width), .num_slots(num_slots)) stackx_0 (
