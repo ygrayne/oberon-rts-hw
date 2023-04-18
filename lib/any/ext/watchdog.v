@@ -38,8 +38,7 @@ module watchdog (
 
   wire ticking = (timeoutval > 16'b0) ? 1'b1 : 1'b0;
 
-
-  always @ (posedge clk) begin
+  always @(posedge clk) begin
     if (rst) begin
       timeoutval <= 16'b0;
       ticker <= 16'b0;
@@ -55,7 +54,7 @@ module watchdog (
         if (ticking) begin
           if (ticker >= timeoutval) begin
             trigger <= 1'b1;
-            timeoutval <= 16'b0;
+            timeoutval <= 16'b0;    // ticking = false
             ticker <= 16'b0;
           end
           else begin
@@ -63,6 +62,9 @@ module watchdog (
               ticker <= ticker + 16'b1;
             end
           end
+        end
+        else begin
+          trigger <= 1'b0;
         end
       end
     end

@@ -36,7 +36,6 @@ module scs (
   reg [23:0] err_addr_r;  // error address
   reg [7:0] err_no_r;     // error number
   reg rst_trig;         // reset trigger from software
-  reg rst_trig0;
   
   
   integer i;
@@ -50,38 +49,36 @@ module scs (
       rst_trig = 1'b0;
     end
     else begin
-      if (scs[1]) begin
-        rst_trig0 <= 1'b1;
-        rst_trig <= 1'b1;
-        scs[1] <= 1'b0;
-      end
-      else begin
-        if (rst_trig0) begin
-          rst_trig0 <= 1'b0;
+      if (scs[1]) begin         // resetting
+        if (~rst_trig) begin
+          rst_trig <= 1'b1;
         end
         else begin
           rst_trig <= 1'b0;
+          scs[1] <= 1'b0;
         end
       end
-      if (wr_scs) begin
-        scs <= data_in[7:0];
-        cp_pid_r <= data_in[12:8];
-        err_pid_r <= data_in[17:13];
-      end
-      else begin
-        if (wr_err) begin
-          err_addr_r <= data_in[31:8];
-          err_no_r <= data_in[7:0];
+      else begin                // otherwise
+        if (wr_scs) begin
+          scs <= data_in[7:0];
+          cp_pid_r <= data_in[12:8];
+          err_pid_r <= data_in[17:13];
         end
         else begin
-          i = 0;
-          while (~scs[1] && (i < 8)) begin
-            if (err_sig[i]) begin
-              scs[1] <= 1'b1;           // reset
-              err_addr_r <= err_addr;
-              err_no_r <= {1'b1, i[2:0]};
+          if (wr_err) begin
+            err_addr_r <= data_in[31:8];
+            err_no_r <= data_in[7:0];
+          end
+          else begin
+            i = 0;
+            while (~scs[1] && (i < 8)) begin
+              if (err_sig[i]) begin
+                scs[1] <= 1'b1;           // start reset
+                err_addr_r <= err_addr;
+                err_no_r <= {1'b1, i[2:0]};
+              end
+              i = i + 1;
             end
-            i = i + 1;
           end
         end
       end
