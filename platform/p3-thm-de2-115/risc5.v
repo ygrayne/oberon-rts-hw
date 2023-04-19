@@ -1,7 +1,8 @@
 /**
-  Top level definition p3-thm-de2-115
+RISC5 processor definition for Oberon RTS p3-thm-de2-115
   --
   Architecture: THM
+  Board and technology: DE2-115, Altera Cyclone IV
   --
   Base/origin:
     * THM-oberon
@@ -16,7 +17,7 @@
   * move bio into board directory as lsb
   * improved SPI device
   * extended IO address space
-  * 16 MB SDRAM
+  * 16 MB SDRAM (only 512k in use currently)
   * parameterised clock frequency for perpiherals
   * process timers (periodic)
   * (re-) start tables
@@ -25,6 +26,7 @@
   * log buffer
   * watchdog
   * stack monitor
+  * calltrace stacks
 **/
 
 `timescale 1ns / 1ps
@@ -167,7 +169,7 @@ module risc5 (
   wire cts_ack;
 
   // clocks
-  clk clk_0 (
+  clocks clocks_0 (
     .clk_in(clk_in),
     .clk_ok(clk_ok),
     .clk_100_ps(sdram_clk),   // 100 MHz, phase-shifted
@@ -176,7 +178,7 @@ module risc5 (
   );
 
   // reset
-  rst rst_0 (
+  reset reset_0 (
     // in
     .clk_in(clk_in),          // 50 MHz "raw" input clock
     .clk_ok(clk_ok),
@@ -239,7 +241,7 @@ module risc5 (
 
   // ms timer
   // uses one IO address
-  tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
+  ms_timer #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),

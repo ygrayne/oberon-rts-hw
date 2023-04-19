@@ -15,7 +15,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module clk(
+module clocks (
   input clk_in,
   output clk_ok,
   output clk_100_ps,

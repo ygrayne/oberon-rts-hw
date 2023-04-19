@@ -8,7 +8,7 @@
   * Project Oberon, NW 14.6.2018
   * Embedded Project Oberon for Arty-A7, v8.0, CFB 16.10.2021
   --
-  Adaptations and extensions by Gray, gray@grayraven.org
+  2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
   --
   Changes/extensions (before stripping...):
@@ -35,7 +35,7 @@
   * remove watchdog
   * remove interrupt ctrl
   * remove dev sig selector
-  * remove log buffers (*)
+  * remove log buffers
   --
   Adding some new modules, replacing direct top level functionality
   * sys ctrl reg
@@ -48,7 +48,7 @@
   * process timers
   * watchdog
   * stack monitor
-  * call trace stacks
+  * calltrace stacks
   --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
@@ -187,7 +187,7 @@
   );
 
   // reset
-  rst rst_0 (
+  reset reset_0 (
     // in
     .clk_in(clk_in),
     .clk_ok(clk_ok),
@@ -238,7 +238,7 @@
 
   // ms timer
   // uses one IO address
-  tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
+  ms_timer #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),

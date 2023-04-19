@@ -12,7 +12,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module tmr #(parameter clock_freq = 40_000_000) (
+module ms_timer #(parameter clock_freq = 40_000_000) (
   input wire clk,
   input wire rst,
   input wire stb,
