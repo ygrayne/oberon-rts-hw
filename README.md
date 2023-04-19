@@ -13,6 +13,12 @@ Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but
 
 ## Current Status
 
+* 2023-04-18: added call trace feature, cleaned up error handling and reporting
+
+* 2023-04-18: improved system reset and restart circuitry
+
+* 2023-04-10: added RTC
+
 * 2023-04-09: extended the system control and status register for the new error handling.
 
 * 2023-04-05: (re-) implemented the watchdog and the stack overflow monitor. Their error signals result in an error handling that is unified together with the trap handling.
@@ -26,7 +32,8 @@ Most on-chip devices, such as process timers, reset circuits, or SPI and RS232 i
 
 ## Next Up
 
-* Rethink processes and their control and monitoring elements in the hardware.
+* Hardware-signal based process scheduling.
+* Hardware support for critical region protection for processes.
 
 
 ## Architectures
