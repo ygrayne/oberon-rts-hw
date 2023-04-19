@@ -8,12 +8,11 @@
   The stack write pointer 'wr_ptr' points to the next unused slot, ie. the next
   'push' will store its value there. If the stack is full, 'wr_ptr' will
   point to a non-existing stack slot, which signals the full condition, and no
-  more values can be pushed. 'pop', well, pops a value from the stack, unless
-  the stack is frozen.
+  more values can be pushed. 'pop', well, pops a value from the stack.
 
-  To read the stack data without popping, 'freeze' it, and use 'pop' until 'more'
-  goes low to indicate the end of the data. 'unfreeze' gets the stack back to
-  the state before the freeze. 'push' is not recognised in the frozen state.
+  To read the stack data without popping, 'freeze' it, and use 'read'.
+  'unfreeze' gets the stack back to the state before the freeze.
+  'push' and 'pop' are not recognised in the frozen state.
 
   The stack fills/grows from bottom to top, ie. from 'wr_ptr' = 0 "upwards".
   --

@@ -1,7 +1,8 @@
 /**
-  Top level definition p3-thm-de2-115
+RISC5 processor definition for Oberon RTS p3-thm-de2-115
   --
   Architecture: THM
+  Board and technology: DE2-115, Altera Cyclone IV
   --
   Base/origin:
     * THM-oberon
@@ -16,7 +17,7 @@
   * move bio into board directory as lsb
   * improved SPI device
   * extended IO address space
-  * 16 MB SDRAM
+  * 16 MB SDRAM (only 512k in use currently)
   * parameterised clock frequency for perpiherals
   * process timers (periodic)
   * (re-) start tables
@@ -25,6 +26,7 @@
   * log buffer
   * watchdog
   * stack monitor
+  * calltrace stacks
 **/
 
 `timescale 1ns / 1ps
@@ -82,9 +84,8 @@ module risc5 (
   wire mclk;                  // memory clock, 100 MHz
   wire clk;                   // system clock, 50 MHz
   // reset
-  wire rst;                   // active high
-  wire rst_n;                 // active low
-  wire rst_trig;              // reset triggers
+  wire rst_out;               // active high
+  wire rst_out_n;             // active low
   // cpu
   wire bus_stb;
   wire bus_we;                // bus write enable
@@ -123,12 +124,14 @@ module risc5 (
   wire start_stb;
   wire [31:0] start_dout;     // data out: start-up table number, armed bit
   wire start_ack;
-  // sys control
-  wire scr_stb;
-  wire [31:0] scr_dout;       // data out: register content
-  wire scr_sys_rst;           // system reset signal out
-  wire [7:0] scr_err_sig_in;  // error signals in
-  wire scr_ack;
+  // sys control and status
+  wire scs_stb;
+  wire rst;                   // system reset signal out, active high
+  wire rst_n;                 // system reset signal out, active low
+  wire [31:0] scs_dout;       // data out: register content
+  wire [7:0] scs_err_sig_in;  // error signals in
+  wire [4:0] scs_cp_pid;      // current process' pid
+  wire scs_ack;
   // rs232
   wire rs232_0_stb;
   wire [31:0] rs232_0_dout;   // data out: received data, status
@@ -166,24 +169,23 @@ module risc5 (
   wire cts_ack;
 
   // clocks
-  clk clk_0 (
+  clocks clocks_0 (
     .clk_in(clk_in),
     .clk_ok(clk_ok),
-    .clk_100_ps(sdram_clk),
-    .clk_100(mclk),
-    .clk_50(clk)
+    .clk_100_ps(sdram_clk),   // 100 MHz, phase-shifted
+    .clk_100(mclk),           // 100 MHz
+    .clk_50(clk)              // 50 MHz
   );
 
   // reset
-  assign rst_trig = scr_sys_rst;
-  rst rst_0 (
+  reset reset_0 (
     // in
-    .clk(clk),
+    .clk_in(clk_in),          // 50 MHz "raw" input clock
     .clk_ok(clk_ok),
-    .rst_in(rst_trig),
+    .rst_in_n(btn_in_n[3]),
     // out
-    .rst(rst),
-    .rst_n(rst_n)
+    .rst_out(rst_out),
+    .rst_out_n(rst_out_n)
   );
 
   // CPU
@@ -239,7 +241,7 @@ module risc5 (
 
   // ms timer
   // uses one IO address
-  tmr #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
+  ms_timer #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -297,24 +299,26 @@ module risc5 (
     .ack(start_ack)
   );
 
-  // sys control
+  // sys control and status
   // uses two consecutive IO addresses
   // order must correspond with values in SysCtrl.mod for correct logging
-  assign scr_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], lsb_btn[0]};
-  sysctrl sysctrl_0 (
+  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], 1'b0};
+  scs scs_0 (
     // in
     .clk(clk),
-    .rst(rst),
-    .stb(scr_stb),
+    .restart(rst_out),
+    .stb(scs_stb),
     .we(bus_we),
     .addr(bus_addr[2]),
-    .err_sig_in(scr_err_sig_in),
-    .err_addr_in(cpu_pcx),
+    .err_sig(scs_err_sig_in),
+    .err_addr(cpu_pcx),
     .data_in(bus_dout[31:0]),
     // out
-    .data_out(scr_dout[31:0]),
-    .sys_rst(scr_sys_rst),
-    .ack(scr_ack)
+    .data_out(scs_dout[31:0]),
+    .sys_rst(rst),
+    .sys_rst_n(rst_n),
+    .cp_pid(scs_cp_pid),
+    .ack(scs_ack)
   );
 
   // RS232 buffered
@@ -439,6 +443,7 @@ module risc5 (
    .addr(bus_addr[2]),
    .ir_in(cpu_irx),
    .lnk_in(cpu_lnkx[23:0]),
+   .cp_pid(scs_cp_pid),
    .data_in(bus_dout[23:0]),
    // out
    .data_out(cts_dout[31:0]),
@@ -465,7 +470,7 @@ module risc5 (
   assign tmr_stb     = (io_stb && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
   // extended IO address range
-  assign scr_stb     = (io_stb && bus_addr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
+  assign scs_stb     = (io_stb && bus_addr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
   assign cts_stb     = (io_stb && bus_addr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80 (data), -76 (ctrl/status)
   assign stm_stb     = (io_stb && bus_addr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
   assign wd_stb      = (io_stb && bus_addr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
@@ -483,7 +488,7 @@ module risc5 (
     rs232_0_stb ? rs232_0_dout[31:0]  :
     lsb_stb     ? lsb_dout[31:0]  :
     tmr_stb     ? tmr_dout[31:0]  :
-    scr_stb     ? scr_dout[31:0] :
+    scs_stb     ? scs_dout[31:0] :
     cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
     wd_stb      ? wd_dout[31:0] :
@@ -502,7 +507,7 @@ module risc5 (
     rs232_0_stb ? rs232_0_ack  :
     lsb_stb     ? lsb_ack  :
     tmr_stb     ? tmr_ack  :
-    scr_stb     ? scr_ack :
+    scs_stb     ? scs_ack :
     cts_stb     ? cts_ack :
     stm_stb     ? stm_ack :
     wd_stb      ? wd_ack :

@@ -410,6 +410,9 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 
 set_global_assignment -name ENABLE_LOGIC_ANALYZER_INTERFACE OFF
+set_global_assignment -name VERILOG_FILE "../../../lib/tech/thm/cyclone-iv/base/clocks.v"
+set_global_assignment -name VERILOG_FILE "../../../lib/board/thm/de2-115/base/reset.v"
+set_global_assignment -name VERILOG_FILE ../../../lib/any/base/ms_timer.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/gen/stackx.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/mon/calltrace.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/base/start.v
@@ -428,16 +431,13 @@ set_global_assignment -name VERILOG_FILE ../../../lib/any/io/rs232_rx.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/io/rs232.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/gen/fifo.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/ext/proctimers.v
-set_global_assignment -name VERILOG_FILE ../../../lib/any/base/tmr.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/base/sysctrl.v
-set_global_assignment -name VERILOG_FILE ../../../lib/any/base/rst.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/shift.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/muldiv.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/fpu.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/cpu/cpu_bus.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/ram.v
 set_global_assignment -name VERILOG_FILE ../../../lib/thm/base/prom.v
-set_global_assignment -name VERILOG_FILE "../../../lib/tech/thm/cyclone-iv/base/clk.v"
 set_global_assignment -name SDC_FILE ../risc5.sdc
 set_global_assignment -name VERILOG_FILE ../risc5.v
 set_global_assignment -name VERILOG_FILE "../../../lib/board/thm/de2-115/io/lsb_s.v"

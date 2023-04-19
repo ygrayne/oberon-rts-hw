@@ -3,7 +3,7 @@
   --
   For Xilinx Artix-7
   --
-  2022 Gray, gray@grayraven.org
+  (c) 2022 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
 
