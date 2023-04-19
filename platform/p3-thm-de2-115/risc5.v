@@ -124,7 +124,8 @@ module risc5 (
   wire start_ack;
   // sys control and status
   wire scs_stb;
-  wire rst;
+  wire rst;                   // system reset signal out, active high
+  wire rst_n;                 // system reset signal out, active low
   wire [31:0] scs_dout;       // data out: register content
   wire [7:0] scs_err_sig_in;  // error signals in
   wire [4:0] scs_cp_pid;      // current process' pid
@@ -177,7 +178,7 @@ module risc5 (
   // reset
   rst rst_0 (
     // in
-    .clk_in(clk_in),          // 50 MHz "raw" input clock 
+    .clk_in(clk_in),          // 50 MHz "raw" input clock
     .clk_ok(clk_ok),
     .rst_in_n(btn_in_n[3]),
     // out
@@ -313,6 +314,7 @@ module risc5 (
     // out
     .data_out(scs_dout[31:0]),
     .sys_rst(rst),
+    .sys_rst_n(rst_n),
     .cp_pid(scs_cp_pid),
     .ack(scs_ack)
   );

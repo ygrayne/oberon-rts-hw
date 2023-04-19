@@ -44,8 +44,11 @@
   --
   Re-adding stuff
   * log buffer
+  * system control and status
+  * process timers
   * watchdog
   * stack monitor
+  * call trace stacks
   --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
@@ -56,7 +59,6 @@
 `default_nettype none
 
 `define CLOCK_FREQ 40_000_000
-`define NUM_PROC_CTRL 16
 `define MEM_BLK_SIZE 'h10000    // 64k
 `define PROM_FILE "../../../platform/p4-eth-arty-a7-100/promfiles/BootLoad-512k-64k.mem"
 `define RS232_BUF_SLOTS 256
@@ -86,13 +88,12 @@
  );
 
   // clk
+  wire clk_ok;                // clocks stable
   wire clk;                   // system clock
   wire clk2x;                 // memory clock
-  wire clk_ok;                // clocks stable
   // reset
-  wire rst_n;                 // active low
-  wire rst;                   // active high
-  wire rst_trig;              // reset triggers
+  wire rst_out_n;             // active low
+  wire rst_out;               // active high
   // cpu
   wire [23:0] adr;            // address bus
   wire [31:0] inbus;          // data to RISC core
@@ -105,7 +106,7 @@
   wire wr;                    // CPU write
   wire ben;                   // CPU byte enable
   wire irq_req;               // interrupt request to CPU
-  // cpu extensions (currently unused)
+  // cpu extensions
   wire cpu_intack;            // CPU out: interrupt ack
   wire cpu_rti;               // CPU out: return from interrupt
   wire cpu_intabort;          // CPU in: abort interrupt, "return" to addr 0, not interrupted code
@@ -114,7 +115,6 @@
   wire [31:0] cpu_irx;        // CPU out: instruction register
   wire [23:0] cpu_spcx;       // CPU out: SPC register (saved PC on interrupt * 4)
   wire [21:0] cpu_pcx;        // CPU out: current PC
-
   // io
   wire ioenb;                 // IO enable
   // ms timer
@@ -133,12 +133,14 @@
   wire start_stb;
   wire [31:0] start_dout;     // data out: start-up table number, armed bit
   wire start_ack;
-  // sys ctrl
-  wire scr_stb;
-  wire [31:0] scr_dout;       // data out: register content
-  wire scr_sys_rst;           // system reset signal out
-  wire [7:0] scr_err_sig_in;  // error signals in
-  wire scr_ack;
+  // sys control and status
+  wire scs_stb;
+  wire [31:0] scs_dout;       // data out: register content
+  wire rst;                   // system reset signal out, active high
+  wire rst_n;                 // system reset signal out, active low
+  wire [7:0] scs_err_sig_in;  // error signals in
+  wire [4:0] scs_cp_pid;      // current process' pid
+  wire scs_ack;
   // rs232
   wire rs232_0_stb;
   wire [31:0] rs232_0_dout;   // data out: received data, status
@@ -178,22 +180,21 @@
   // clocks
   clocks clocks_0 (
     .clk_in(clk_in),
+    .locked(clk_ok),
     .rst(1'b0),
     .outclk_0(clk),
-    .outclk_1(clk2x),
-    .locked(clk_ok)
+    .outclk_1(clk2x)
   );
 
   // reset
-  assign rst_trig = scr_sys_rst;
   rst rst_0 (
     // in
-    .clk(clk),
+    .clk_in(clk_in),
     .clk_ok(clk_ok),
-    .rst_in(rst_trig),
+    .rst_in(btn_in[3]),
     // out
-    .rst_n(rst_n),
-    .rst(rst)
+    .rst_out_n(rst_out_n),
+    .rst_out(rst_out)
   );
 
   // CPU
@@ -290,21 +291,23 @@
   // sys control
   // uses two consecutive IO addresses
   // order must correspond with values in SysCtrl.mod for correct logging
-  assign scr_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], lsb_btn[0]};
-  sysctrl sysctrl_0 (
+  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], 1'b0};
+  scs scs_0 (
     // in
     .clk(clk),
-    .rst(rst),
-    .stb(scr_stb),
+    .restart(rst_out),
+    .stb(scs_stb),
     .we(wr),
     .addr(adr[2]),
-    .err_sig_in(scr_err_sig_in),
-    .err_addr_in({cpu_pcx, 2'b0}), // PC is 22 bit word aligned
+    .err_sig(scs_err_sig_in),
+    .err_addr({cpu_pcx, 2'b0}), // PC is 22 bit word aligned
     .data_in(outbus[31:0]),
     // out
-    .data_out(scr_dout[31:0]),
-    .sys_rst(scr_sys_rst),
-    .ack(scr_ack)
+    .data_out(scs_dout[31:0]),
+    .sys_rst(rst),
+    .sys_rst_n(rst_n),
+    .cp_pid(scs_cp_pid),
+    .ack(scs_ack)
   );
 
   // RS232 buffered
@@ -425,6 +428,7 @@
     .addr(adr[2]),
     .ir_in(cpu_irx),
     .lnk_in(cpu_lnkx[23:0]),
+    .cp_pid(scs_cp_pid),
     .data_in(outbus[23:0]),
     // out
     .data_out(cts_dout[31:0]),
@@ -451,7 +455,7 @@
   assign tmr_stb     = (ioenb && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
 
   // extended IO address range
-  assign scr_stb     = (ioenb && adr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
+  assign scs_stb     = (ioenb && adr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
   assign cts_stb     = (ioenb && adr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80, -76 (ctrl/status)
   assign stm_stb     = (ioenb && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
   assign wd_stb      = (ioenb && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
@@ -467,7 +471,7 @@
     rs232_0_stb ? rs232_0_dout[31:0] :
     lsb_stb     ? lsb_dout[31:0] :
     tmr_stb     ? tmr_dout[31:0] :
-    scr_stb     ? scr_dout[31:0] :
+    scs_stb     ? scs_dout[31:0] :
     cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
     wd_stb      ? wd_dout[31:0] :
@@ -479,15 +483,3 @@
 endmodule
 
 `resetall
-
-//  echo echo_0 (
-//    // in
-//    .clk(clk),
-//    .stb(log_stb),
-//    .we(wr),
-//    .addr(adr[2]),
-//    .data_in(outbus[31:0]),
-//    // out
-//    .data_out(log_dout[31:0]),
-//    .ack(log_ack)
-//  );

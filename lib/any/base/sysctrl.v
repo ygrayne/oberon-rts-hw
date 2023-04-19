@@ -21,6 +21,7 @@ module scs (
   input wire [31:0] data_in,
   output wire [31:0] data_out,
   output wire sys_rst,              // reset the hardware (global 'rst')
+  output wire sys_rst_n,            // reset the hardware (global 'rst_n')
   output wire [4:0] cp_pid,         // current process pid for other hardware to tap
   output wire ack
 );
@@ -29,15 +30,15 @@ module scs (
   wire rd_scs = stb & ~we & ~addr;
   wire wr_err = stb &  we &  addr;
   wire rd_err = stb & ~we &  addr;
-  
+
   reg [7:0] scs;        // control and status
   reg [4:0] cp_pid_r;     // current process pid
   reg [4:0] err_pid_r;    // error process pid
   reg [23:0] err_addr_r;  // error address
   reg [7:0] err_no_r;     // error number
   reg rst_trig;         // reset trigger from software
-  
-  
+
+
   integer i;
   always @(posedge clk) begin
     if (restart) begin
@@ -84,13 +85,14 @@ module scs (
       end
     end
   end
-    
+
   assign data_out[31:0] =
     rd_scs ? {14'b0, err_pid_r[4:0], cp_pid_r[4:0], scs[7:0]} :
     rd_err ? {err_addr_r[23:0], err_no_r[7:0]} :
     32'b0;
 
   assign sys_rst = restart | rst_trig;
+  assign sys_rst_n = ~sys_rst;
   assign cp_pid = cp_pid_r;
 
   assign ack = stb;

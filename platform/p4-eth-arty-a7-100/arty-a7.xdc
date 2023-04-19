@@ -1,5 +1,4 @@
 ## Constraints file for p4-eth-arty-a7-100
-## Stripped down
 ## --
 ## Based on Embedded Oberon, Astrobe for RISC5 v7.0.2
 ## CFB Software
