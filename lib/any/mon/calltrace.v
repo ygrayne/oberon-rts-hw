@@ -4,7 +4,7 @@
   Instantiate 'num_stacks' calltrace stacks with 'num_slots' slots each.
   --
   The calltrace stack is selected by input 'cp_pid' from the SCS.
-  
+
   The selected calltrace stack registers
   1) the entry into a procedure, pushing the LNK value
   2) the exit from a procedure, popping the topmost LNK value
@@ -20,6 +20,8 @@
   [1]: clear stack as given by ctrl_data
   [2]: freeze stack as given by ctrl_data
   [3]: unfreeze stack as given by ctrl_data
+  [4]: block all hw-push
+  [5]: unblock, ie. allow hw-push
 
   Control data_in[13:8];
   [5:0] stack number
@@ -74,7 +76,7 @@ module calltrace (
 
   reg blocked;
   initial blocked = 1'b0;
-  
+
   // actual push and pop signals
   wire push_c = wr_data | (~blocked & push_p);
   wire pop_c = rd_data | (~blocked & pop_p);
@@ -84,7 +86,7 @@ module calltrace (
 
   // control and output signals for individual stacks
   wire [num_stacks-1:0] push, pop, read, rst, freeze, unfreeze;
-  wire [num_stacks-1:0] empty, full, frozen;
+  wire [num_stacks-1:0] empty, full, ovfl, frozen;
 
   // output muxers from the stacks
   wire [7:0] count [num_stacks-1:0];
@@ -102,6 +104,7 @@ module calltrace (
   genvar j;
   generate
     for (j = 0; j < num_stacks; j = j+1) begin: ct_stacks
+      // control signals
       assign push[j] = push_c & (cp_pid == j);
       assign pop[j] = pop_c & (cp_pid == j);
       assign read[j] = rd_data & (cp_pid == j);
@@ -122,13 +125,14 @@ module calltrace (
         // out
         .empty(empty[j]),
         .full(full[j]),
+        .ovfl(ovfl[j]),
         .frozen(frozen[j]),
         .count(count[j]),
         .max_count(max_count[j]),
         .data_out(stack_data_out_mux[j])
       );
-
-      assign stack_ctrl_out_mux[j] = {max_count[j], count[j], 5'b0, frozen[j], full[j], empty[j]};
+      // status signals
+      assign stack_ctrl_out_mux[j] = {max_count[j], count[j], 4'b0, frozen[j], ovfl[j], full[j], empty[j]};
     end
   endgenerate
 
