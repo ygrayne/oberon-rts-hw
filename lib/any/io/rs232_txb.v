@@ -5,8 +5,6 @@
   --
   Original RS232 transmitter design by NW 4.5.09 / 15.8.10 / 15.11.10
   --
-  Note: needs design review
-  --
   2020 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -16,7 +14,7 @@
 
 module rs232_txb #(parameter clock_freq = 50000000, num_slots = 63) (
   input wire clk,
-  input wire rst_n,
+  input wire rst,
   input wire fsel,
   input wire wr,
   input wire [7:0] data_in,
@@ -33,13 +31,13 @@ module rs232_txb #(parameter clock_freq = 50000000, num_slots = 63) (
   wire fifo_rd = start_tx;
 
   always @(posedge clk) begin
-    tx_rdy_0 <= ~rst_n ? 1'b1 : tx_rdy;
+    tx_rdy_0 <= rst ? 1'b1 : tx_rdy;
   end
 
   // unbuffered RS232 transmitter
   rs232_tx #(.clock_freq(clock_freq)) rs232_tx_0 (
     .clk(clk),
-    .rst_n(rst_n),
+    .rst_n(~rst),
     .fsel(fsel),
     .start(start_tx),
     .rdy(rdy),
@@ -50,7 +48,7 @@ module rs232_txb #(parameter clock_freq = 50000000, num_slots = 63) (
   // buffer
   fifo #(.num_slots(num_slots)) fifo_0 (
     .clk(clk),
-    .rst_n(rst_n),
+    .rst(rst),
     .wr(wr),
     .rd(fifo_rd),
     .data_in(data_in),
