@@ -8,10 +8,12 @@
 `default_nettype none
 
 
-module cpu_x (clk, rst,
-           bus_stb, bus_we, bus_addr,
-           bus_din, bus_dout, bus_ack,
-           spx, lnkx, pcx, irx); // gray
+module cpu_x #(parameter start_addr = 24'hFFE000) ( // gray
+  clk, rst,
+  bus_stb, bus_we, bus_addr,
+  bus_din, bus_dout, bus_ack,
+  spx, lnkx, pcx, irx  // gray
+); 
     input clk;                  // system clock
     input rst;                  // system reset
     output bus_stb;             // bus strobe
@@ -52,7 +54,7 @@ module cpu_x (clk, rst,
     .cpu_ack(cpu_ack)
   );
 
-  cpu_core_x cpu_core_0( // gray
+  cpu_core_x #(.start_addr(start_addr)) cpu_core_0 ( // gray
     .clk(clk),
     .rst(rst),
     .bus_stb(cpu_stb),

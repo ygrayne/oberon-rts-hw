@@ -10,27 +10,29 @@
 `define SP 14
 `define LNK 15
 
-module cpu_core_x (clk, rst,
-                bus_stb, bus_we, bus_ben, bus_addr,
-                bus_din, bus_dout, bus_ack,
-                spx_out, lnkx_out, pcx_out, irx_out);  // gray
+module cpu_core_x #(parameter start_addr = 24'hFFE000) (
+  clk, rst,
+  bus_stb, bus_we, bus_ben, bus_addr,
+  bus_din, bus_dout, bus_ack,
+  spx_out, lnkx_out, pcx_out, irx_out // gray
+);  
                 
-    input clk;                // system clock
-    input rst;                // system reset
-    output bus_stb;           // bus strobe
-    output bus_we;            // bus write enable
-    output bus_ben;           // 0: word, 1: byte
-    output [23:0] bus_addr;   // bus address
-    input [31:0] bus_din;     // bus data input, for reads
-    output [31:0] bus_dout;   // bus data output, for writes
-    input bus_ack;            // bus acknowledge
+  input clk;                // system clock
+  input rst;                // system reset
+  output bus_stb;           // bus strobe
+  output bus_we;            // bus write enable
+  output bus_ben;           // 0: word, 1: byte
+  output [23:0] bus_addr;   // bus address
+  input [31:0] bus_din;     // bus data input, for reads
+  output [31:0] bus_dout;   // bus data output, for writes
+  input bus_ack;            // bus acknowledge
 
-    // gray
-    output [31:0] spx_out;    // stack pointer register value
-    output [31:0] lnkx_out;   // slink register value
-    output [23:0] pcx_out;    // pc value
-    output [31:0] irx_out;    // instruction register value
-    // end
+  // gray
+  output [31:0] spx_out;    // stack pointer register value
+  output [31:0] lnkx_out;   // slink register value
+  output [23:0] pcx_out;    // pc value
+  output [31:0] irx_out;    // instruction register value
+  // end
 
   // program counter
   wire pc_src;                // pc source selector
@@ -106,8 +108,8 @@ module cpu_core_x (clk, rst,
 
   // program counter
   assign pc_next =
-    (pc_src == 1'b0) ? 24'hFFE000 :       // reset
-    (pc_src == 1'b1) ? alu_res[23:0] :    // next instr, branch
+    (pc_src == 1'b0) ? start_addr :      // reset (gray)
+    (pc_src == 1'b1) ? alu_res[23:0] :   // next instr, branch
     24'hxxxxxx;
   always @(posedge clk) begin
     if (pc_we) begin
