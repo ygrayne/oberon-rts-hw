@@ -5,7 +5,7 @@
   Parameter: 'mem_blocks': the number of 16kx32 blocks, ie. 16,384 * 4 bytes
   Limitation: minimum mem_blocks = 3 (ie. 196,608 bytes, allocates one 32k and one 16k block)
   --
-  Logic for byte-wise write enable and rdata demux-ing from Astrobe's design. Thanks.
+  Logic for byte-wise write enable and rdata mux-ing from Astrobe's design. Thanks.
   --
   Gray, gray@grayraven.org
   https://oberon-rts.org/licences
@@ -18,15 +18,15 @@ module ramg #(parameter mem_blocks = 3) (
   input wire clk,
   input wire wr,
   input wire be,
-  input wire [$clog2(mem_blocks*65536)-1:0] adr,
+  input wire [$clog2(mem_blocks * 'h10000)-1:0] adr,
   input wire [31:0] wdata,
   output reg [31:0] rdata
 );
 
-  localparam Num16k = mem_blocks % 2;
-  localparam Num32k = mem_blocks / 2;
+  localparam Num16k = 0; //mem_blocks % 2;
+  localparam Num32k = 4; // mem_blocks / 2;
   localparam NumBlocks = Num32k + Num16k;
-  localparam MaxAdrBit = $clog2(mem_blocks*65536);
+  localparam MaxAdrBit = $clog2(mem_blocks * 'h10000);
 
   // clock divider
   reg clkb;
@@ -35,9 +35,9 @@ module ramg #(parameter mem_blocks = 3) (
   // basic write enable, byte-wise (adr[1:0])
   wire [1:0] adr10 = adr[1:0];
   wire [3:0] byte_en = {~be | (adr10 == 2'b11), ~be | (adr10 == 2'b10), ~be | (adr10 == 2'b01), ~be | (adr10 == 2'b00)};
-  wire [3:0] bwe = (wr & ~clkb) ? byte_en : 4'b0000;
+  wire [3:0] bwe = (wr & ~clkb) ? byte_en : 4'b0;
 
-  wire [31:0] rdd [0:NumBlocks-1];  // rdata demux, 32 bits
+  wire [31:0] rdd [0:NumBlocks-1];  // rdata mux, 32 bits
   reg [3:0] we [0:NumBlocks-1];     // byte-wise write enable
 
   // update write enable and rdata

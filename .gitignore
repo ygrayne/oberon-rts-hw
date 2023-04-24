@@ -14,8 +14,11 @@
 !/orig/
 !/epo-base/
 
-/platform/*/build/
-/epo-base/platform/*/build/
+/platform/*/build/*
+/epo-base/platform/*/build/*
+
+!/platform/*/build/signal_tap/
+!/platform/*/build/LAI/
 
 ## add files
 !*.mod
@@ -30,3 +33,5 @@
 !*.srf
 !*.v
 !*.xdc
+!*.stp
+!*.lai

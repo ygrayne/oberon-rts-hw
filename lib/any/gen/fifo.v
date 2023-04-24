@@ -34,50 +34,50 @@ module fifo #(parameter data_width = 8, num_slots = 8) (
 
   always @(posedge clk) begin
     if (rst) begin
-      rd_ptr <= 8'b0;
-      wr_ptr <= 8'b0;
-      count <= 9'b0;
+      rd_ptr[7:0] <= 8'b0;
+      wr_ptr[7:0] <= 8'b0;
+      count[8:0] <= 9'b0;
     end
 		else begin
       if (empty) begin
-        if (wr && rd) begin
-          wr_ptr <= wr_ptr + 8'b1;
-          rd_ptr <= rd_ptr + 8'b1;
+        if (wr & rd) begin
+          wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
+          rd_ptr[7:0] <= rd_ptr[7:0] + 8'b1;
         end
         else begin
           if (wr) begin
-            wr_ptr <= wr_ptr + 8'b1;
-            count <= count + 9'b1;
+            wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
+            count[8:0] <= count[8:0] + 9'b1;
           end
         end
       end
       else begin
         if (full) begin
-          if (wr && rd) begin
-            wr_ptr <= wr_ptr + 8'b1;
-            rd_ptr <= rd_ptr + 8'b1;
+          if (wr & rd) begin
+            wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
+            rd_ptr[7:0] <= rd_ptr[7:0] + 8'b1;
           end
           else begin
             if (rd) begin
-              rd_ptr <= rd_ptr + 8'b1;
-              count <= count - 9'b1;
+              rd_ptr[7:0] <= rd_ptr[7:0] + 8'b1;
+              count[8:0] <= count[8:0] - 9'b1;
             end
           end
         end
         else begin // in between
-          if (wr && rd) begin
-            wr_ptr <= wr_ptr + 8'b1;
-            rd_ptr <= rd_ptr + 8'b1;
+          if (wr & rd) begin
+            wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
+            rd_ptr[7:0] <= rd_ptr[7:0] + 8'b1;
           end
           else begin
             if (wr) begin
-              wr_ptr <= wr_ptr + 8'b1;
-              count <= count + 9'b1;
+              wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
+              count[8:0] <= count[8:0] + 9'b1;
             end
             else begin
               if (rd) begin
-                rd_ptr <= rd_ptr + 8'b1;
-                count <= count - 9'b1;
+                rd_ptr[7:0] <= rd_ptr[7:0] + 8'b1;
+                count[8:0] <= count[8:0] - 9'b1;
               end
             end
           end
@@ -111,6 +111,7 @@ module fifo_mem #(parameter data_width = 8, num_slots = 8) (
 
   reg [data_width-1:0] mem [num_slots-1:0];
 
+  // read will return new data from write
   always @(posedge clk) begin
     if (we) begin
       mem[wr_ptr] = din[data_width-1:0];

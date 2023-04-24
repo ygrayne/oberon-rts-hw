@@ -31,12 +31,12 @@ module scs (
   wire wr_err = stb &  we &  addr;
   wire rd_err = stb & ~we &  addr;
 
-  reg [7:0] scs;        // control and status
+  reg [7:0] scs;          // control and status
   reg [4:0] cp_pid_r;     // current process pid
   reg [4:0] err_pid_r;    // error process pid
   reg [23:0] err_addr_r;  // error address
   reg [7:0] err_no_r;     // error number
-  reg rst_trig;         // reset trigger from software
+  reg rst_trig;           // reset trigger from software
 
 
   integer i;

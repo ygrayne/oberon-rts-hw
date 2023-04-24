@@ -43,7 +43,8 @@ module rs232 #(parameter clock_freq = 50_000_000, buf_slots = 63) (
   always @(posedge clk) begin
     if (rst) begin
       ctrl <= 1'b0;
-    end else begin
+    end
+    else begin
       if (wr_ctrl) begin
         ctrl <= data_in[0:0];
       end
