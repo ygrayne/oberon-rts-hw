@@ -30,14 +30,14 @@ module lsb_s (
   input wire [31:0] data_in,
   input wire [3:0] leds_g_in,
   output wire [31:0] data_out,
+  output wire [3:0] btn_out,
+  output wire [3:0] swi_out,
   output wire ack,
   // external interface
   input wire [3:0] btn_in,
   input wire [3:0] swi_in,
   output reg [7:0] leds_sys,
-  output wire [3:0] leds_g,
-  output wire [3:0] btn_out,
-  output wire [3:0] swi_out
+  output wire [3:0] leds_g
 );
 
   wire wr_data = stb & we;
@@ -53,15 +53,15 @@ module lsb_s (
   reg [3:0] leds_g_d; // via data
 
   // debouncers-syncers
-  dbnc #(.polarity(1)) dbnc_btn0 (.clk(clk), .btn_in(btn_in[0]), .btn_out(btn_out[0]));
-  dbnc #(.polarity(1)) dbnc_btn1 (.clk(clk), .btn_in(btn_in[1]), .btn_out(btn_out[1]));
-  dbnc #(.polarity(1)) dbnc_btn2 (.clk(clk), .btn_in(btn_in[2]), .btn_out(btn_out[2]));
-  dbnc #(.polarity(1)) dbnc_btn3 (.clk(clk), .btn_in(btn_in[3]), .btn_out(btn_out[3]));
+  dbnc #(.polarity(1'b1)) dbnc_btn0 (.clk(clk), .rst(rst), .btn_in(btn_in[0]), .btn_out(btn_out[0]));
+  dbnc #(.polarity(1'b1)) dbnc_btn1 (.clk(clk), .rst(rst), .btn_in(btn_in[1]), .btn_out(btn_out[1]));
+  dbnc #(.polarity(1'b1)) dbnc_btn2 (.clk(clk), .rst(rst), .btn_in(btn_in[2]), .btn_out(btn_out[2]));
+  dbnc #(.polarity(1'b1)) dbnc_btn3 (.clk(clk), .rst(rst), .btn_in(btn_in[3]), .btn_out(btn_out[3]));
 
-  dbnc #(.polarity(1)) dbnc_swi0 (.clk(clk), .btn_in(swi_in[0]), .btn_out(swi_out[0]));
-  dbnc #(.polarity(1)) dbnc_swi1 (.clk(clk), .btn_in(swi_in[1]), .btn_out(swi_out[1]));
-  dbnc #(.polarity(1)) dbnc_swi2 (.clk(clk), .btn_in(swi_in[2]), .btn_out(swi_out[2]));
-  dbnc #(.polarity(1)) dbnc_swi3 (.clk(clk), .btn_in(swi_in[3]), .btn_out(swi_out[3]));
+  dbnc #(.polarity(1'b1)) dbnc_swi0 (.clk(clk), .rst(rst), .btn_in(swi_in[0]), .btn_out(swi_out[0]));
+  dbnc #(.polarity(1'b1)) dbnc_swi1 (.clk(clk), .rst(rst), .btn_in(swi_in[1]), .btn_out(swi_out[1]));
+  dbnc #(.polarity(1'b1)) dbnc_swi2 (.clk(clk), .rst(rst), .btn_in(swi_in[2]), .btn_out(swi_out[2]));
+  dbnc #(.polarity(1'b1)) dbnc_swi3 (.clk(clk), .rst(rst), .btn_in(swi_in[3]), .btn_out(swi_out[3]));
 
   always @(posedge clk) begin
     if (rst) begin
@@ -74,8 +74,8 @@ module lsb_s (
       if (wr_data) begin
         leds_sys <= data_in[7:0];
         case (ctrl[1:0])
-          2'b01: leds_g_d[3:0] <= leds_g_d[3:0] & ~data_in[11:8];   // off
-          2'b10: leds_g_d[3:0] <= leds_g_d[3:0] | data_in[11:8];    // off
+          2'b01: leds_g_d[3:0] <= leds_g_d[3:0] & ~data_in[11:8]; // off
+          2'b10: leds_g_d[3:0] <= leds_g_d[3:0] | data_in[11:8];  // on
         endcase
       end
     end

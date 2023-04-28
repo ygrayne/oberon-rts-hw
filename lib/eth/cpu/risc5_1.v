@@ -18,7 +18,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module risc5_cpu (
+module risc5_1 #(parameter start_addr = 24'hFFE000) (
   input wire clk, rst, irq,
   input wire [31:0] inbus, codebus,
   input wire intabort,           // ** gray: abort interrupt: load address 0 = abort handler as return address for interrupt
@@ -33,8 +33,7 @@ module risc5_cpu (
   output wire [31:0] outbus
 );
 
-//localparam StartAdr = 22'b100_0000_0000_0000_0000; // adr[23:2]
-localparam StartAdr = 22'h7FF000; // adr[23:2], ie. actual address 0FFE000 DIV 4
+localparam StartAdr = start_addr[23:2];   // PC is adr[23:2]
 localparam IsrAdr = 1;
 
 reg [21:0] PC;

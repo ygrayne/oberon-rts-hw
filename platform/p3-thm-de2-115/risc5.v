@@ -1,5 +1,5 @@
 /**
-RISC5 processor definition for Oberon RTS p3-thm-de2-115
+  RISC5 processor definition for Oberon RTS p3-thm-de2-115
   --
   Architecture: THM
   Board and technology: DE2-115, Altera Cyclone IV
@@ -34,8 +34,10 @@ RISC5 processor definition for Oberon RTS p3-thm-de2-115
 
 `define CLOCK_FREQ 50_000_000
 `define PROM_FILE "../../../platform/p3-thm-de2-115/promfiles/BootLoad-512k-64k.mem"  // for PROM
-`define RS232_BUF_SLOTS 255
+`define RS232_BUF_SLOTS 256   // RS232 buffer size, for tx and rx
 `define LOGBUF_ENTRIES 32
+`define CALLTRACE_SLOTS 32    // depth of each calltrace stack
+`define NUM_GPIO 4
 
 module risc5 (
   // clock
@@ -76,7 +78,9 @@ module risc5 (
   output [6:0] hex1_n,
   output [6:0] hex0_n,
   input [3:0] btn_in_n,
-  input [17:0] swi_in
+  input [17:0] swi_in,
+  // GPIO
+  inout [`NUM_GPIO-1:0] gpio
 );
 
   // clk
@@ -92,6 +96,7 @@ module risc5 (
   wire [23:2] bus_addr;       // bus address (word address)
   wire [31:0] bus_din;        // bus data input, for reads
   wire [31:0] bus_dout;       // bus data output, for writes
+  // cpu extensions
   wire [31:0] cpu_spx;        // SP register value (for stack monitor)
   wire [31:0] cpu_lnkx;       // LNK register value (for calltrace)
   wire [23:0] cpu_pcx;        // PC value (for aborts, see sys ctrl)
@@ -116,10 +121,14 @@ module risc5 (
   // lsb
   wire lsb_stb;
   wire [17:0] lsb_leds_r_in;  // signals in for red LEDs
-  wire [31:0] lsb_dout;       // data out: buttons, switches
+  wire [31:0] lsb_dout;       // buttons, switches
   wire [3:0] lsb_btn;         // button signals out
   wire [17:0] lsb_swi;        // button signals out
   wire lsb_ack;
+  // gpio
+  wire gpio_stb;
+  wire [31:0] gpio_dout;      // pin data, in/out control status
+  wire gpio_ack;
   // start tables
   wire start_stb;
   wire [31:0] start_dout;     // data out: start-up table number, armed bit
@@ -128,17 +137,17 @@ module risc5 (
   wire scs_stb;
   wire rst;                   // system reset signal out, active high
   wire rst_n;                 // system reset signal out, active low
-  wire [31:0] scs_dout;       // data out: register content
+  wire [31:0] scs_dout;       // register content, error data
   wire [7:0] scs_err_sig_in;  // error signals in
-  wire [4:0] scs_cp_pid;      // current process' pid
+  wire [4:0] scs_cp_pid;      // current process' pid out
   wire scs_ack;
   // rs232
   wire rs232_0_stb;
-  wire [31:0] rs232_0_dout;   // data out: received data, status
+  wire [31:0] rs232_0_dout;   // received data, status
   wire rs232_0_ack;
   // spi
   wire spi_0_stb;
-  wire [31:0] spi_0_dout;     // data out: received data, status
+  wire [31:0] spi_0_dout;     // received data, status
   wire spi_0_sclk_d;          // sclk signal from device
   wire spi_0_mosi_d;          // mosi signal from device
   wire spi_0_miso_d;          // miso signals to device
@@ -146,26 +155,26 @@ module risc5 (
   wire spi_0_ack;
   // proc periodic timing
   wire ptmr_stb;
-  wire [31:0] ptmr_dout;      // proc timers data output (ready signals)
+  wire [31:0] ptmr_dout;      // proc timers ready signals
   wire ptmr_ack;
   // log buffer
   wire log_stb;
-  wire [31:0] log_dout;       // log data output, log indices output
+  wire [31:0] log_dout;       // log data output, log indices
   wire log_ack;
   // watchdog
   wire wd_stb;
-  wire [31:0] wd_dout;        // timeout value output
-  wire wd_trig;               // watchdog trigger output
+  wire [31:0] wd_dout;        // timeout value
+  wire wd_trig;               // watchdog trigger signal out
   wire wd_ack;
   // stack mmonitor
   wire stm_stb;
-  wire [31:0] stm_dout;
+  wire [31:0] stm_dout;       // stack limit, hotzone address, lowest address reached (usage)
   wire stm_trig_lim;          // stack limit trigger signal out
   wire stm_trig_hot;          // hot zone trigger signal out
   wire stm_ack;
   // call trace stacks
   wire cts_stb;
-  wire [31:0] cts_dout;
+  wire [31:0] cts_dout;       // stack values output, status output
   wire cts_ack;
 
   // clocks
@@ -189,7 +198,7 @@ module risc5 (
   );
 
   // CPU
-  cpu_x cpu_0 (
+  cpu_x #(.start_addr(24'hFFE000)) cpu_0 (  // PROM address
     .clk(clk),
     .rst(rst),
     .bus_stb(bus_stb),
@@ -216,7 +225,7 @@ module risc5 (
   );
 
   // SDRAM
-  assign ram_addr[26:2] = { 3'b000, bus_addr[23:2] };
+  assign ram_addr[26:2] = {3'b000, bus_addr[23:2]};
   ram ram_0 (
     .clk_ok(clk_ok),
     .clk2(mclk),
@@ -285,6 +294,23 @@ module risc5 (
     .hex0_n(hex0_n[6:0])
   );
 
+  // GPIO
+  // uses two consecutive IO addresses
+  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(gpio_stb),
+    .we(bus_we),
+    .addr(bus_addr[2]),
+    .data_in(bus_dout[`NUM_GPIO-1:0]),
+    // out
+    .data_out(gpio_dout),
+    .ack(gpio_ack),
+    // external
+    .io_pin(gpio[`NUM_GPIO-1:0])
+  );
+
   // (-re) start tables
   // uses one IO address
   start start_0 (
@@ -302,7 +328,7 @@ module risc5 (
   // sys control and status
   // uses two consecutive IO addresses
   // order must correspond with values in SysCtrl.mod for correct logging
-  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], 1'b0};
+  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, 1'b0, lsb_btn[0]};
   scs scs_0 (
     // in
     .clk(clk),
@@ -311,7 +337,7 @@ module risc5 (
     .we(bus_we),
     .addr(bus_addr[2]),
     .err_sig(scs_err_sig_in),
-    .err_addr(cpu_pcx),
+    .err_addr(cpu_pcx[23:0]),
     .data_in(bus_dout[31:0]),
     // out
     .data_out(scs_dout[31:0]),
@@ -435,7 +461,7 @@ module risc5 (
 
  // call trace stacks
  // uses two consecutive IO addresses
- calltrace calltrace_0 (
+ calltrace #(.num_slots(`CALLTRACE_SLOTS)) calltrace_0 (
    // in
    .clk(clk),
    .stb(cts_stb),
@@ -464,6 +490,7 @@ module risc5 (
   assign io_stb = (bus_stb && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
+  assign gpio_stb    = (io_stb && bus_addr[7:3] == 5'b11100)  ? 1'b1 : 1'b0;  // -32 (data), -28 (ctrl/status)
   assign spi_0_stb   = (io_stb && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
   assign rs232_0_stb = (io_stb && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
   assign lsb_stb     = (io_stb && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
@@ -484,6 +511,7 @@ module risc5 (
   assign bus_din[31:0] =
     prom_stb    ? prom_dout[31:0] :
     ram_stb     ? ram_dout[31:0]  :
+    gpio_stb    ? gpio_dout[31:0] :
     spi_0_stb   ? spi_0_dout[31:0]  :
     rs232_0_stb ? rs232_0_dout[31:0]  :
     lsb_stb     ? lsb_dout[31:0]  :
@@ -503,6 +531,7 @@ module risc5 (
   assign bus_ack =
     prom_stb    ? prom_ack :
     ram_stb     ? ram_ack  :
+    gpio_stb    ? gpio_ack :
     spi_0_stb   ? spi_0_ack  :
     rs232_0_stb ? rs232_0_ack  :
     lsb_stb     ? lsb_ack  :

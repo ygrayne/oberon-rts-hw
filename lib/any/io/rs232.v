@@ -40,9 +40,20 @@ module rs232 #(parameter clock_freq = 50_000_000, buf_slots = 63) (
   wire tx_empty, tx_full;
   wire [7:0] rx_data;
 
+  always @(posedge clk) begin
+    if (rst) begin
+      ctrl <= 1'b0;
+    end
+    else begin
+      if (wr_ctrl) begin
+        ctrl <= data_in[0:0];
+      end
+    end
+  end
+
   rs232_rxb #(.clock_freq(clock_freq), .num_slots(buf_slots)) rs232_rxb_0 (
     .clk(clk),
-    .rst_n(~rst),
+    .rst(rst),
     .fsel(ctrl[0]),
     .rd(rd_data),
     .data_out(rx_data),
@@ -53,7 +64,7 @@ module rs232 #(parameter clock_freq = 50_000_000, buf_slots = 63) (
 
   rs232_txb #(.clock_freq(clock_freq), .num_slots(buf_slots)) rs232_txb_0 (
     .clk(clk),
-    .rst_n(~rst),
+    .rst(rst),
     .fsel(ctrl[0]),
     .wr(wr_data),
     .data_in(data_in[7:0]),
@@ -67,6 +78,8 @@ module rs232 #(parameter clock_freq = 50_000_000, buf_slots = 63) (
     rd_ctrl ? {28'h0000000, ~tx_full, rx_full, tx_empty, ~rx_empty} :
     32'h0;
 
+  assign ack = stb;
+
   // buffered use:
   // ~rx_empty: RXBNE  Rx buffer not empty, ie. data received, can receive more
   // tx_empty:  TXBE   Tx buffer empty, ie. ready to send
@@ -76,18 +89,6 @@ module rs232 #(parameter clock_freq = 50_000_000, buf_slots = 63) (
   // non-buffered use:
   // ~rx_empty: RXNE   Rx "register" non empty, ie. byte received
   // tx_empty:  TXE    Tx "register" empty, ie. ready to send
-
-  always @(posedge clk) begin
-    if (rst) begin
-      ctrl <= 1'b0;
-    end else begin
-      if (wr_ctrl) begin
-        ctrl <= data_in[0:0];
-      end
-    end
-  end
-
-  assign ack = stb;
 
 endmodule
 

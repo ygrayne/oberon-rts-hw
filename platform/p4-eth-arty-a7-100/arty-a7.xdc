@@ -66,10 +66,10 @@ set_property -dict {PACKAGE_PIN D12 IOSTANDARD LVCMOS33} [get_ports {sdcard_sclk
 #set_property PULLUP true [get_ports {spi2_MISO}]
 
 ## Pmod Header JC
-#set_property -dict { PACKAGE_PIN U12 IOSTANDARD LVCMOS33 } [get_ports {spi3_CS}]
-#set_property -dict { PACKAGE_PIN V12 IOSTANDARD LVCMOS33 } [get_ports {spi3_MOSI}]
-#set_property -dict { PACKAGE_PIN V10 IOSTANDARD LVCMOS33 } [get_ports {spi3_MISO}]
-#set_property -dict { PACKAGE_PIN V11 IOSTANDARD LVCMOS33 } [get_ports {spi3_SCLK}]
+set_property -dict { PACKAGE_PIN U12 IOSTANDARD LVCMOS33 } [get_ports {gpio[0]}]
+set_property -dict { PACKAGE_PIN V12 IOSTANDARD LVCMOS33 } [get_ports {gpio[1]}]
+set_property -dict { PACKAGE_PIN V10 IOSTANDARD LVCMOS33 } [get_ports {gpio[2]}]
+set_property -dict { PACKAGE_PIN V11 IOSTANDARD LVCMOS33 } [get_ports {gpio[3]}]
 #set_property -dict { PACKAGE_PIN U14 IOSTANDARD LVCMOS33 } [get_ports {GPIO[24]}]
 #set_property -dict { PACKAGE_PIN V14 IOSTANDARD LVCMOS33 } [get_ports {spi3_CTRL}]
 #set_property -dict { PACKAGE_PIN T13 IOSTANDARD LVCMOS33 } [get_ports {GPIO[10]}]

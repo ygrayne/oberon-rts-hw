@@ -74,9 +74,9 @@ module stackx  #(parameter data_width = 8, num_slots = 8) (
 
   always @(posedge clk) begin
     if (rst) begin
-      rd_ptr <= 8'b0;
-      wr_ptr <= 8'b0;
-			rd_ptr_f <= 8'b0;
+      rd_ptr[7:0] <= 8'b0;
+      wr_ptr[7:0] <= 8'b0;
+			rd_ptr_f[7:0] <= 8'b0;
       frozen <= 1'b0;
       max_count <= 8'b0;
       count <= 8'b0;
@@ -91,7 +91,7 @@ module stackx  #(parameter data_width = 8, num_slots = 8) (
         else begin
           if (read) begin
             if (rd_ptr > 8'b0) begin
-              rd_ptr <= rd_ptr - 8'b1;
+              rd_ptr[7:0] <= rd_ptr[7:0] - 8'b1;
             end
           end
         end
@@ -104,45 +104,45 @@ module stackx  #(parameter data_width = 8, num_slots = 8) (
         else begin
           if (wr_ptr == 0) begin // empty
               if (push) begin
-                wr_ptr <= wr_ptr + 8'b1; // keep rd_ptr at 0 here
-                count <= count + 8'b1;
+                wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1; // keep rd_ptr at 0 here
+                count[7:0] <= count[7:0] + 8'b1;
               end
             end
           else begin
             if (wr_ptr > num_slots) begin // overflow
               if (push) begin
-                wr_ptr <= wr_ptr + 8'b1;
+                wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
               end
               else begin
                 if (pop) begin
-                  wr_ptr <= wr_ptr - 8'b1;
+                  wr_ptr[7:0] <= wr_ptr[7:0] - 8'b1;
                 end
               end
             end
             else begin
               if (wr_ptr == num_slots) begin // full
                 if (push) begin
-                  wr_ptr <= wr_ptr + 8'b1;
+                  wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
                 end
                 else begin
                   if (pop) begin
-                    wr_ptr <= wr_ptr - 8'b1;
-                    rd_ptr <= rd_ptr - 8'b1;
-                    count <= count - 8'b1;
+                    wr_ptr[7:0] <= wr_ptr[7:0] - 8'b1;
+                    rd_ptr[7:0] <= rd_ptr[7:0] - 8'b1;
+                    count[7:0] <= count[7:0] - 8'b1;
                   end
                 end
               end
               else begin	// in between
                 if (push) begin
-                  wr_ptr <= wr_ptr + 8'b1;
-                  rd_ptr <= rd_ptr + 8'b1;
-                  count <= count + 8'b1;
+                  wr_ptr[7:0] <= wr_ptr[7:0] + 8'b1;
+                  rd_ptr[7:0] <= rd_ptr[7:0] + 8'b1;
+                  count[7:0] <= count[7:0] + 8'b1;
                 end
                 else begin
                   if (pop) begin
                     wr_ptr <= wr_ptr - 8'b1;  // no guard required for wr_ptr
-                    if (rd_ptr > 8'b0) rd_ptr <= rd_ptr - 8'b1;
-                    count <= count - 8'b1;
+                    if (rd_ptr > 8'b0) rd_ptr[7:0] <= rd_ptr[7:0] - 8'b1;
+                    count <= count[7:0] - 8'b1;
                   end
                 end
               end
@@ -158,8 +158,8 @@ module stackx  #(parameter data_width = 8, num_slots = 8) (
   stack_mem #(.data_width(data_width), .num_slots(num_slots)) stack_mem_0 (
     .clk(clk),
     .we(we),
-    .rd_ptr(rd_ptr),
-    .wr_ptr(wr_ptr),
+    .rd_ptr(rd_ptr[$clog2(num_slots)-1:0]),
+    .wr_ptr(wr_ptr[$clog2(num_slots)-1:0]),
     .din(data_in[data_width-1:0]),
     .dout(data_out[data_width-1:0])
   );
@@ -170,8 +170,8 @@ endmodule
 module stack_mem #(parameter data_width = 8, num_slots = 8) (
   input wire clk,
   input wire we,
-  input wire [7:0] rd_ptr,
-  input wire [7:0] wr_ptr,
+  input wire [$clog2(num_slots)-1:0] rd_ptr,
+  input wire [$clog2(num_slots)-1:0] wr_ptr,
   input wire [data_width-1:0] din,
   output reg [data_width-1:0] dout
 );

@@ -20,7 +20,7 @@ module  clocks (
 
 // clocks
 wire clkfbout;
-wire pllclk2, pllclk3, pllclk4, pllclk5, pllpwrdwn; // dummies to keep the synthesiser happy
+wire pllclk2, pllclk3, pllclk4, pllclk5, pllpwrdwn;
 
 localparam BasePeriod = 10;    // nano seconds, 100 MHz
 localparam M = 12;             // multiplier, BaseClock * M must be in the VCO range, which is 800 - 1,600 MHz for the A7

@@ -5,8 +5,6 @@
   --
   Original RS232 receiver design by NW 4.5.09 / 15.8.10 / 15.11.10 / 13.8.15
   --
-  Note: needs design review
-  --
   2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -16,7 +14,7 @@
 
 module rs232_rxb #(parameter clock_freq = 50000000, num_slots = 63) (
   input wire clk,
-  input wire rst_n,
+  input wire rst,
   input wire fsel,
   input wire rd,
   input wire rxd,
@@ -33,13 +31,13 @@ module rs232_rxb #(parameter clock_freq = 50000000, num_slots = 63) (
   wire fifo_wr = rx_done;
 
   always @(posedge clk) begin
-    rx_rdy_0 <= ~rst_n ? 1'b1 : rx_rdy;
+    rx_rdy_0 <= rst ? 1'b1 : rx_rdy;
   end
 
   // unbuffered RS232 receiver
   rs232_rx #(.clock_freq(clock_freq)) rs232_rx_0 (
     .clk(clk),
-    .rst_n(rst_n),
+    .rst_n(~rst),
     .fsel(fsel),
     .data_out(fifo_in),
     .done(rx_done),
@@ -50,7 +48,7 @@ module rs232_rxb #(parameter clock_freq = 50000000, num_slots = 63) (
   // buffer
   fifo #(.num_slots(num_slots), .data_width(8)) fifo_0 (
     .clk(clk),
-    .rst_n(rst_n),
+    .rst(rst),
     .wr(fifo_wr),
     .rd(rd),
     .data_in(fifo_in),

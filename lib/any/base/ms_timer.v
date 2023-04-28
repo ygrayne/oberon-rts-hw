@@ -31,8 +31,8 @@ module ms_timer #(parameter clock_freq = 40_000_000) (
   wire ms = (cnt0 == clock_divider - 1) ? 1'b1 : 1'b0;
 
   always @(posedge clk) begin
-   cnt0 <= ms ? 16'b0 : cnt0 + 16'b1;
-   cnt1 <= rst ? 32'b0 : ms ? cnt1 + 16'b1 : cnt1;
+   cnt0[15:0] <= ms ? 16'b0 : cnt0[15:0] + 16'b1;
+   cnt1[31:0] <= rst ? 32'b0 : ms ? cnt1[31:0] + 32'b1 : cnt1;
   end
 
   assign data_out[31:0] =

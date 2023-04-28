@@ -33,7 +33,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module calltrace (
+module calltrace #(parameter num_slots = 32) (
   input wire clk,
   input wire stb,
   input wire we,
@@ -47,7 +47,6 @@ module calltrace (
 );
 
   localparam num_stacks = 32;
-  localparam num_slots = 32;
   localparam data_width = 24;
 
   wire wr_data = stb &  we & ~addr;     // write to the selected stack (push, no effect in frozen state)

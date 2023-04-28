@@ -13,36 +13,39 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module dbnc #(parameter polarity = 1) (
+module dbnc #(parameter polarity = 1'b1) (
   input wire clk,
-  input wire btn_in,     // HW button
+  input wire rst,
+  input wire btn_in,     // not debounced HW button
   output wire btn_out    // debounced state of btn_in
 );
 
-  wire btn_pol = (polarity == 1) ? btn_in : ~btn_in;
+  wire btn_pol = (polarity == 1'b1) ? btn_in : ~btn_in;
 
-  reg state = 0;
+  reg state;
+  reg [16:0] count;
+  reg btn_s_0;
+  reg btn_s_1;
 
-  // sync btn_pol with the clock
-  // the signal is still bouncy!
-  reg hwsynced0, hwsynced1;
   always @(posedge clk) begin
-    hwsynced0 <= btn_pol;
-    hwsynced1 <= hwsynced0;
-  end
-  // detect button/switch activation
-  wire nochange = (hwsynced1 == state);
+    btn_s_0 <= btn_pol;
+    btn_s_1 <= btn_s_0;
 
-  // counter to measure time of stable contact of btn_in
-  // max counter value determines the debounce period
-  reg [16:0] count;         // 50 MHz: 2^17 => 2.6ms
-  wire count_max = &count;	// reduction: true when all bits of count are 1
-
-  // keep 'count' at zero when idle, or repeatedly reset to zero during bounce time
-  // accept state change when counter reaches max
-  always @(posedge clk) begin
-    count <= nochange ? 0 : count + 1;
-    state <= count_max ? ~state : state;
+    if (rst) begin
+      state <= 1'b0;
+      count[16:0] <= 17'b0;
+    end
+    else begin
+      if (btn_s_1 == state) begin   // idle
+        count[16:0] <= 17'b0;
+      end
+      else begin // button pressed
+        count[16:0] <= count[16:0] + 17'b1;
+        if (count == &count) begin
+          state <= ~state;  // => btn_s_1 == state, counting stops
+        end
+      end
+    end
   end
 
   assign btn_out = state;
@@ -50,10 +53,3 @@ module dbnc #(parameter polarity = 1) (
 endmodule
 
 `resetall
-
-// unused pulses
-//output closed,  // a pulse of one clock cycle when the HW button/switch makes contact
-//output open     // a pulse of one clock cycle when the HW button/switch is released/opened
-
-//assign closed = ~nochange & count_max & ~state;
-//assign open   = ~nochange & count_max &  state;

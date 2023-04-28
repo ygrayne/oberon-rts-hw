@@ -49,6 +49,7 @@
   * watchdog
   * stack monitor
   * calltrace stacks
+  * GPIO
   --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
@@ -59,12 +60,13 @@
 `default_nettype none
 
 `define CLOCK_FREQ 40_000_000
-`define MEM_BLK_SIZE 'h10000    // 64k
 `define PROM_FILE "../../../platform/p4-eth-arty-a7-100/promfiles/BootLoad-512k-64k.mem"
-`define RS232_BUF_SLOTS 256
+`define RS232_BUF_SLOTS 256   // RS232 buffer size, one for tx and rx each
 `define LOGBUF_ENTRIES 32
+`define CALLTRACE_SLOTS 32    // depth of each calltrace stack (same for each process)
+`define NUM_GPIO 4
 
-  module RISC5Top (
+module RISC5Top (
   // clock
   input wire clk_in,
   // RS 232
@@ -83,8 +85,10 @@
   // LEDs, switches, buttons
   input wire [3:0] btn_in,
   input wire [3:0] swi_in,
-  output wire [7:0] sys_leds,       // on Pmod board
-  output wire [3:0] leds_g          // on Arty board
+  output wire [7:0] sys_leds,         // on Pmod board
+  output wire [3:0] leds_g,           // on Arty board
+  // GPIO
+  inout wire [`NUM_GPIO-1:0] gpio
  );
 
   // clk
@@ -92,6 +96,7 @@
   wire clk;                   // system clock
   wire clk2x;                 // memory clock
   // reset
+  // rst and rst_n: see sys ctrl and status
   wire rst_out_n;             // active low
   wire rst_out;               // active high
   // cpu
@@ -105,7 +110,7 @@
   wire rd;                    // CPU read
   wire wr;                    // CPU write
   wire ben;                   // CPU byte enable
-  wire irq_req;               // interrupt request to CPU
+  wire irq;                   // interrupt request to CPU
   // cpu extensions
   wire cpu_intack;            // CPU out: interrupt ack
   wire cpu_rti;               // CPU out: return from interrupt
@@ -129,25 +134,29 @@
   wire [3:0] lsb_btn;         // button signals out
   wire [3:0] lsb_swi;         // switch signals out
   wire lsb_ack;
+  // gpio
+  wire gpio_stb;
+  wire [31:0] gpio_dout;      // pin data, in/out control status
+  wire gpio_ack;
   // start tables
   wire start_stb;
   wire [31:0] start_dout;     // data out: start-up table number, armed bit
   wire start_ack;
   // sys control and status
   wire scs_stb;
-  wire [31:0] scs_dout;       // data out: register content
   wire rst;                   // system reset signal out, active high
   wire rst_n;                 // system reset signal out, active low
+  wire [31:0] scs_dout;       // register content, error data
   wire [7:0] scs_err_sig_in;  // error signals in
-  wire [4:0] scs_cp_pid;      // current process' pid
+  wire [4:0] scs_cp_pid;      // current process' pid out
   wire scs_ack;
   // rs232
   wire rs232_0_stb;
-  wire [31:0] rs232_0_dout;   // data out: received data, status
+  wire [31:0] rs232_0_dout;   // received data, status
   wire rs232_0_ack;
   // spi
   wire spi_0_stb;
-  wire [31:0] spi_0_dout;     // data out: received data, status
+  wire [31:0] spi_0_dout;     // received data, status
   wire spi_0_sclk_d;          // sclk signal from device
   wire spi_0_mosi_d;          // mosi signal from device
   wire spi_0_miso_d;          // miso signals to device
@@ -155,26 +164,26 @@
   wire spi_0_ack;
   // proc periodic timing
   wire ptmr_stb;
-  wire [31:0] ptmr_dout;      // proc timers data output (ready signals)
+  wire [31:0] ptmr_dout;      // proc timers ready signals
   wire ptmr_ack;
   // log buffer
   wire log_stb;
-  wire [31:0] log_dout;       // log data output, log indices output
+  wire [31:0] log_dout;       // log data output, log indices
   wire log_ack;
   // watchdog
   wire wd_stb;
-  wire [31:0] wd_dout;
-  wire wd_trig;
+  wire [31:0] wd_dout;        // timeout value
+  wire wd_trig;               // watchdof trigger signal out
   wire wd_ack;
   // stack monitor
   wire stm_stb;
-  wire [31:0] stm_dout;
-  wire stm_trig_lim;
-  wire stm_trig_hot;
+  wire [31:0] stm_dout;       // stack limit, hotzone address, lowest address reached (usage)
+  wire stm_trig_lim;          // stack limit trigger signal out
+  wire stm_trig_hot;          // hot zone trigger signal out
   wire stm_ack;
   // calltrace stacks
   wire cts_stb;
-  wire [31:0] cts_dout;
+  wire [31:0] cts_dout;       // stack values output, status
   wire cts_ack;
 
   // clocks
@@ -198,10 +207,10 @@
   );
 
   // CPU
-  risc5_cpu risc5_cpu_0 (
+  risc5_1 #(.start_addr(24'hFFE000)) risc5_1_0 (
     .clk(clk),
     .rst(rst_n),
-    .irq(irq_req),
+    .irq(irq),
     .rd(rd),
     .wr(wr),
     .ben(ben),
@@ -223,7 +232,7 @@
   prom #(.memfile(`PROM_FILE)) prom_0 (
     .clk(~clk),
     .adr(adr[10:2]),
-    .data_out(romout)
+    .data_out(romout[31:0])
   );
 
   // BRAM 512k (8 blocks of 64k)
@@ -232,8 +241,8 @@
     .wr(wr),
     .be(ben),
     .adr(adr[18:0]),
-    .wdata(outbus),
-    .rdata(inbus0)
+    .wdata(outbus[31:0]),
+    .rdata(inbus0[31:0])
   );
 
   // ms timer
@@ -262,16 +271,33 @@
     .leds_g_in(lsb_leds_g_in),
     .data_in(outbus[31:0]),
     // out
-    .data_out(lsb_dout),
-    .btn_out(lsb_btn),
-    .swi_out(lsb_swi),
+    .data_out(lsb_dout[31:0]),
+    .btn_out(lsb_btn[3:0]),
+    .swi_out(lsb_swi[3:0]),
     .ack(lsb_ack),
     // external in
-    .btn_in(btn_in),
-    .swi_in(swi_in),
+    .btn_in(btn_in[3:0]),
+    .swi_in(swi_in[3:0]),
     // external out
-    .leds_sys(sys_leds),
-    .leds_g(leds_g)
+    .leds_sys(sys_leds[7:0]),
+    .leds_g(leds_g[3:0])
+  );
+
+  // GPIO
+  // uses two consecutive IO addresses
+  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(gpio_stb),
+    .we(wr),
+    .addr(adr[2]),
+    .data_in(outbus[`NUM_GPIO-1:0]),
+    // out
+    .data_out(gpio_dout),
+    .ack(gpio_ack),
+    // external
+    .io_pin(gpio[`NUM_GPIO-1:0])
   );
 
   // (re-) start tables
@@ -291,7 +317,7 @@
   // sys control
   // uses two consecutive IO addresses
   // order must correspond with values in SysCtrl.mod for correct logging
-  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, lsb_btn[1], 1'b0};
+  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, 1'b0, lsb_btn[0]};
   scs scs_0 (
     // in
     .clk(clk),
@@ -300,7 +326,7 @@
     .we(wr),
     .addr(adr[2]),
     .err_sig(scs_err_sig_in),
-    .err_addr({cpu_pcx, 2'b0}), // PC is 22 bit word aligned
+    .err_addr({cpu_pcx[21:0], 2'b0}), // PC is 22 bit word aligned
     .data_in(outbus[31:0]),
     // out
     .data_out(scs_dout[31:0]),
@@ -420,7 +446,7 @@
 
   // call trace stacks
   // uses two consecutive IO addresses
-  calltrace calltrace_0 (
+  calltrace #(.num_slots(`CALLTRACE_SLOTS)) calltrace_0 (
     // in
     .clk(clk),
     .stb(cts_stb),
@@ -434,6 +460,7 @@
     .data_out(cts_dout[31:0]),
     .ack(cts_ack)
   );
+
 
   // address decoding
   // ----------------
@@ -449,6 +476,7 @@
   assign ioenb = (adr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
+  assign gpio_stb    = (ioenb && adr[7:3] == 5'b11100)  ? 1'b1 : 1'b0;  // -32 (data), -28 (ctrl/status)
   assign spi_0_stb   = (ioenb && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
   assign rs232_0_stb = (ioenb && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
   assign lsb_stb     = (ioenb && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
@@ -467,6 +495,7 @@
   // data out multiplexing
   // ---------------------
   assign io_out[31:0] =
+    gpio_stb    ? gpio_dout[31:0] :
     spi_0_stb   ? spi_0_dout :
     rs232_0_stb ? rs232_0_dout[31:0] :
     lsb_stb     ? lsb_dout[31:0] :
