@@ -2,7 +2,7 @@
   Reset
   --
   Architecture: ANY
-  Board: Arty A7
+  Board: Arty A7 (buttons are active high, not debounced)
   --
   Origin: THM-Oberon
   --
@@ -23,7 +23,9 @@ module reset (
 
   reg rst_p;
   reg rst_s;
+  reg rst_s_0;
   reg [23:0] rst_cnt;
+  wire rst = rst_s & ~rst_s_0;
 
   reg clk_in_0 = 0;
   always @(posedge clk_in) clk_in_0 <= ~clk_in_0;
@@ -31,8 +33,9 @@ module reset (
   always @(posedge clk_in_0) begin
     rst_p <= rst_in;
     rst_s <= rst_p;
+    rst_s_0 <= rst_s;
 
-    if (rst_s | ~clk_ok) begin
+    if (rst | ~clk_ok) begin
       rst_cnt[23:0] <= 24'h0;
       rst_out <= 1'b1;
     end

@@ -2,7 +2,7 @@
   Reset
   --
   Architecture: ANY
-  Board: DE2-115 (buttons are active low)
+  Board: DE2-115 (buttons are active low, debounced)
   --
   Origin: THM-Oberon
   --
@@ -23,13 +23,16 @@ module reset (
 
   reg rst_p_n;
   reg rst_s_n;
+  reg rst_s_n_0;
   reg [23:0] rst_cnt;
+  wire rst = ~rst_s_n & rst_s_n_0;
 
   always @(posedge clk_in) begin
     rst_p_n <= rst_in_n;
     rst_s_n <= rst_p_n;
+    rst_s_n_0 <= rst_s_n;
 
-    if (~rst_s_n | ~clk_ok) begin
+    if (rst | ~clk_ok) begin
       rst_cnt[23:0] <= 24'h0;
       rst_out <= 1'b1;
     end
