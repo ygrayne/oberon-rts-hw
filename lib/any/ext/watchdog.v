@@ -35,27 +35,30 @@ module watchdog (
   reg [15:0] timeoutval;
   reg [15:0] ticker;
   reg trigger;
-
-  wire ticking = (timeoutval > 16'b0) ? 1'b1 : 1'b0;
+  reg enable;
 
   always @(posedge clk) begin
     if (rst) begin
       timeoutval <= 16'b0;
       ticker <= 16'b0;
       trigger <= 1'b0;
+      enable <= 1'b0;
     end
     else begin
       if (wr_data) begin
         timeoutval <= data_in[15:0];
         ticker <= 16'b0;
         trigger <= 1'b0;
+        if (data_in[15:0] == 16'b0) enable <= 1'b0;
+        else enable <= 1'b1;
       end
       else begin
-        if (ticking) begin
-          if (ticker >= timeoutval) begin
+        if (enable) begin
+          if (ticker == timeoutval) begin
             trigger <= 1'b1;
-            timeoutval <= 16'b0;    // ticking = false
-            ticker <= 16'b0;
+//            timeoutval <= 16'b0;
+//            ticker <= 16'b0;
+            enable <= 1'b0;
           end
           else begin
             if (tick) begin
@@ -63,16 +66,13 @@ module watchdog (
             end
           end
         end
-        else begin
-          trigger <= 1'b0;
-        end
       end
     end
   end
 
   // outputs
   assign data_out[31:0] =
-    rd_data ? {16'b0, timeoutval} :
+    rd_data ? {ticker, timeoutval} :
     32'b0;
   assign trig = trigger;
   assign ack = stb;
