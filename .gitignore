@@ -11,7 +11,7 @@
 !/lib/
 !/platform/
 !/doc/
-!/orig/
+!/base/
 !/epo-base/
 
 /platform/*/build/*
@@ -35,3 +35,5 @@
 !*.xdc
 !*.stp
 !*.lai
+!*.csv
+!*.sdc
