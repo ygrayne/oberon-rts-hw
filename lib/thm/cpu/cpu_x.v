@@ -13,7 +13,7 @@ module cpu_x #(parameter start_addr = 24'hFFE000) ( // gray
   bus_stb, bus_we, bus_addr,
   bus_din, bus_dout, bus_ack,
   spx, lnkx, pcx, irx  // gray
-); 
+);
     input clk;                  // system clock
     input rst;                  // system reset
     output bus_stb;             // bus strobe
@@ -36,33 +36,39 @@ module cpu_x #(parameter start_addr = 24'hFFE000) ( // gray
   wire [31:0] cpu_dout;
   wire cpu_ack;
 
-  cpu_bus cpu_bus_0(
+  cpu_bus cpu_bus_0 (
     .clk(clk),
     .rst(rst),
+    // from devices (in)
+    .bus_ack(bus_ack),
+    // to devices (out)
     .bus_stb(bus_stb),
     .bus_we(bus_we),
     .bus_addr(bus_addr[23:2]),
     .bus_din(bus_din[31:0]),
     .bus_dout(bus_dout[31:0]),
-    .bus_ack(bus_ack),
+    // from cpu (in)
     .cpu_stb(cpu_stb),
     .cpu_we(cpu_we),
     .cpu_ben(cpu_ben),
     .cpu_addr(cpu_addr[23:0]),
-    .cpu_din(cpu_din[31:0]),
     .cpu_dout(cpu_dout[31:0]),
+    // to cpu (out)
+    .cpu_din(cpu_din[31:0]),
     .cpu_ack(cpu_ack)
   );
 
   cpu_core_x #(.start_addr(start_addr)) cpu_core_0 ( // gray
     .clk(clk),
     .rst(rst),
+    // to bus (out)
     .bus_stb(cpu_stb),
     .bus_we(cpu_we),
     .bus_ben(cpu_ben),
     .bus_addr(cpu_addr[23:0]),
-    .bus_din(cpu_din[31:0]),
     .bus_dout(cpu_dout[31:0]),
+    // from bus (in)
+    .bus_din(cpu_din[31:0]),
     .bus_ack(cpu_ack),
     // gray
     .spx_out(spx[31:0]),

@@ -158,8 +158,8 @@ module stackx  #(parameter data_width = 8, num_slots = 8) (
   stack_mem #(.data_width(data_width), .num_slots(num_slots)) stack_mem_0 (
     .clk(clk),
     .we(we),
-    .rd_ptr(rd_ptr),
-    .wr_ptr(wr_ptr),
+    .rd_ptr(rd_ptr[$clog2(num_slots)-1:0]),
+    .wr_ptr(wr_ptr[$clog2(num_slots)-1:0]),
     .din(data_in[data_width-1:0]),
     .dout(data_out[data_width-1:0])
   );
@@ -170,8 +170,8 @@ endmodule
 module stack_mem #(parameter data_width = 8, num_slots = 8) (
   input wire clk,
   input wire we,
-  input wire [7:0] rd_ptr,
-  input wire [7:0] wr_ptr,
+  input wire [$clog2(num_slots)-1:0] rd_ptr,
+  input wire [$clog2(num_slots)-1:0] wr_ptr,
   input wire [data_width-1:0] din,
   output reg [data_width-1:0] dout
 );

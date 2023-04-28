@@ -18,7 +18,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module risc5_cpu #(parameter start_addr = 24'hFFE000) (
+module risc5_1 #(parameter start_addr = 24'hFFE000) (
   input wire clk, rst, irq,
   input wire [31:0] inbus, codebus,
   input wire intabort,           // ** gray: abort interrupt: load address 0 = abort handler as return address for interrupt

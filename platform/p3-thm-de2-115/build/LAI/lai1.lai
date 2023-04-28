@@ -1,8 +1,8 @@
 <session jtag_chain="USB-Blaster [USB-1]" jtag_device="@1: 10CL120(Y|Z)/EP3C120/.. (0x020F70DD)" sof_file="C:/Users/gray/Projects/Oberon/WORK/oberon-rts-hw/platform/p3-thm-de2-115/build/output_files/risc5.sof">
-  <display_attributes active_instance="1" active_tab="3"/>
+  <display_attributes active_instance="0" active_tab="5"/>
   <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_0" type="generic">
     <node_ip_info instance_id="0" mfg_id="110" node_id="7" version="0"/>
-    <core_parameters bank_count="4" capture_mode="timing" crc_value="D9A3" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <core_parameters bank_count="4" capture_mode="timing" crc_value="6D7A" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
     <pins>
       <pin io_standard="2.5 V" location="PIN_AC19" name="altera_reserved_lai_0_0"/>
       <pin io_standard="2.5 V" location="PIN_AD19" name="altera_reserved_lai_0_1"/>
@@ -35,31 +35,31 @@
         <signal name="" type="unused"/>
       </bank>
       <bank name="Bank 2">
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
+        <signal name="watchdog:watchdog_0|ticker[0]" type="reg"/>
+        <signal name="watchdog:watchdog_0|ticker[1]" type="reg"/>
+        <signal name="watchdog:watchdog_0|ticker[2]" type="reg"/>
+        <signal name="watchdog:watchdog_0|ticker[3]" type="reg"/>
+        <signal name="watchdog:watchdog_0|ticker[4]" type="reg"/>
+        <signal name="watchdog:watchdog_0|ticker[5]" type="reg"/>
+        <signal name="watchdog:watchdog_0|ticker[6]" type="reg"/>
+        <signal name="watchdog:watchdog_0|ticker[7]" type="reg"/>
       </bank>
       <bank name="Bank 3">
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
-        <signal name="" type="unused"/>
+        <signal name="cpu_x:cpu_0|cpu_core_x:cpu_core_0|C" type="reg"/>
+        <signal name="cpu_x:cpu_0|cpu_core_x:cpu_core_0|N" type="reg"/>
+        <signal name="cpu_x:cpu_0|cpu_core_x:cpu_core_0|V" type="reg"/>
+        <signal name="cpu_x:cpu_0|cpu_core_x:cpu_core_0|Z" type="reg"/>
+        <signal name="gpio[0]" type="bidir"/>
+        <signal name="gpio[1]" type="bidir"/>
+        <signal name="gpio[2]" type="bidir"/>
+        <signal name="gpio[3]" type="bidir"/>
       </bank>
     </banks>
-    <display_attributes connected_bank="-1"/>
+    <display_attributes connected_bank="3"/>
   </instance>
   <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_1" type="generic">
     <node_ip_info instance_id="1" mfg_id="110" node_id="7" version="0"/>
-    <core_parameters bank_count="2" capture_mode="timing" crc_value="DDD8" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <core_parameters bank_count="3" capture_mode="timing" crc_value="8730" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
     <pins>
       <pin io_standard="2.5 V" location="PIN_AF16" name="altera_reserved_lai_1_0"/>
       <pin io_standard="2.5 V" location="PIN_AF15" name="altera_reserved_lai_1_1"/>
@@ -91,7 +91,17 @@
         <signal name="cpu_x:cpu_0|cpu_bus:cpu_bus_0|bus_we" type="comb"/>
         <signal name="cpu_x:cpu_0|cpu_bus:cpu_bus_0|state" type="reg"/>
       </bank>
+      <bank name="Bank 2">
+        <signal name="scs:scs_0|wr_err" type="comb"/>
+        <signal name="scs:scs_0|wr_scs" type="comb"/>
+        <signal name="scs:scs_0|sys_rst" type="comb"/>
+        <signal name="scs:scs_0|err_sig[1]" type="comb"/>
+        <signal name="watchdog:watchdog_0|trig" type="comb"/>
+        <signal name="watchdog:watchdog_0|wr_data" type="comb"/>
+        <signal name="watchdog:watchdog_0|tick" type="comb"/>
+        <signal name="watchdog:watchdog_0|enable" type="reg"/>
+      </bank>
     </banks>
-    <display_attributes connected_bank="0"/>
+    <display_attributes connected_bank="2"/>
   </instance>
 </session>
