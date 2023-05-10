@@ -15,10 +15,15 @@
 !/epo-base/
 
 /platform/*/build/*
+!/platform/*/build/SignalTap/
+!/platform/*/build/LAI/
+
 /epo-base/platform/*/build/*
 
-!/platform/*/build/signal_tap/
-!/platform/*/build/LAI/
+/platform/*/lib-exp/
+/platform/*/lib-base/
+
+
 
 ## add files
 !*.mod
