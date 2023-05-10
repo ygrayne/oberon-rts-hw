@@ -33,7 +33,7 @@
 `default_nettype none
 
 `define CLOCK_FREQ 50_000_000
-`define PROM_FILE "../../../platform/p3-thm-de2-115/promfiles/BootLoad-512k-64k.mem"  // for PROM
+`define PROM_FILE "../../platform/p3-thm-de2-115/bootload/BootLoad-512k-64k.mem"  // for PROM
 `define RS232_BUF_SLOTS 256   // RS232 buffer size, for tx and rx
 `define LOGBUF_ENTRIES 32
 `define CALLTRACE_SLOTS 32    // depth of each calltrace stack
@@ -85,11 +85,10 @@ module risc5 (
 
   // clk
   wire clk_ok;                // clocks stable
-  wire mclk;                  // memory clock, 100 MHz
   wire clk;                   // system clock, 50 MHz
+  wire mclk;                  // memory clock, 100 MHz
   // reset
   wire rst_out;               // active high
-  wire rst_out_n;             // active low
   // cpu
   wire bus_stb;
   wire bus_we;                // bus write enable
@@ -123,24 +122,8 @@ module risc5 (
   wire [17:0] lsb_leds_r_in;  // signals in for red LEDs
   wire [31:0] lsb_dout;       // buttons, switches
   wire [3:0] lsb_btn;         // button signals out
-  wire [17:0] lsb_swi;        // button signals out
+  wire [17:0] lsb_swi;        // switch signals out
   wire lsb_ack;
-  // gpio
-  wire gpio_stb;
-  wire [31:0] gpio_dout;      // pin data, in/out control status
-  wire gpio_ack;
-  // start tables
-  wire start_stb;
-  wire [31:0] start_dout;     // data out: start-up table number, armed bit
-  wire start_ack;
-  // sys control and status
-  wire scs_stb;
-  wire rst;                   // system reset signal out, active high
-  wire rst_n;                 // system reset signal out, active low
-  wire [31:0] scs_dout;       // register content, error data
-  wire [7:0] scs_err_sig_in;  // error signals in
-  wire [4:0] scs_cp_pid;      // current process' pid out
-  wire scs_ack;
   // rs232
   wire rs232_0_stb;
   wire [31:0] rs232_0_dout;   // received data, status
@@ -153,6 +136,14 @@ module risc5 (
   wire spi_0_miso_d;          // miso signals to device
   wire [2:0] spi_0_cs_n_d;    // chip selects from device
   wire spi_0_ack;
+  // sys control and status
+  wire scs_stb;
+  wire rst;                   // system reset signal out, active high
+  wire rst_n;                 // system reset signal out, active low
+  wire [31:0] scs_dout;       // register content, error data
+  wire [7:0] scs_err_sig_in;  // error signals in
+  wire [4:0] scs_cp_pid;      // current process' pid out
+  wire scs_ack;
   // proc periodic timing
   wire ptmr_stb;
   wire [31:0] ptmr_dout;      // proc timers ready signals
@@ -176,50 +167,66 @@ module risc5 (
   wire cts_stb;
   wire [31:0] cts_dout;       // stack values output, status output
   wire cts_ack;
+  // start tables
+  wire start_stb;
+  wire [31:0] start_dout;     // data out: start-up table number, armed bit
+  wire start_ack;
+  // gpio
+  wire gpio_stb;
+  wire [31:0] gpio_dout;      // pin data, in/out control status
+  wire gpio_ack;
+
 
   // clocks
   clocks clocks_0 (
+    // in
     .clk_in(clk_in),
+    //out
     .clk_ok(clk_ok),
-    .clk_100_ps(sdram_clk),   // 100 MHz, phase-shifted
-    .clk_100(mclk),           // 100 MHz
-    .clk_50(clk)              // 50 MHz
+    .clk_2x(mclk),           // 100 MHz
+    .clk(clk),             // 50 MHz
+    // external out
+    .clk_2x_ps(sdram_clk)    // 100 MHz, phase-shifted
   );
 
   // reset
   reset reset_0 (
     // in
-    .clk_in(clk_in),          // 50 MHz "raw" input clock
+    .clk(clk), 
     .clk_ok(clk_ok),
     .rst_in_n(btn_in_n[3]),
     // out
-    .rst_out(rst_out),
-    .rst_out_n(rst_out_n)
+    .rst_out(rst_out)
   );
 
   // CPU
   cpu_x #(.start_addr(24'hFFE000)) cpu_0 (  // PROM address
+    // in
     .clk(clk),
     .rst(rst),
+    .bus_din(bus_din[31:0]),
+    .bus_ack(bus_ack),
+    // out
     .bus_stb(bus_stb),
     .bus_we(bus_we),
     .bus_addr(bus_addr[23:2]),
-    .bus_din(bus_din[31:0]),
     .bus_dout(bus_dout[31:0]),
-    .bus_ack(bus_ack),
-    .spx(cpu_spx),
-    .pcx(cpu_pcx),
-    .irx(cpu_irx),
-    .lnkx(cpu_lnkx)
+    // extenstions out
+    .spx(cpu_spx[31:0]),
+    .pcx(cpu_pcx[23:0]),
+    .irx(cpu_irx[31:0]),
+    .lnkx(cpu_lnkx[31:0])
   );
 
   // boot ROM
-  prom #(.memfile(`PROM_FILE)) prom_0 (
+  prom #(.mem_file(`PROM_FILE)) prom_0 (
+    // in
     .clk(clk),
     .rst(rst),
     .stb(prom_stb),
     .we(bus_we),
     .addr(bus_addr[10:2]),
+    // out
     .data_out(prom_dout[31:0]),
     .ack(prom_ack)
   );
@@ -294,59 +301,6 @@ module risc5 (
     .hex0_n(hex0_n[6:0])
   );
 
-  // GPIO
-  // uses two consecutive IO addresses
-  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
-    // in
-    .clk(clk),
-    .rst(rst),
-    .stb(gpio_stb),
-    .we(bus_we),
-    .addr(bus_addr[2]),
-    .data_in(bus_dout[`NUM_GPIO-1:0]),
-    // out
-    .data_out(gpio_dout),
-    .ack(gpio_ack),
-    // external
-    .io_pin(gpio[`NUM_GPIO-1:0])
-  );
-
-  // (-re) start tables
-  // uses one IO address
-  start start_0 (
-    // in
-    .clk(clk),
-    .rst(rst),
-    .stb(start_stb),
-    .we(bus_we),
-    .data_in(bus_dout[15:0]),
-    // out
-    .data_out(start_dout[31:0]),
-    .ack(start_ack)
-  );
-
-  // sys control and status
-  // uses two consecutive IO addresses
-  // order must correspond with values in SysCtrl.mod for correct logging
-  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, 1'b0, lsb_btn[0]};
-  scs scs_0 (
-    // in
-    .clk(clk),
-    .restart(rst_out),
-    .stb(scs_stb),
-    .we(bus_we),
-    .addr(bus_addr[2]),
-    .err_sig(scs_err_sig_in),
-    .err_addr(cpu_pcx[23:0]),
-    .data_in(bus_dout[31:0]),
-    // out
-    .data_out(scs_dout[31:0]),
-    .sys_rst(rst),
-    .sys_rst_n(rst_n),
-    .cp_pid(scs_cp_pid),
-    .ack(scs_ack)
-  );
-
   // RS232 buffered
   // uses two consecutive IO addresses
   rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
@@ -395,6 +349,28 @@ module risc5 (
   assign rtc_mosi = spi_0_mosi_d;
 
   assign spi_0_miso_d = sdcard_miso & rtc_miso;
+
+  // sys control and status
+  // uses two consecutive IO addresses
+  // order must correspond with values in SysCtrl.mod for correct logging
+  assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, 1'b0, lsb_btn[0]};
+  scs scs_0 (
+    // in
+    .clk(clk),
+    .restart(rst_out),
+    .stb(scs_stb),
+    .we(bus_we),
+    .addr(bus_addr[2]),
+    .err_sig(scs_err_sig_in),
+    .err_addr(cpu_pcx[23:0]),
+    .data_in(bus_dout[31:0]),
+    // out
+    .data_out(scs_dout[31:0]),
+    .sys_rst(rst),
+    .sys_rst_n(rst_n),
+    .cp_pid(scs_cp_pid),
+    .ack(scs_ack)
+  );
 
   // process periodic timers
   // uses one IO address
@@ -476,6 +452,36 @@ module risc5 (
    .ack(cts_ack)
  );
 
+  // (-re) start tables
+  // uses one IO address
+  start start_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(start_stb),
+    .we(bus_we),
+    .data_in(bus_dout[15:0]),
+    // out
+    .data_out(start_dout[31:0]),
+    .ack(start_ack)
+  );
+
+  // GPIO
+  // uses two consecutive IO addresses
+  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
+    // in
+    .clk(clk),
+    .rst(rst),
+    .stb(gpio_stb),
+    .we(bus_we),
+    .addr(bus_addr[2]),
+    .data_in(bus_dout[`NUM_GPIO-1:0]),
+    // out
+    .data_out(gpio_dout),
+    .ack(gpio_ack),
+    // external
+    .io_pin(gpio[`NUM_GPIO-1:0])
+  );
 
   // address decoding
   // ----------------
@@ -487,6 +493,7 @@ module risc5 (
   assign ram_stb = (bus_stb && bus_addr[23:13] != 11'h7FF) ? 1'b1 : 1'b0;
 
   // I/O: 256 bytes (64 words) @ 0FFFF00H
+  // there's space for three more IO blocks "above" the PROM region
   assign io_stb = (bus_stb && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
