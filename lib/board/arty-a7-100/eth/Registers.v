@@ -2,7 +2,7 @@
 // register file, triple-port
 
 module Registers(
-  input clk,wr,
+  input clk, wr,
   input [3:0] rno0, rno1, rno2,
   input [31:0] din,
   output [31:0] dout0, dout1, dout2);
