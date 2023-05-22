@@ -7,7 +7,9 @@
   [2:0] chip select
   [3:3] fast transmit (default: slow)
   [5:4] data width (default: 8 bits)
-  [6:6] ms byte first (default: ls byte first)
+  [6:6] most significant byte first (default: least significant byte first)
+  [11:7] currently unused, but reserved
+  [13:12] SPI mode
 
   Data width:
   2'b00 => 8 bits
@@ -16,7 +18,7 @@
 
   Note: these control settings are compatible with Astrobe's design.
   --
-  2020 - 2023 Gray, gray@grayraven.org
+  (c) 2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
 
@@ -24,7 +26,7 @@
 `default_nettype none
 
 module spie #(parameter clock_freq = 50_000_000) (
-  // internal interface
+  // internal
   input wire clk,
   input wire rst,
   input wire stb,
@@ -33,7 +35,7 @@ module spie #(parameter clock_freq = 50_000_000) (
   input wire [31:0] data_in,
   output wire [31:0] data_out,
   output wire ack,
-  // external interface
+  // external
   output wire [2:0] cs_n,
   output wire sclk,
   output wire mosi,
@@ -46,41 +48,45 @@ module spie #(parameter clock_freq = 50_000_000) (
   wire wr_ctrl = stb &  we &  addr;	// write control
 
   wire spi_rdy;
-  wire [31:0] dataRx;
-  reg [6:0] spi_ctrl = 0;
+  wire [31:0] data_rx;
+  reg [13:0] spi_ctrl = 0;
 
   always @(posedge clk) begin
     if (rst) begin
-      spi_ctrl[6:0] <= 7'b0;
-    end else begin
+      spi_ctrl[13:0] <= {2'b0, 12'b0}; // default SPI mode = 0
+    end
+    else begin
       if (wr_ctrl) begin
-        spi_ctrl[6:0] <= data_in[6:0];
+        spi_ctrl[13:0] <= data_in[13:0];
       end
     end
   end
 
-  assign cs_n[2:0] = ~spi_ctrl[2:0];
-
   spie_rxtx #(.clock_freq(clock_freq)) spie_rxtx_0 (
+    // in
     .clk(clk),
     .rst(rst),
     .fast(spi_ctrl[3]),
-    .datawidth(spi_ctrl[5:4]),
-    .msbytefirst(spi_ctrl[6]),
+    .data_width(spi_ctrl[5:4]),
+    .msbyte_first(spi_ctrl[6]),
+    .cpol(spi_ctrl[12]),
+    .cpha(spi_ctrl[13]),
     .start(wr_data),
-    .dataTx(data_in[31:0]),
-    .dataRx(dataRx[31:0]),
+    .data_tx(data_in[31:0]),
+    // out
+    .data_rx(data_rx[31:0]),
     .rdy(spi_rdy),
+    // external
     .sclk(sclk),
     .mosi(mosi),
     .miso(miso)
   );
-
+  
+  assign cs_n[2:0] = ~spi_ctrl[2:0];
   assign data_out[31:0] =
-    rd_data ? dataRx[31:0] :
-    rd_ctrl ? {28'h0, 3'b0, spi_rdy} :
+    rd_data ? data_rx[31:0] :
+    rd_ctrl ? {22'h0, spi_ctrl[13:12], 7'b0, spi_rdy} :
     32'h0;
-
   assign ack = stb;
 
 endmodule

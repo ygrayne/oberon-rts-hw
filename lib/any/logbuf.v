@@ -14,7 +14,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module logbuf #(num_entries = 32) (
+module logbuf #(parameter num_entries = 32) (
   input wire clk,
   input wire stb,
   input wire we,
