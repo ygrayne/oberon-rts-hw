@@ -1,5 +1,5 @@
 /**
-  RISC5 processor definition for Oberon RTS p4-eth-arty-a7-100
+  RISC5 CPU and environment definition for Oberon RTS p4-eth-arty-a7-100
   --
   Architecture: ETH
   Board and technology: Arty-A7-100, Xilinx Artix-7
@@ -11,46 +11,6 @@
   2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
   --
-  Changes/extensions (before stripping...):
-  * extension of the IO address space to 1024 bytes
-  * three RS232 devices, buffered
-  * three SPI devices, two unbuffered, one buffered
-  * stack overflow monitor
-  * watchdog timer
-  * logging facility
-  * process timers
-  * interrupt controller with eight interrupt lines
-  * program/command start tables
-  --
-  Stripping down for building the equivalant for THM (March 2023)
-  * remove two SPI devices
-  * remove two RS232 devices
-  * remove cycle counter
-  * remove GPIO
-  * remove proc delay
-  * remove proc signal
-  * remove proc monitor
-  * remove stack monitor (also in prom file)
-  * remove call tracing (also in prom file)
-  * remove watchdog
-  * remove interrupt ctrl
-  * remove dev sig selector
-  * remove log buffers
-  --
-  Adding some new modules, replacing direct top level functionality
-  * sys ctrl reg
-  * reset device
-  * milliseconds timer device
-  --
-  Re-adding stuff
-  * log buffer
-  * system control and status
-  * process timers
-  * watchdog
-  * stack monitor
-  * calltrace stacks
-  * GPIO
-  --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
   * apart from the CPU, all modules use the active high reset signal
@@ -59,14 +19,15 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-`define CLOCK_FREQ 40_000_000
-`define PROM_FILE "../../platform/p4-eth-arty-a7-100/bootload/BootLoad-512k-64k.mem"
-`define RS232_BUF_SLOTS 256   // RS232 buffer size, one for tx and rx each
-`define LOGBUF_ENTRIES 32
-`define CALLTRACE_SLOTS 32    // depth of each calltrace stack (same for each process)
-`define NUM_GPIO 4
-
-module RISC5Top (
+module RISC5Top #(
+  parameter
+    clock_freq = 40_000_000,
+    prom_file = "../../platform/p4-eth-arty-a7-100/bootload/BootLoad-512k-64k.mem",
+    rs232_buf_slots = 256,
+    logbuf_entries = 32,
+    calltrace_slots = 32,
+    num_gpio = 4
+  )(
   // clock
   input wire clk_in,
   // RS 232
@@ -88,7 +49,7 @@ module RISC5Top (
   output wire [7:0] sys_leds,         // on Pmod board
   output wire [3:0] leds_g,           // on Arty board
   // GPIO
-  inout wire [`NUM_GPIO-1:0] gpio
+  inout wire [num_gpio-1:0] gpio
  );
 
   // clk
@@ -235,7 +196,7 @@ module RISC5Top (
   );
 
   // boot ROM
-  prom #(.mem_file(`PROM_FILE)) prom_0 (
+  prom #(.mem_file(prom_file)) prom_0 (
     // in
     .clk(~clk),
     .addr(adr[10:2]),
@@ -254,7 +215,7 @@ module RISC5Top (
 //    // out
 //    .rdata(inbus0[31:0])
 //  );
-  
+
   // BRAM 512k
   ramg5 #(.num_kbytes(512)) ram_0 (
     // in
@@ -269,7 +230,7 @@ module RISC5Top (
 
   // ms timer
   // uses one IO address
-  ms_timer #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
+  ms_timer #(.clock_freq(clock_freq)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -307,7 +268,7 @@ module RISC5Top (
 
   // RS232 buffered
   // uses two consecutive IO addresses
-  rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
+  rs232 #(.clock_freq(clock_freq), .buf_slots(rs232_buf_slots)) rs232_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -325,7 +286,7 @@ module RISC5Top (
 
   // SPI
   // uses two consecutive IO addresses
-  spie #(.clock_freq(`CLOCK_FREQ)) spie_0 (
+  spie #(.clock_freq(clock_freq)) spie_0 (
     .clk(clk),
     .rst(rst),
     .stb(spi_0_stb),
@@ -391,7 +352,7 @@ module RISC5Top (
 
   // log buffer
   // uses two consecutive IO addresses
-  logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
+  logbuf #(.num_entries(logbuf_entries)) logbuf_0 (
     // in
     .clk(clk),
     .stb(log_stb),
@@ -437,7 +398,7 @@ module RISC5Top (
 
   // call trace stacks
   // uses two consecutive IO addresses
-  calltrace #(.num_slots(`CALLTRACE_SLOTS)) calltrace_0 (
+  calltrace #(.num_slots(calltrace_slots)) calltrace_0 (
     // in
     .clk(clk),
     .stb(cts_stb),
@@ -468,33 +429,37 @@ module RISC5Top (
 
   // GPIO
   // uses two consecutive IO addresses
-  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
+  gpio #(.num_gpio(num_gpio)) gpio_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(gpio_stb),
     .we(wr),
     .addr(adr[2]),
-    .data_in(outbus[`NUM_GPIO-1:0]),
+    .data_in(outbus[num_gpio-1:0]),
     // out
     .data_out(gpio_dout),
     .ack(gpio_ack),
     // external
-    .io_pin(gpio[`NUM_GPIO-1:0])
+    .io_pin(gpio[num_gpio-1:0])
   );
 
 
   // address decoding
   // ----------------
+  // cf. memory map below
+
+  // max RAM address space at 000000H to 0FFE000H (16 MB - 8 kB)
 
   // codebus multiplexer
-  // PROM: 2 kB @ 0FFE000H => initial code address for CPU
+  // PROM: 2 kB at 0FFE000H => initial code address for CPU
   assign prom_stb = (adr[23:12] == 12'hFFE && adr[11] == 1'b0) ? 1'b1 : 1'b0;
   assign codebus[31:0] = ~prom_stb ? inbus0[31:0] : prom_dout[31:0];
 
   // inbus multiplexer
-  // I/O: 256 bytes (64 words) @ 0FFFF00H
-  // there's space for three more IO blocks "above" the PROM region
+  // I/O: 256 bytes (64 words) at 0FFFF00H
+  // there's space for three more 256 bytes IO blocks "above" the PROM region
+  // at: 0FFFE00H, 0FFFD00, 0FFFC00
   assign io_en = (adr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
   assign inbus[31:0] = ~io_en ? inbus0[31:0] : io_out[31:0];
 
@@ -519,7 +484,7 @@ module RISC5Top (
   // ---------------------
   assign io_out[31:0] =
     gpio_stb    ? gpio_dout[31:0] :
-    spi_0_stb   ? spi_0_dout :
+    spi_0_stb   ? spi_0_dout[31:0] :
     rs232_0_stb ? rs232_0_dout[31:0] :
     lsb_stb     ? lsb_dout[31:0] :
     tmr_stb     ? tmr_dout[31:0] :
@@ -535,3 +500,37 @@ module RISC5Top (
 endmodule
 
 `resetall
+
+/**
+FFFFFC  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFF00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFE00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFD00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFC00  +---------------------------+
+        |                           |
+        |      -- unused --         |     3 kB
+        |                           !
+FFF000  +---------------------------+
+        |                           !
+        |          PROM             |     4 KB
+        |                           |
+FFE000  +---------------------------+
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |          max              |
+        |          RAM              |     16 MB - 8 kB
+        |         space             |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+000000  +---------------------------+
+**/

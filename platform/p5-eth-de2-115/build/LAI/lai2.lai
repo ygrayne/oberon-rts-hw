@@ -1,0 +1,77 @@
+<session jtag_chain="USB-Blaster [USB-1]" jtag_device="@1: 10CL120(Y|Z)/EP3C120/.. (0x020F70DD)" sof_file="C:/Users/gray/Projects/Oberon/WORK/oberon-rts-hw/platform/p5-eth-de2-115/build/output_files/RISC5Top.sof">
+  <display_attributes active_instance="1" active_tab="3"/>
+  <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_0" type="generic">
+    <node_ip_info instance_id="0" mfg_id="110" node_id="7" version="0"/>
+    <core_parameters bank_count="2" capture_mode="timing" clock="sram_test:sram_test_0|clk" crc_value="B5C4" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <pins>
+      <pin io_standard="2.5 V" location="PIN_AC19" name="altera_reserved_lai_0_0"/>
+      <pin io_standard="2.5 V" location="PIN_AD19" name="altera_reserved_lai_0_1"/>
+      <pin io_standard="2.5 V" location="PIN_AF24" name="altera_reserved_lai_0_2"/>
+      <pin io_standard="2.5 V" location="PIN_AF25" name="altera_reserved_lai_0_3"/>
+      <pin io_standard="2.5 V" location="PIN_AE22" name="altera_reserved_lai_0_4"/>
+      <pin io_standard="2.5 V" location="PIN_AF22" name="altera_reserved_lai_0_5"/>
+      <pin io_standard="2.5 V" location="PIN_AG25" name="altera_reserved_lai_0_6"/>
+      <pin io_standard="2.5 V" location="PIN_AH25" name="altera_reserved_lai_0_7"/>
+    </pins>
+    <banks>
+      <bank name="Bank 0">
+        <signal name="risc5_1:risc5_0|clk" type="comb"/>
+        <signal name="risc5_1:risc5_0|rd" type="comb"/>
+        <signal name="risc5_1:risc5_0|LDR" type="comb"/>
+        <signal name="risc5_1:risc5_0|wr" type="comb"/>
+        <signal name="risc5_1:risc5_0|STR" type="comb"/>
+        <signal name="echo:echo_0|wr_data1" type="comb"/>
+        <signal name="echo:echo_0|rd_data1" type="comb"/>
+        <signal name="" type="unused"/>
+      </bank>
+      <bank name="Bank 1">
+        <signal name="sram_test:sram_test_0|sram:sram_0|dbuf[0]" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|dbuf[2]" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|data_in[2]" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|data_in[16]" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|data_in[18]" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|sram_addr[0]" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|sram_addr[1]" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|sram_addr[2]" type="unused"/>
+      </bank>
+    </banks>
+    <display_attributes connected_bank="0"/>
+  </instance>
+  <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_1" type="generic">
+    <node_ip_info instance_id="1" mfg_id="110" node_id="7" version="0"/>
+    <core_parameters bank_count="2" capture_mode="timing" clock="sram_test:sram_test_0|clk_sram" crc_value="7A41" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <pins>
+      <pin io_standard="2.5 V" location="PIN_AF16" name="altera_reserved_lai_1_0"/>
+      <pin io_standard="2.5 V" location="PIN_AF15" name="altera_reserved_lai_1_1"/>
+      <pin io_standard="2.5 V" location="PIN_AE21" name="altera_reserved_lai_1_2"/>
+      <pin io_standard="2.5 V" location="PIN_AC22" name="altera_reserved_lai_1_3"/>
+      <pin io_standard="2.5 V" location="PIN_AF21" name="altera_reserved_lai_1_4"/>
+      <pin io_standard="2.5 V" location="PIN_AD22" name="altera_reserved_lai_1_5"/>
+      <pin io_standard="2.5 V" location="PIN_AD25" name="altera_reserved_lai_1_6"/>
+      <pin io_standard="2.5 V" location="PIN_AE25" name="altera_reserved_lai_1_7"/>
+    </pins>
+    <banks>
+      <bank name="Bank 0">
+        <signal name="sram_test:sram_test_0|clk_sram" type="comb"/>
+        <signal name="sram_test:sram_test_0|clk_sram_ps" type="comb"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|state" type="unused"/>
+        <signal name="sram_test:sram_test_0|sram:sram_0|sram_we_n" type="unused"/>
+        <signal name="sram_test:sram_test_0|wr_data" type="unused"/>
+        <signal name="sram_test:sram_test_0|rd_data" type="unused"/>
+        <signal name="sram_test:sram_test_0|we" type="comb"/>
+        <signal name="sram_test:sram_test_0|clk" type="comb"/>
+      </bank>
+      <bank name="Bank 1">
+        <signal name="inbus[0]" type="comb"/>
+        <signal name="inbus[1]" type="comb"/>
+        <signal name="inbus[2]" type="comb"/>
+        <signal name="inbus[3]" type="comb"/>
+        <signal name="inbus[8]" type="comb"/>
+        <signal name="inbus[9]" type="comb"/>
+        <signal name="inbus[10]" type="comb"/>
+        <signal name="inbus[11]" type="comb"/>
+      </bank>
+    </banks>
+    <display_attributes connected_bank="1"/>
+  </instance>
+</session>

@@ -4,8 +4,9 @@
   Architecture: ANY
   Board: Arty-A7-100
   --
-  * Green LEDs are also switched by hardware input signals.
-  * Green LEDs use "toggle" mechanism for on/off
+  * The system leds are wired to a Pmod port with an 8 LED board
+  * Green LEDs can also switched by hardware input signals.
+  * From Software, green LEDs use "toggle" mechanism for on/off
   * Compatible with DE2-115 design, hence the wide 'unused' gap.
   --
     data_in [31:0]:
@@ -21,7 +22,7 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module lsb_s (
+module lsb_s #(parameter board = 4'd1) (  // board identifier
   // internal interface
   input wire clk,
   input wire rst,
@@ -72,11 +73,15 @@ module lsb_s (
     else begin
       leds_g_s[3:0] <= leds_g_in[3:0];
       if (wr_data) begin
-        leds_sys <= data_in[7:0];
-        case (ctrl[1:0])
-          2'b01: leds_g_d[3:0] <= leds_g_d[3:0] & ~data_in[11:8]; // off
-          2'b10: leds_g_d[3:0] <= leds_g_d[3:0] | data_in[11:8];  // on
-        endcase
+        if (data_in[31:8] == 24'b0) begin
+          leds_sys <= data_in[7:0];
+        end
+        else begin
+          case (ctrl[1:0])
+            2'b01: leds_g_d[3:0] <= leds_g_d[3:0] & ~data_in[11:8]; // off
+            2'b10: leds_g_d[3:0] <= leds_g_d[3:0] | data_in[11:8];  // on
+          endcase
+        end
       end
     end
   end
@@ -85,7 +90,7 @@ module lsb_s (
   assign leds_g[3:0] = leds_g_s[3:0] | leds_g_d[3:0];
 
   assign data_out[31:0] =
-    rd_data ? {16'b0, 4'b0, btn_out[3:0], 4'b0, swi_out[3:0]} :
+    rd_data ? {board[3:0], 12'b0, 4'b0, btn_out[3:0], 4'b0, swi_out[3:0]} :
     32'b0;
 
   assign ack = stb;

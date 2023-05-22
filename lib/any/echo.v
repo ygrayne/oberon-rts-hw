@@ -5,7 +5,7 @@
   --
   Architecture: ANY
   --
-  2023 Gray, gray@grayraven.org
+  (c) 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
 
@@ -37,8 +37,6 @@ module echo (
     data1 <= wr_data1 ? data_in[15:0] : data1;
     data2 <= wr_data2 ? data_in[31:16] : data2;
   end
-
-  wire [31:0] dout = {data2, data1};
 
   assign data_out[31:0] =
     rd_data1 ? {16'b0, data1} :

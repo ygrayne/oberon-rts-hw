@@ -17,11 +17,11 @@ MODULE* BootLoad;
   IMPORT SYSTEM;
 
   CONST
-    MT = 12; SP = 14;
-    MTOrg = 20H;
+    MT = 12; SP = 14; MTOrg = 20H;
     spiData = -48; spiCtrl = -44;
     CARD0 = 1; SPIFAST = 8; SPIWORD = 16;
     FSoffset = 80000H;   (*block offset*)
+    LEDbase = 090H;
 
     (* stack monitor *)
     StackMonBaseAdr = -96;
@@ -80,19 +80,24 @@ MODULE* BootLoad;
     FOR i := 24 TO 0 BY -8 DO SPI(ROR(arg, i)) END; (*send arg*)
     SPI(crc);
     i := 32;
-    REPEAT SPI(255); SYSTEM.GET(spiData, data); DEC(i) UNTIL (data < 80H) OR (i = 0)
+    REPEAT SPI(255); SYSTEM.GET(spiData, data); DEC(i) UNTIL (data < 80H) OR (i = 0);
+
   END SPICmd;
 
   PROCEDURE InitSPI;
     VAR res: INTEGER;
   BEGIN
     SPIIdle(10); (*first, idle for at least 80 clks*)
-    LED(090H + 5);
+    LED(LEDbase + 8);
+    (*
     REPEAT (* gray: until card accepts init *)
+    *)
       SPICmd(0, 0); (*CMD0 when card selected, sets MMC SPI mode*)
+    (*
       SYSTEM.GET(spiData, res);
     UNTIL res = 1H;
-    LED(090H + 6);
+    *)
+    LED(LEDbase + 9);
     SPICmd(8, 1AAH); SPI(-1); SPI(-1); SPI(-1); (*CMD8 for SD cards*)
     REPEAT (*until card becomes ready*)
       (*ACMD41, optionally with high-capacity (HCS) bit set, starts init*)
@@ -100,9 +105,10 @@ MODULE* BootLoad;
       SPICmd(41, LSL(1(*HCS*), 30));
       SYSTEM.GET(spiData, res);
       SPI(-1); SPI(-1); SPI(-1); (*flush response*)
-      SPIIdle(10000)
+      SPIIdle(10000);
+      LED(0F0H + 1)
     UNTIL res = 0;
-    LED(090H + 7);
+    LED(LEDbase + 10);
     (*CMD16 set block size as a precaution (should default)*)
     SPICmd(16, 512); SPIIdle(1)
   END InitSPI;
@@ -122,14 +128,14 @@ MODULE* BootLoad;
     SDShift(src); SPICmd(17, src); (*CMD17 read one block*)
     i := 0; (*wait for start data marker*)
     REPEAT SPI(-1); SYSTEM.GET(spiData, data); INC(i) UNTIL data = 254;
-    LED(090H + 8);
+    LED(LEDbase + 11);
     SYSTEM.PUT(spiCtrl, SPIWORD + SPIFAST + CARD0);
     FOR i := 0 TO 508 BY 4 DO
       SYSTEM.PUT(spiData, -1);
       REPEAT UNTIL SYSTEM.BIT(spiCtrl, 0);
       SYSTEM.GET(spiData, data); SYSTEM.PUT(dst, data); INC(dst, 4)
     END;
-    LED(090H + 9);
+    LED(LEDbase + 12);
     SPI(255); SPI(255); SPIIdle(1) (*may be a checksum; deselect card*)
   END ReadSD;
 
@@ -144,7 +150,7 @@ MODULE* BootLoad;
 
 
 BEGIN
-  LED(090H + 1);
+  LED(LEDbase + 1);
   (* set registers to run the boot loader *)
   SYSTEM.LDREG(SP, stackOrg);
   SYSTEM.LDREG(MT, MTOrg);
@@ -155,7 +161,7 @@ BEGIN
   SYSTEM.PUT(StackMonHotAdr, 0);
   (* disable watchdog *)
   SYSTEM.PUT(WatchdogAdr, 0);
-  LED(090H + 2);
+  LED(LEDbase + 2);
   IF ~SYSTEM.BIT(SysCtrlAdr, SysCtrlNoReload) THEN
 
     (***
@@ -163,15 +169,16 @@ BEGIN
     SYSTEM.PUT(CalltraceStatusAdr, ClearCtrl);
     *)
 
-    LED(090H + 3);
+    LED(LEDbase + 3);
     InitSPI;
+    LED(LEDbase + 4);
     LoadFromDisk;
-    LED(090H + 4);
+    LED(LEDbase + 5);
   END;
 
   (* put the memory info for Modules and Kernel *)
   (* note: the statically linked boot file adds some more, eg. for AllocPtr *)
   SYSTEM.PUT(12, MemLim);
   SYSTEM.PUT(24, stackOrg);
-  LED(090H + 0FH)
+  LED(LEDbase + 6)
 END BootLoad.

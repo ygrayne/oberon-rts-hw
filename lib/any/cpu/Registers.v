@@ -1,6 +1,8 @@
 /**
   Generic register file for RISC5 CPU
   --
+  Synchronous writes, asynchronous reads.
+  --
   (c) 2022 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -17,15 +19,18 @@ module Registers (
 );
 
   reg [31:0] R [0:15];
-  
-  assign dout0 = R[rno0];
-  assign dout1 = R[rno1];
-  assign dout2 = R[rno2];
-  
+
+  assign dout0[31:0] = R[rno0];
+  assign dout1[31:0] = R[rno1];
+  assign dout2[31:0] = R[rno2];
+
   always @(posedge clk) begin
-    R[rno0] <= wr ? din : R[rno0];
+//    R[rno0] <= wr ? din[31:0] : R[rno0];
+    if (wr) begin
+      R[rno0] <= din[31:0];
+    end
   end
-  
+
 endmodule
 
 `resetall
