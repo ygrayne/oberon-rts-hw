@@ -1,5 +1,5 @@
 /**
-  RISC5 processor definition for Oberon RTS p3-thm-de2-115
+  RISC5 CPU and environment definition for Oberon RTS p3-thm-de2-115
   --
   Architecture: THM
   Board and technology: DE2-115, Altera Cyclone IV
@@ -13,8 +13,7 @@
 
   * no video RAM
   * no keyboard and mouse
-  * separate clock and reset, move clock into tech directory
-  * move bio into board directory as lsb
+  * separate clock and reset, move clock into platform directory
   * improved SPI device
   * extended IO address space
   * 16 MB SDRAM (only 512k in use currently)
@@ -27,19 +26,21 @@
   * watchdog
   * stack monitor
   * calltrace stacks
+  * gpio
 **/
 
 `timescale 1ns / 1ps
 `default_nettype none
 
-`define CLOCK_FREQ 50_000_000
-`define PROM_FILE "../../platform/p3-thm-de2-115/bootload/BootLoad-512k-64k.mem"  // for PROM
-`define RS232_BUF_SLOTS 256   // RS232 buffer size, for tx and rx
-`define LOGBUF_ENTRIES 32
-`define CALLTRACE_SLOTS 32    // depth of each calltrace stack
-`define NUM_GPIO 4
-
-module risc5 (
+module risc5 #(
+  parameter
+    clock_freq = 50_000_000,
+    prom_file = "../../platform/p3-thm-de2-115/bootload/BootLoad-512k-64k.mem",
+    rs232_buf_slots = 256,
+    logbuf_entries = 32,
+    calltrace_slots = 32,
+    num_gpio = 4
+  )(
   // clock
   input clk_in,
   // SDRAM
@@ -80,7 +81,8 @@ module risc5 (
   input [3:0] btn_in_n,
   input [17:0] swi_in,
   // GPIO
-  inout [`NUM_GPIO-1:0] gpio
+  inout [num_gpio-1:0] gpio,
+  output [5:0] ext
 );
 
   // clk
@@ -114,13 +116,13 @@ module risc5 (
   wire io_stb;                // i/o strobe
   // ms timer
   wire tmr_stb;
-  wire [31:0] tmr_dout;       // data out: running milliseconds since reset
+  wire [31:0] tmr_dout;       // running milliseconds since reset
   wire tmr_ms_tick;           // millisecond timer tick
   wire tmr_ack;
   // lsb
   wire lsb_stb;
-  wire [17:0] lsb_leds_r_in;  // signals in for red LEDs
-  wire [31:0] lsb_dout;       // buttons, switches
+  wire [17:0] lsb_leds_r_in;  // direct signals in for red LEDs
+  wire [31:0] lsb_dout;       // buttons, switches io data
   wire [3:0] lsb_btn;         // button signals out
   wire [17:0] lsb_swi;        // switch signals out
   wire lsb_ack;
@@ -177,6 +179,14 @@ module risc5 (
   wire gpio_ack;
 
 
+  assign ext[0] = clk;
+  assign ext[1] = sdcard_sclk;
+  assign ext[2] = clk_in;
+  assign ext[3] = 1'b0;
+  assign ext[4] = 1'b0;
+  assign ext[5] = 1'b0;
+
+
   // clocks
   clocks clocks_0 (
     // in
@@ -184,7 +194,7 @@ module risc5 (
     //out
     .clk_ok(clk_ok),
     .clk_2x(mclk),           // 100 MHz
-    .clk(clk),             // 50 MHz
+    .clk(clk),               // 50 MHz
     // external out
     .clk_2x_ps(sdram_clk)    // 100 MHz, phase-shifted
   );
@@ -192,7 +202,7 @@ module risc5 (
   // reset
   reset reset_0 (
     // in
-    .clk(clk), 
+    .clk(clk),
     .clk_ok(clk_ok),
     .rst_in_n(btn_in_n[3]),
     // out
@@ -219,7 +229,7 @@ module risc5 (
   );
 
   // boot ROM
-  prom #(.mem_file(`PROM_FILE)) prom_0 (
+  prom #(.mem_file(prom_file)) prom_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -257,7 +267,7 @@ module risc5 (
 
   // ms timer
   // uses one IO address
-  ms_timer #(.clock_freq(`CLOCK_FREQ)) tmr_0 (
+  ms_timer #(.clock_freq(clock_freq)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -303,7 +313,7 @@ module risc5 (
 
   // RS232 buffered
   // uses two consecutive IO addresses
-  rs232 #(.clock_freq(`CLOCK_FREQ), .buf_slots(`RS232_BUF_SLOTS)) rs232_0 (
+  rs232 #(.clock_freq(clock_freq), .buf_slots(rs232_buf_slots)) rs232_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -321,7 +331,7 @@ module risc5 (
 
   // SPI
   // uses two consecutive IO addresses
-  spie #(.clock_freq(`CLOCK_FREQ)) spie_0 (
+  spie #(.clock_freq(clock_freq)) spie_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -389,7 +399,7 @@ module risc5 (
 
   // log buffer
   // uses two consecutive IO addresses
-  logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
+  logbuf #(.num_entries(logbuf_entries)) logbuf_0 (
     // in
     .clk(clk),
     .stb(log_stb),
@@ -437,7 +447,7 @@ module risc5 (
 
  // call trace stacks
  // uses two consecutive IO addresses
- calltrace #(.num_slots(`CALLTRACE_SLOTS)) calltrace_0 (
+ calltrace #(.num_slots(calltrace_slots)) calltrace_0 (
    // in
    .clk(clk),
    .stb(cts_stb),
@@ -468,32 +478,35 @@ module risc5 (
 
   // GPIO
   // uses two consecutive IO addresses
-  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
+  gpio #(.num_gpio(num_gpio)) gpio_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(gpio_stb),
     .we(bus_we),
     .addr(bus_addr[2]),
-    .data_in(bus_dout[`NUM_GPIO-1:0]),
+    .data_in(bus_dout[num_gpio-1:0]),
     // out
     .data_out(gpio_dout),
     .ack(gpio_ack),
     // external
-    .io_pin(gpio[`NUM_GPIO-1:0])
+    .io_pin(gpio[num_gpio-1:0])
   );
 
   // address decoding
   // ----------------
+  // cf. memory map below
 
-  // PROM: 2 KB @ 0xFFE000 => initial code address for CPU
+  // PROM: 2 kB at 0FFE000H => initial code address for CPU
   assign prom_stb = (bus_stb && bus_addr[23:12] == 12'hFFE && bus_addr[11] == 1'b0) ? 1'b1 : 1'b0;
 
-  // RAM: (16 MB - 8 kB) @ 000000H
+  // RAM: (16 MB - 8 kB) at 000000H to 0FFE000H
+  // adr[23:0] = 0FFE000H => adr[23:13] = 11'h7FF
   assign ram_stb = (bus_stb && bus_addr[23:13] != 11'h7FF) ? 1'b1 : 1'b0;
 
-  // I/O: 256 bytes (64 words) @ 0FFFF00H
-  // there's space for three more IO blocks "above" the PROM region
+  // I/O: 256 bytes (64 words) at 0FFFF00H
+  // there's space for three more 256 bytes IO blocks "above" the PROM region
+  // at: 0FFFE00H, 0FFFD00, 0FFFC00
   assign io_stb = (bus_stb && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
@@ -555,3 +568,37 @@ module risc5 (
 endmodule
 
 `resetall
+
+/**
+FFFFFC  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFF00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFE00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFD00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFC00  +---------------------------+
+        |                           |
+        |      -- unused --         |     3 kB
+        |                           !
+FFF000  +---------------------------+
+        |                           !
+        |          PROM             |     4 KB
+        |                           |
+FFE000  +---------------------------+
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |          max              |
+        |          RAM              |     16 MB - 8 kB
+        |         space             |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+000000  +---------------------------+
+**/
