@@ -15,10 +15,10 @@
 
 module clocks (
   input wire clk_in,
-  output wire clk_ok,
-  output wire clk_sram_ps,
+  output wire clk_sys,
   output wire clk_sram,
-  output wire clk_sys
+  output wire clk_sram_ps,
+  output wire clk_ok
 );
 
   wire [1:0] in_clk = {1'b0, clk_in};

@@ -1,4 +1,6 @@
-create_clock -period 20 [get_ports clk_in]
+set_time_format -unit ns -decimal_places 3
+
+create_clock -name {clk_in} -period 20.000 -waveform {0.000 10.000} [get_ports clk_in]
 derive_pll_clocks
 derive_clock_uncertainty
 
@@ -17,4 +19,3 @@ set_false_path -to [get_ports hex3_n[*]]
 set_false_path -to [get_ports hex2_n[*]]
 set_false_path -to [get_ports hex1_n[*]]
 set_false_path -to [get_ports hex0_n[*]]
-

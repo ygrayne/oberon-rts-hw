@@ -60,27 +60,6 @@ module sram_test (
       else begin
         if (wr_data) begin
           sram_a[20:0] <= sram_a0[20:0];
-//          if (~be) begin
-//            sram_d[31:0] <= data_in[31:0];
-//          end
-//          else begin
-//            if (sram_a[1] == 1'b0) begin
-//              if (sram_a[0] == 1'b0) begin
-//                sram_din[31:0] <= {24'h0, data_in[7:0]};
-//              end
-//              else begin
-//                sram_din[31:0] <= {16'h0, data_in[15:8], 8'h0};
-//              end
-//            end
-//            else begin
-//              if (sram_a[0] == 1'b0) begin
-//                sram_din[31:0] <= {8'h0, data_in[23:16], 16'h0};
-//              end
-//              else begin
-//                sram_din[31:0] <= {data_in[31:24], 24'h0};
-//              end
-//            end
-//          end
           sram_d[31:0] <= data_in[31:0];
           sram_en <= 1'b1;
           sram_we <= 1'b1;
@@ -108,6 +87,7 @@ module sram_test (
 
   // SRAM
   sram sram_0 (
+    // in
     .clk(clk_sram),
     .clk_ps(clk_sram_ps),
     .rst(rst),
@@ -116,7 +96,9 @@ module sram_test (
     .we(sram_we),
     .addr(sram_a[20:0]),
     .data_in(sram_d[31:0]),
+    // out
     .data_out(sram_dout[31:0]),
+    // SRAM external
     .sram_addr(sram_addr[19:0]),
     .sram_data(sram_data[15:0]),
     .sram_ce_n(sram_ce_n),

@@ -38,15 +38,15 @@ module sram (
   assign sram_ce_n = en;
   assign sram_oe_n = we;
   assign sram_we_n = ~(we & clk_ps);
-//  assign sram_ub_n = 1'b0;
-//  assign sram_lb_n = 1'b0;
+  assign sram_ub_n = 1'b0;
+  assign sram_lb_n = 1'b0;
 
-  wire [1:0] addr10 = addr[1:0];
-  wire [3:0] b_en = (~we | ~be) ? 4'b1111 :
-    {addr10 == 2'b11, addr10 == 2'b10, addr10 == 2'b01, addr10 == 2'b00};
+//  wire [1:0] addr10 = addr[1:0];
+//  wire [3:0] b_en = (~we | ~be) ? 4'b1111 :
+//    {addr10 == 2'b11, addr10 == 2'b10, addr10 == 2'b01, addr10 == 2'b00};
 
-  assign sram_lb_n = (state == 1'b0) ? ~b_en[0] : ~b_en[2];
-  assign sram_ub_n = (state == 1'b0) ? ~b_en[1] : ~b_en[3];
+//  assign sram_lb_n = (state == 1'b0) ? ~b_en[0] : ~b_en[2];
+//  assign sram_ub_n = (state == 1'b0) ? ~b_en[1] : ~b_en[3];
 
   assign sram_data[15:0] =
     we ? ((state == 1'b0) ? data_in[15:0] : data_in[31:16]): 16'hzzzz;

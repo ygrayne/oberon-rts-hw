@@ -2,7 +2,7 @@
   RISC5 processor definition for Oberon RTS p5-eth-de2-115
   --
   Architecture: ETH
-  Board and technology: DE2-115, Altera Cyclone IV
+  Board and technology: Terasic DE2-115, Altera Cyclone IV
   --
   Base/origin:
     * THM-oberon
@@ -16,7 +16,7 @@
 `default_nettype none
 
 `define CLOCK_FREQ 25_000_000
-`define PROM_FILE "../../platform/p5-eth-de2-115/bootload/BootLoad-256k-64k.mem"  // for PROM
+`define PROM_FILE "../../platform/p5-eth-de2-115/bootload/BootLoad-256k-64k.mem"
 `define RS232_BUF_SLOTS 256   // RS232 buffer size, for tx and rx
 `define LOGBUF_ENTRIES 32
 `define CALLTRACE_SLOTS 32    // depth of each calltrace stack
@@ -52,22 +52,22 @@ module RISC5Top (
   input [3:0] btn_in_n,
   input [17:0] swi_in,
   // GPIO
-  inout [`NUM_GPIO-1:0] gpio
+//  inout [`NUM_GPIO-1:0] gpio,
   // SRAM
-//  output wire [19:0] sram_addr,
-//  inout wire [15:0] sram_data,
-//  output wire sram_ce_n,
-//  output wire sram_oe_n,
-//  output wire sram_we_n,
-//  output wire sram_ub_n,
-//  output wire sram_lb_n
+  output wire [19:0] sram_addr,
+  inout wire [15:0] sram_data,
+  output wire sram_ce_n,
+  output wire sram_oe_n,
+  output wire sram_we_n,
+  output wire sram_ub_n,
+  output wire sram_lb_n
 );
 
   // clk
   wire clk_ok;                // clocks stable
   wire clk;                   // system clock, 25 MHz
   wire clk_sram;
-  wire clk_sram_ps;           // memory write clock
+  wire clk_sram_ps;
   // reset
   wire rst_out;               // active high
   // cpu
@@ -102,7 +102,7 @@ module RISC5Top (
   wire [31:0] io_out;         // io devices output
   // ms timer
   wire tmr_stb;
-  wire [31:0] tmr_dout;       // data out: running milliseconds since reset
+  wire [31:0] tmr_dout;       // running milliseconds since reset
   wire tmr_ms_tick;           // millisecond timer tick
   wire tmr_ack;
   // lsb
@@ -136,34 +136,37 @@ module RISC5Top (
   wire ptmr_stb;
   wire [31:0] ptmr_dout;      // proc timers ready signals
   wire ptmr_ack;
-  // log buffer
-  wire log_stb;
-  wire [31:0] log_dout;       // log data output, log indices
-  wire log_ack;
-  // watchdog
-  wire wd_stb;
-  wire [31:0] wd_dout;        // timeout value
+//  // log buffer
+//  wire log_stb;
+//  wire [31:0] log_dout;       // log data output, log indices
+//  wire log_ack;
+//  // watchdog
+//  wire wd_stb;
+//  wire [31:0] wd_dout;        // timeout value
   wire wd_trig;               // watchdog trigger signal out
-  wire wd_ack;
-  // stack mmonitor
-  wire stm_stb;
-  wire [31:0] stm_dout;       // stack limit, hotzone address, lowest address reached (usage)
+//  wire wd_ack;
+//  // stack mmonitor
+//  wire stm_stb;
+//  wire [31:0] stm_dout;       // stack limit, hotzone address, lowest address reached (usage)
   wire stm_trig_lim;          // stack limit trigger signal out
   wire stm_trig_hot;          // hot zone trigger signal out
-  wire stm_ack;
-  // call trace stacks
-  wire cts_stb;
-  wire [31:0] cts_dout;       // stack values output, status output
-  wire cts_ack;
-  // start tables
-  wire start_stb;
-  wire [31:0] start_dout;     // data out: start-up table number, armed bit
-  wire start_ack;
-  // gpio
-  wire gpio_stb;
-  wire [31:0] gpio_dout;      // pin data, in/out control status
-  wire gpio_ack;
-
+//  wire stm_ack;
+//  // call trace stacks
+//  wire cts_stb;
+//  wire [31:0] cts_dout;       // stack values output, status output
+//  wire cts_ack;
+//  // start tables
+//  wire start_stb;
+//  wire [31:0] start_dout;     // data out: start-up table number, armed bit
+//  wire start_ack;
+//  // gpio
+//  wire gpio_stb;
+//  wire [31:0] gpio_dout;      // pin data, in/out control status
+//  wire gpio_ack;
+//  // echo
+//  wire echo_stb;
+//  wire [31:0] echo_dout;
+//  wire echo_ack;
 
   // clocks
   clocks clocks_0 (
@@ -241,28 +244,28 @@ module RISC5Top (
 //    .sram_lb_n(sram_lb_n)
 //  );
 
-//  sram_test sram_test_0 (
-//    .clk(clk),
-//    .clk_sram(clk_sram),
-//    .clk_sram_ps(clk_sram_ps),
-//    .rst(rst),
-//    .stb(sram_stb),
-//    .we(wr),
-//    .be(ben),
-//    .addr(adr[2]),
-//    .data_in(outbus[31:0]),
-//    .data_out(sram_dout[31:0]),
-//    .ack(sram_ack),
-//    .sram_addr(sram_addr[19:0]),
-//    .sram_data(sram_data[15:0]),
-//    .sram_ce_n(sram_ce_n),
-//    .sram_oe_n(sram_oe_n),
-//    .sram_we_n(sram_we_n),
-//    .sram_ub_n(sram_ub_n),
-//    .sram_lb_n(sram_lb_n)
-//  );
+  sram_test sram_test_0 (
+    .clk(clk),
+    .clk_sram(clk_sram),
+    .clk_sram_ps(clk_sram_ps),
+    .rst(rst),
+    .stb(sram_stb),
+    .we(wr),
+    .be(ben),
+    .addr(adr[2]),
+    .data_in(outbus[31:0]),
+    .data_out(sram_dout[31:0]),
+    .ack(sram_ack),
+    .sram_addr(sram_addr[19:0]),
+    .sram_data(sram_data[15:0]),
+    .sram_ce_n(sram_ce_n),
+    .sram_oe_n(sram_oe_n),
+    .sram_we_n(sram_we_n),
+    .sram_ub_n(sram_ub_n),
+    .sram_lb_n(sram_lb_n)
+  );
 
-  // BRAM 256
+  // BRAM 256k
   ramg5 #(.num_kbytes(256)) ram_0 (
     // in
     .clk(clk),
@@ -407,105 +410,120 @@ module RISC5Top (
     .ack(ptmr_ack)
   );
 
-  // log buffer
-  // uses two consecutive IO addresses
-  logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
-    // in
-    .clk(clk),
-    .stb(log_stb),
-    .we(wr),
-    .addr(adr[2]),
-    .data_in(outbus[15:0]),
-    // out
-    .data_out(log_dout[31:0]),
-    .ack(log_ack)
-  );
+//  // log buffer
+//  // uses two consecutive IO addresses
+//  logbuf #(.num_entries(`LOGBUF_ENTRIES)) logbuf_0 (
+//    // in
+//    .clk(clk),
+//    .stb(log_stb),
+//    .we(wr),
+//    .addr(adr[2]),
+//    .data_in(outbus[15:0]),
+//    // out
+//    .data_out(log_dout[31:0]),
+//    .ack(log_ack)
+//  );
 
-  // watchdog
-  // uses one IO address
-  watchdog watchdog_0 (
-    // in
-    .clk(clk),
-    .rst(rst),
-    .tick(tmr_ms_tick),
-    .stb(wd_stb),
-    .we(wr),
-    .data_in(outbus[15:0]),
-    // out
-    .data_out(wd_dout[31:0]),
-    .trig(wd_trig),
-    .ack(wd_ack)
-  );
+//  // watchdog
+//  // uses one IO address
+//  watchdog watchdog_0 (
+//    // in
+//    .clk(clk),
+//    .rst(rst),
+//    .tick(tmr_ms_tick),
+//    .stb(wd_stb),
+//    .we(wr),
+//    .data_in(outbus[15:0]),
+//    // out
+//    .data_out(wd_dout[31:0]),
+//    .trig(wd_trig),
+//    .ack(wd_ack)
+//  );
 
-  // stack monitor
-  // uses four consecutive IO addresses
-  stackmon stackmon_0 (
-    // in
-    .clk(clk),
-    .rst(rst),
-    .stb(stm_stb),
-    .we(wr),
-    .addr(adr[3:2]),
-    .sp_in(cpu_spx[23:0]),
-    .data_in(outbus[23:0]),
-    // out
-    .data_out(stm_dout[31:0]),
-    .trig_lim(stm_trig_lim),
-    .trig_hot(stm_trig_hot),
-    .ack(stm_ack)
-  );
+//  // stack monitor
+//  // uses four consecutive IO addresses
+//  stackmon stackmon_0 (
+//    // in
+//    .clk(clk),
+//    .rst(rst),
+//    .stb(stm_stb),
+//    .we(wr),
+//    .addr(adr[3:2]),
+//    .sp_in(cpu_spx[23:0]),
+//    .data_in(outbus[23:0]),
+//    // out
+//    .data_out(stm_dout[31:0]),
+//    .trig_lim(stm_trig_lim),
+//    .trig_hot(stm_trig_hot),
+//    .ack(stm_ack)
+//  );
 
- // call trace stacks
- // uses two consecutive IO addresses
- calltrace #(.num_slots(`CALLTRACE_SLOTS)) calltrace_0 (
-   // in
-   .clk(clk),
-   .stb(cts_stb),
-   .we(wr),
-   .addr(adr[2]),
-   .ir_in(cpu_irx),
-   .lnk_in(cpu_lnkx[23:0]),
-   .cp_pid(scs_cp_pid),
-   .data_in(outbus[23:0]),
-   // out
-   .data_out(cts_dout[31:0]),
-   .ack(cts_ack)
- );
+// // call trace stacks
+// // uses two consecutive IO addresses
+// calltrace #(.num_slots(`CALLTRACE_SLOTS)) calltrace_0 (
+//   // in
+//   .clk(clk),
+//   .stb(cts_stb),
+//   .we(wr),
+//   .addr(adr[2]),
+//   .ir_in(cpu_irx),
+//   .lnk_in(cpu_lnkx[23:0]),
+//   .cp_pid(scs_cp_pid),
+//   .data_in(outbus[23:0]),
+//   // out
+//   .data_out(cts_dout[31:0]),
+//   .ack(cts_ack)
+// );
 
-  // (-re) start tables
-  // uses one IO address
-  start start_0 (
-    // in
-    .clk(clk),
-    .rst(rst),
-    .stb(start_stb),
-    .we(wr),
-    .data_in(outbus[15:0]),
-    // out
-    .data_out(start_dout[31:0]),
-    .ack(start_ack)
-  );
+//  // (-re) start tables
+//  // uses one IO address
+//  start start_0 (
+//    // in
+//    .clk(clk),
+//    .rst(rst),
+//    .stb(start_stb),
+//    .we(wr),
+//    .data_in(outbus[15:0]),
+//    // out
+//    .data_out(start_dout[31:0]),
+//    .ack(start_ack)
+//  );
 
-  // GPIO
-  // uses two consecutive IO addresses
-  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
-    // in
-    .clk(clk),
-    .rst(rst),
-    .stb(gpio_stb),
-    .we(wr),
-    .addr(adr[2]),
-    .data_in(outbus[`NUM_GPIO-1:0]),
-    // out
-    .data_out(gpio_dout),
-    .ack(gpio_ack),
-    // external
-    .io_pin(gpio[`NUM_GPIO-1:0])
-  );
+//  // GPIO
+//  // uses two consecutive IO addresses
+//  gpio #(.num_gpio(`NUM_GPIO)) gpio_0 (
+//    // in
+//    .clk(clk),
+//    .rst(rst),
+//    .stb(gpio_stb),
+//    .we(wr),
+//    .addr(adr[2]),
+//    .data_in(outbus[`NUM_GPIO-1:0]),
+//    // out
+//    .data_out(gpio_dout),
+//    .ack(gpio_ack),
+//    // external
+//    .io_pin(gpio[`NUM_GPIO-1:0])
+//  );
+
+//  // echo testing
+//  echo echo_0 (
+//    .clk(clk),
+//    .stb(echo_stb),
+//    .we(wr),
+//    .addr(adr[2]),
+//    .data_in(outbus[31:0]),
+//    .data_out(echo_dout),
+//    .ack(echo_ack)
+//  );
+
+
 
   // address decoding
   // ----------------
 
+  // max RAM address space at 000000H to 0FFE000H (16 MB - 8 kB)
+  // adr[23:0] = 0FFE000H => adr[23:13] = 11'h7FF
 //  assign sram_stb = (adr[23:13] != 11'h7FF) ? 1'b1 : 1'b0;
 
   // codebus multiplexer
@@ -520,7 +538,7 @@ module RISC5Top (
   assign inbus[31:0] = ~io_en ? inbus0[31:0] : io_out[31:0];
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
-  assign gpio_stb    = (io_en && adr[7:3] == 5'b11100)  ? 1'b1 : 1'b0;  // -32 (data), -28 (ctrl/status)
+//  assign gpio_stb    = (io_en && adr[7:3] == 5'b11100)  ? 1'b1 : 1'b0;  // -32 (data), -28 (ctrl/status)
   assign spi_0_stb   = (io_en && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
   assign rs232_0_stb = (io_en && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
   assign lsb_stb     = (io_en && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
@@ -528,33 +546,69 @@ module RISC5Top (
 
   // extended IO address range
   assign scs_stb     = (io_en && adr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
-  assign cts_stb     = (io_en && adr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80, -76 (ctrl/status)
-  assign stm_stb     = (io_en && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
-//  assign sram_stb    = (io_en && adr[7:3] == 5'b10011) ? 1'b1 : 1'b0;   // -104
-  assign wd_stb      = (io_en && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
+//  assign cts_stb     = (io_en && adr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80, -76 (ctrl/status)
+//  assign stm_stb     = (io_en && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
+  assign sram_stb    = (io_en && adr[7:3] == 5'b10011)  ? 1'b1 : 1'b0;  // -104
+//  assign wd_stb      = (io_en && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
   assign ptmr_stb    = (io_en && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
-  assign start_stb   = (io_en && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
-  assign log_stb     = (io_en && adr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
+//  assign start_stb   = (io_en && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
+//  assign log_stb     = (io_en && adr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
+//  assign echo_stb    = (io_en && adr[7:3] == 5'b00000)  ? 1'b1 : 1'b0;  // -256
 
 
-  // data out multiplexing
-  // ---------------------
+  // IO data out multiplexing
+  // ------------------------
   assign io_out[31:0] =
-    gpio_stb    ? gpio_dout[31:0] :
-    spi_0_stb   ? spi_0_dout :
+//    gpio_stb    ? gpio_dout[31:0] :
+    spi_0_stb   ? spi_0_dout[31:0] :
     rs232_0_stb ? rs232_0_dout[31:0] :
     lsb_stb     ? lsb_dout[31:0] :
     tmr_stb     ? tmr_dout[31:0] :
     scs_stb     ? scs_dout[31:0] :
-    cts_stb     ? cts_dout[31:0]  :
-    stm_stb     ? stm_dout[31:0]  :
-//    sram_stb    ? sram_dout[31:0] :
-    wd_stb      ? wd_dout[31:0] :
+//    cts_stb     ? cts_dout[31:0]  :
+//    stm_stb     ? stm_dout[31:0]  :
+    sram_stb    ? sram_dout[31:0] :
+//    wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :
-    start_stb   ? start_dout[31:0] :
-    log_stb     ? log_dout[31:0] :
+//    start_stb   ? start_dout[31:0] :
+//    log_stb     ? log_dout[31:0] :
+//    echo_stb    ? echo_dout[31:0] :
     32'h0;
 
 endmodule
 
 `resetall
+
+/**
+FFFFFC  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFF00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFE00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFD00  +---------------------------+
+        | 64 dev addr (1 word each) |     256 Bytes
+FFFC00  +---------------------------+
+        |                           |
+        |      -- unused --         |     3 kB
+        |                           !
+FFF000  +---------------------------+
+        |                           !
+        |          PROM             |     4 KB
+        |                           |
+FFE000  +---------------------------+
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |          max              |
+        |          RAM              |     16 MB - 8 kB
+        |         space             |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+        |                           |
+000000  +---------------------------+
+**/
