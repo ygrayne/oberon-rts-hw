@@ -15,6 +15,7 @@
 
 module prom #(parameter mem_file = "BootLoad.mem") (
   input wire clk,
+  input wire en,
   input wire [8:0] addr,
   output reg [31:0] data_out
 );
@@ -26,7 +27,9 @@ module prom #(parameter mem_file = "BootLoad.mem") (
   end
 
   always @(posedge clk) begin
-    data_out <= mem[addr];
+    if (en) begin
+      data_out <= mem[addr];
+    end
   end
 
 endmodule

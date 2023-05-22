@@ -25,6 +25,7 @@
 
 module ramg5 #(parameter num_kbytes = 128) (
   input wire clk,
+  input wire en,
   input wire wr,
   input wire be,
   input wire [$clog2(num_kbytes*'h400)-1:0] addr,
@@ -35,10 +36,10 @@ module ramg5 #(parameter num_kbytes = 128) (
   localparam num_kwords = num_kbytes / 4;
   localparam addr_width = $clog2(num_kbytes*'h400);
 
-  // byte-wise write enable (addr[1:0])
+  // (byte-wise) write enable (addr[1:0])
   // reads are always 32 bits, see above
   wire [1:0] addr10 = addr[1:0];
-  wire [3:0] b_en = (~wr | ~be) ? 4'b1111 : {addr10 == 2'b11, addr10 == 2'b10, addr10 == 2'b01, addr10 == 2'b00};
+  wire [3:0] b_en = ~en ? 4'b0 : (~wr | ~be) ? 4'b1111 : {addr10 == 2'b11, addr10 == 2'b10, addr10 == 2'b01, addr10 == 2'b00};
 
   // address bus for the RAM blocks, word-aligned
   wire [addr_width-1:2] addr4 = addr[addr_width-1:2];
