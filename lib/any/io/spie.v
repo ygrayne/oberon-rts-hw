@@ -9,14 +9,16 @@
   [5:4] data width (default: 8 bits)
   [6:6] most significant byte first (default: least significant byte first)
   [11:7] currently unused, but reserved
-  [13:12] SPI mode
+  [13:12] SPI mode (default: 'default_mode')
 
   Data width:
   2'b00 => 8 bits
   2'b01 => 32 bits
   2'b10 => 16 bits
 
-  Note: these control settings are compatible with Astrobe's design.
+  Notes: 
+  * these control settings are compatible with Astrobe's design
+  * see 'spie_rxtx' about the parameters
   --
   (c) 2020 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
@@ -25,7 +27,12 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module spie #(parameter clock_freq = 50_000_000) (
+module spie #(
+  parameter
+    fast_div = 5,
+    slow_div = 125,
+    default_mode = 2'b0
+  )(
   // internal
   input wire clk,
   input wire rst,
@@ -53,7 +60,7 @@ module spie #(parameter clock_freq = 50_000_000) (
 
   always @(posedge clk) begin
     if (rst) begin
-      spi_ctrl[13:0] <= {2'b0, 12'b0}; // default SPI mode = 0
+      spi_ctrl[13:0] <= {default_mode, 12'b0};
     end
     else begin
       if (wr_ctrl) begin
@@ -62,7 +69,10 @@ module spie #(parameter clock_freq = 50_000_000) (
     end
   end
 
-  spie_rxtx #(.clock_freq(clock_freq)) spie_rxtx_0 (
+  spie_rxtx #(
+    .fast_div(fast_div),
+    .slow_div(slow_div)
+    ) spie_rxtx_0 (
     // in
     .clk(clk),
     .rst(rst),
