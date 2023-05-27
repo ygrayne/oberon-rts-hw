@@ -1,7 +1,7 @@
 /**
   SRAM test device
   --
-  Board: CV-SK
+  Board: DE2-115
   --
   (c) 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
@@ -14,7 +14,6 @@ module sram_test (
   // internal
   input wire clk,
   input wire clk_sram,
-//  input wire clk_sram_ps,
   input wire rst,
   input wire stb,
   input wire we,
@@ -48,11 +47,11 @@ module sram_test (
     end
   end
 
-  wire sram_en = (wr_data | rd_data);
+  wire sram_en = wr_data | (wr_ctrl & data_in[31]);
   wire sram_we = wr_data;
   wire sram_be = stb & be;
 
-  wire [18:0] sram_a = (wr_data | rd_data) ? sram_a0[18:0] : 19'b111_1100_0011_1010_0101;
+  wire [18:0] sram_a = wr_data ? sram_a0[18:0] : (wr_ctrl && data_in[31]) ? data_in[18:0] : 19'b111_1100_0011_1010_0101;
   wire [31:0] sram_d = wr_data ? data_in[31:0] : 32'h00ABCDEF;
 
   // outputs
@@ -63,7 +62,7 @@ module sram_test (
   assign ack = stb;
 
   // SRAM
-  sram3 sram_0 (
+  sram sram_0 (
     // in
     .clk(clk_sram),
   //  .clk_ps(clk_sram_ps),

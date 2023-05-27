@@ -1,10 +1,10 @@
 # Platforms
 
 All platforms:
-* Compiler: Astrobe for RISC5
+* compiler: Astrobe for RISC5
 * Oberon RTS is "SD card swappable"
-* also runs Embedded Project Oberon out of the box
-* same memory layout, RAM and IO devices
+* also run Embedded Project Oberon out of the box
+* same address layout: RAM and IO devices
 
 ## p3-thm-de-115
 
@@ -29,7 +29,7 @@ Status: working
 * architecture: ETH
 * board: Terasic DE2-115 (Altera FPGA)
 * RAM: BRAM 256k
-* system clock: 25 MHz (currently)
+* system clock: 25 MHz (currently, SRAM experiments)
 
 Status: working
 
@@ -38,6 +38,6 @@ Status: working
 * Architecture: ETH
 * Board: Terasic Cyclone V GX Starter Kit (Altera FPGA)
 * RAM: BRAM 384k or SRAM 512k
-* system clock: 20 MHz (currently)
+* system clock: 20 MHz (currently, SRAM experiments)
 
 Status: working, but only at 20 MHz for now with SRAM

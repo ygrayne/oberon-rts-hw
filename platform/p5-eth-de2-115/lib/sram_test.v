@@ -11,9 +11,10 @@
 `default_nettype none
 
 module sram_test (
+  // internal
   input wire clk,
   input wire clk_sram,
-  input wire clk_sram_ps,
+//  input wire clk_sram_ps,
   input wire rst,
   input wire stb,
   input wire we,
@@ -22,8 +23,8 @@ module sram_test (
   input wire [31:0] data_in,
   output wire [31:0] data_out,
   output wire ack,
-  // SRAM chip
-  output wire [19:0] sram_addr,
+  // etxernal
+  output wire [17:0] sram_addr,
   inout wire [15:0] sram_data,
   output wire sram_ce_n,
   output wire sram_oe_n,
@@ -34,72 +35,49 @@ module sram_test (
 
   wire rd_data = stb & ~we & ~addr;
   wire wr_data = stb &  we & ~addr;
-  wire rd_addr = stb & ~we & addr;
-  wire wr_addr = stb &  we & addr;
+  wire rd_ctrl = stb & ~we & addr;
+  wire wr_ctrl = stb &  we & addr;
 
-  reg sram_we;
-  reg sram_be;
-  reg sram_en;
-  reg [20:0] sram_a, sram_a0;
-  reg [31:0] sram_d;
+  reg [18:0] sram_a0;
   wire [31:0] sram_dout;
+  wire rdy;
 
   always @(posedge clk) begin
-    if (rst) begin
-      sram_en <= 1'b0;
-      sram_we <= 1'b0;
-      sram_be <= 1'b0;
-      sram_a0 <= 20'b0;
-    end
-    else begin
-      if (wr_addr) begin
-        sram_a0[20:0] <= data_in[20:0];
-        sram_en <= 1'b0;
-        sram_we <= 1'b0;
-      end
-      else begin
-        if (wr_data) begin
-          sram_a[20:0] <= sram_a0[20:0];
-          sram_d[31:0] <= data_in[31:0];
-          sram_en <= 1'b1;
-          sram_we <= 1'b1;
-        end
-        else begin
-          if (rd_data) begin
-            sram_a[20:0] <= sram_a0[20:0];
-            sram_en <= 1'b1;
-            sram_we <= 1'b0;
-          end
-          else begin
-            sram_en <= 1'b1;
-            sram_we <= 1'b0;
-          end
-        end
-      end
+    if (wr_ctrl) begin
+      sram_a0[18:0] <= data_in[18:0];
     end
   end
+
+  wire sram_en = (wr_data | rd_data);
+  wire sram_we = wr_data;
+  wire sram_be = stb & be;
+
+  wire [18:0] sram_a = (wr_data | rd_data) ? sram_a0[18:0] : 19'b111_1100_0011_1010_0101;
+  wire [31:0] sram_d = wr_data ? data_in[31:0] : 32'h00ABCDEF;
 
   // outputs
   assign data_out[31:0] =
     rd_data ? sram_dout[31:0] :
+    rd_ctrl ? {31'b0, rdy} :
     32'b0;
   assign ack = stb;
 
   // SRAM
-  sram sram_0 (
+  sram3 sram_0 (
     // in
     .clk(clk_sram),
-    .clk_ps(clk_sram_ps),
+  //  .clk_ps(clk_sram_ps),
     .rst(rst),
     .en(sram_en),
     .be(sram_be),
     .we(sram_we),
-    .addr(sram_a[20:0]),
+    .addr(sram_a[18:0]),
     .data_in(sram_d[31:0]),
     // out
     .data_out(sram_dout[31:0]),
-    // SRAM external
-    .sram_addr(sram_addr[19:0]),
+    .rdy(rdy),
+    // external
+    .sram_addr(sram_addr[17:0]),
     .sram_data(sram_data[15:0]),
     .sram_ce_n(sram_ce_n),
     .sram_oe_n(sram_oe_n),

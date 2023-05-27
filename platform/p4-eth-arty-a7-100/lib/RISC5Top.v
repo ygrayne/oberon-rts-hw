@@ -8,12 +8,12 @@
   * Project Oberon, NW 14.6.2018
   * Embedded Project Oberon for Arty-A7, v8.0, CFB 16.10.2021
   --
-  2020 - 2023 Gray, gray@grayraven.org
-  https://oberon-rts.org/licences
-  --
   Notes:
   * all ack signals are unused, they are for THM compatibility only
   * apart from the CPU, all modules use the active high reset signal
+  --
+  2020 - 2023 Gray, gray@grayraven.org
+  https://oberon-rts.org/licences
 **/
 
 `timescale 1ns / 1ps
@@ -55,7 +55,7 @@ module RISC5Top #(
   // clk
   wire clk_ok;                // clocks stable
   wire clk;                   // system clock
-  wire clk2x;                 // memory clock
+  wire mem_clk;               // memory clock (unused)
   // reset
   // rst and rst_n: see sys ctrl and status
   wire rst_out;               // active high
@@ -66,7 +66,6 @@ module RISC5Top #(
   wire [31:0] romout;         // code to RISC core from PROM
   wire [31:0] codebus;        // code to RISC core from RAM
   wire [31:0] outbus;         // data from RISC core
-  wire [31:0] io_out;         // io devices output
   wire rd;                    // CPU read
   wire wr;                    // CPU write
   wire ben;                   // CPU byte enable
@@ -83,9 +82,11 @@ module RISC5Top #(
   // prom
   wire prom_stb;
   wire [31:0] prom_dout;
-  wire prom_ack;
+  // ram
+  wire ram_stb;
   // io
   wire io_en;                 // IO enable
+  wire [31:0] io_out;         // io devices output
   // ms timer
   wire tmr_stb;
   wire [31:0] tmr_dout;       // data out: running milliseconds since reset
@@ -156,7 +157,7 @@ module RISC5Top #(
     .locked(clk_ok),
     .rst(1'b0),
     .clk(clk),
-    .clk_2x(clk2x)
+    .clk_2x(mem_clk)
   );
 
   // reset
@@ -199,27 +200,17 @@ module RISC5Top #(
   prom #(.mem_file(prom_file)) prom_0 (
     // in
     .clk(~clk),
+    .en(prom_stb),
     .addr(adr[10:2]),
     // out
     .data_out(prom_dout[31:0])
   );
 
-//  // BRAM 512k (8 blocks of 64k)
-//  ramg #(.mem_blocks(8)) ram_0 (
-//    // in
-//    .clk(clk2x),
-//    .wr(wr),
-//    .be(ben),
-//    .adr(adr[18:0]),
-//    .wdata(outbus[31:0]),
-//    // out
-//    .rdata(inbus0[31:0])
-//  );
-
   // BRAM 512k
   ramg5 #(.num_kbytes(512)) ram_0 (
     // in
     .clk(clk),
+    .en(ram_stb),
     .wr(wr),
     .be(ben),
     .addr(adr[18:0]),
@@ -229,13 +220,13 @@ module RISC5Top #(
   );
 
   // ms timer
-  // uses one IO address
+  // one IO address
+  // read-only
   ms_timer #(.clock_freq(clock_freq)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(tmr_stb),
-    .we(wr),
     // out
     .data_out(tmr_dout[31:0]),
     .ms_tick(tmr_ms_tick),
@@ -243,8 +234,8 @@ module RISC5Top #(
   );
 
   // LEDs, switches, buttons
-  // uses one IO address
-  assign lsb_leds_g_in[3:0] = 4'b0;
+  // one IO address
+  assign lsb_leds_g_in[3:0] = 4'b0;  // only 'clk'-sync-ed signals
   lsb_s lsb_0 (
     // in
     .clk(clk),
@@ -267,7 +258,7 @@ module RISC5Top #(
   );
 
   // RS232 buffered
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   rs232 #(.clock_freq(clock_freq), .buf_slots(rs232_buf_slots)) rs232_0 (
     // in
     .clk(clk),
@@ -285,8 +276,8 @@ module RISC5Top #(
   );
 
   // SPI
-  // uses two consecutive IO addresses
-  spie #(.clock_freq(clock_freq)) spie_0 (
+  // two consecutive IO addresses
+  spie spie_0 (
     .clk(clk),
     .rst(rst),
     .stb(spi_0_stb),
@@ -314,8 +305,9 @@ module RISC5Top #(
   assign spi_0_miso_d = sdcard_miso & spi_0_miso;
 
   // sys control
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   // order must correspond with values in SysCtrl.mod for correct logging
+  // only 'clk'-sync-ed signals
   assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, 1'b0, lsb_btn[0]};
   scs scs_0 (
     // in
@@ -336,7 +328,7 @@ module RISC5Top #(
   );
 
   // process periodc timing
-  // uses one IO address
+  // one IO address
   proctimers ptmr_0 (
     // in
     .clk(clk),
@@ -351,7 +343,7 @@ module RISC5Top #(
   );
 
   // log buffer
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   logbuf #(.num_entries(logbuf_entries)) logbuf_0 (
     // in
     .clk(clk),
@@ -365,7 +357,7 @@ module RISC5Top #(
   );
 
   // watchdog
-  // uses one IO address
+  // one IO address
   watchdog watchdog_0 (
     // in
     .clk(clk),
@@ -381,7 +373,7 @@ module RISC5Top #(
   );
 
   // stack monitor
-  // uses four consecutive IO addresses
+  // four consecutive IO addresses
   stackmon stackmon_0 (
     .clk(clk),
     .rst(rst),
@@ -397,7 +389,7 @@ module RISC5Top #(
   );
 
   // call trace stacks
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   calltrace #(.num_slots(calltrace_slots)) calltrace_0 (
     // in
     .clk(clk),
@@ -414,7 +406,7 @@ module RISC5Top #(
   );
 
   // (re-) start tables
-  // uses one IO address
+  // one IO address
   start start_0 (
     // in
     .clk(clk),
@@ -428,7 +420,7 @@ module RISC5Top #(
   );
 
   // GPIO
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   gpio #(.num_gpio(num_gpio)) gpio_0 (
     // in
     .clk(clk),
@@ -450,38 +442,43 @@ module RISC5Top #(
   // cf. memory map below
 
   // max RAM address space at 000000H to 0FFE000H (16 MB - 8 kB)
+  // the actually used RAM space is defined in the bootloader
+  // adr[23:0] = 0FFE000H => adr[23:13] = 11'h7FF
+  assign ram_stb = (adr[23:13] != 11'h7FF);
 
   // codebus multiplexer
   // PROM: 2 kB at 0FFE000H => initial code address for CPU
-  assign prom_stb = (adr[23:12] == 12'hFFE && adr[11] == 1'b0) ? 1'b1 : 1'b0;
+  // PROM uses adr[10:2] (word address)
+  // PROM could be extended to 4kB "below" the IO addresses
+  assign prom_stb = (adr[23:12] == 12'hFFE && adr[11] == 1'b0);
   assign codebus[31:0] = ~prom_stb ? inbus0[31:0] : prom_dout[31:0];
 
   // inbus multiplexer
-  // I/O: 256 bytes (64 words) at 0FFFF00H
+  // IO: 256 bytes (64 words) at 0FFFF00H
   // there's space for three more 256 bytes IO blocks "above" the PROM region
   // at: 0FFFE00H, 0FFFD00, 0FFFC00
-  assign io_en = (adr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
+  assign io_en = (adr[23:8] == 16'hFFFF);
   assign inbus[31:0] = ~io_en ? inbus0[31:0] : io_out[31:0];
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
-  assign gpio_stb    = (io_en && adr[7:3] == 5'b11100)  ? 1'b1 : 1'b0;  // -32 (data), -28 (ctrl/status)
-  assign spi_0_stb   = (io_en && adr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
-  assign rs232_0_stb = (io_en && adr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
-  assign lsb_stb     = (io_en && adr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
-  assign tmr_stb     = (io_en && adr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
+  assign gpio_stb    = (io_en && adr[7:3] == 5'b11100);   // -32 (data), -28 (ctrl/status)
+  assign spi_0_stb   = (io_en && adr[7:3] == 5'b11010);   // -48 (data), -44 (ctrl/status)
+  assign rs232_0_stb = (io_en && adr[7:3] == 5'b11001);   // -56 (data), -52 (ctrl/status)
+  assign lsb_stb     = (io_en && adr[7:2] == 6'b110001);  // -60 note: system LEDs via LED()
+  assign tmr_stb     = (io_en && adr[7:2] == 6'b110000);  // -64
 
   // extended IO address range
-  assign scs_stb     = (io_en && adr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
-  assign cts_stb     = (io_en && adr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80, -76 (ctrl/status)
-  assign stm_stb     = (io_en && adr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
-  assign wd_stb      = (io_en && adr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
-  assign ptmr_stb    = (io_en && adr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
-  assign start_stb   = (io_en && adr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
-  assign log_stb     = (io_en && adr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
+  assign scs_stb     = (io_en && adr[7:3] == 5'b10111);   // -72
+  assign cts_stb     = (io_en && adr[7:3] == 5'b10110);   // -80, -76 (ctrl/status)
+  assign stm_stb     = (io_en && adr[7:4] == 4'b1010);    // -96
+  assign wd_stb      = (io_en && adr[7:2] == 6'b100100);  // -112
+  assign ptmr_stb    = (io_en && adr[7:2] == 6'b011111);  // -132
+  assign start_stb   = (io_en && adr[7:2] == 6'b010001);  // -188
+  assign log_stb     = (io_en && adr[7:3] == 5'b00100);   // -224 (data), -220 (indices)
 
 
-  // data out multiplexing
-  // ---------------------
+  // IO data out multiplexing
+  // ------------------------
   assign io_out[31:0] =
     gpio_stb    ? gpio_dout[31:0] :
     spi_0_stb   ? spi_0_dout[31:0] :
@@ -505,18 +502,18 @@ endmodule
 FFFFFC  +---------------------------+
         | 64 dev addr (1 word each) |     256 Bytes
 FFFF00  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+        | 64 dev addr (unused)      |     256 Bytes
 FFFE00  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+        | 64 dev addr (unused)      |     256 Bytes
 FFFD00  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+        | 64 dev addr (unused)      |     256 Bytes
 FFFC00  +---------------------------+
         |                           |
         |      -- unused --         |     3 kB
         |                           !
 FFF000  +---------------------------+
         |                           !
-        |          PROM             |     4 KB
+        |     PROM (2k used)        |     4 KB
         |                           |
 FFE000  +---------------------------+
         |                           |

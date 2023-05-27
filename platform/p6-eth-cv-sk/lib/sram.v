@@ -4,7 +4,7 @@
   Board: CV-SK
   --
   SRAM is half-word addressed ([17:0]).
-  -- 
+  --
   (c) 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -14,7 +14,6 @@
 
 module sram (
   // internal
-  input io_en,
   input wire clk,
 //  input wire clk_ps,
   input wire rst,
@@ -36,7 +35,6 @@ module sram (
 
   reg state;
   reg [15:0] dbuf;
-  reg [15:0] cnt;
 
   assign sram_ce_n = ~en;
   assign sram_oe_n = we;
@@ -71,10 +69,6 @@ module sram (
       if (state == 1'b0) begin
         dbuf[15:0] <= sram_data[15:0];
       end
-    end
-    // dummy
-    if (io_en) begin
-      cnt <= cnt + 8'b1;
     end
   end
 

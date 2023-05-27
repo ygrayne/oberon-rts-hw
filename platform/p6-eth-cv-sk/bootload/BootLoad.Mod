@@ -48,8 +48,8 @@ MODULE* BootLoad;
     (* total: 192k, heap: 32k *) (* MemLim = 030000H; stackOrg = 028000H; *)
     (* total: 256k, heap: 64k *) (* MemLim = 040000H; stackOrg = 030000H; *)
     (* total: 256k, heap: 32k *) (* MemLim = 040000H; stackOrg = 037F00H; *)
-    (* total: 384k, heap: 64k *) (* MemLim = 060000H; stackOrg = 050000H; *)
-    (* total: 512k, heap: 64k *) MemLim = 080000H; stackOrg = 070000H;
+    (* total: 384k, heap: 64k *) MemLim = 060000H; stackOrg = 050000H;
+    (* total: 512k, heap: 64k *) (* MemLim = 080000H; stackOrg = 070000H; *)
     (* total: 650k, heap: 64k *) (* MemLim = 090000H; stackOrg = 080000H; *)
 
     (* total: 1M, heap: 512k *) (*MemLim = 0100000H; stackOrg = 080000H;*)
@@ -89,14 +89,10 @@ MODULE* BootLoad;
   BEGIN
     SPIIdle(10); (*first, idle for at least 80 clks*)
     LED(LEDbase + 8);
-    (*
     REPEAT (* gray: until card accepts init *)
-    *)
       SPICmd(0, 0); (*CMD0 when card selected, sets MMC SPI mode*)
-    (*
       SYSTEM.GET(spiData, res);
     UNTIL res = 1H;
-    *)
     LED(LEDbase + 9);
     SPICmd(8, 1AAH); SPI(-1); SPI(-1); SPI(-1); (*CMD8 for SD cards*)
     REPEAT (*until card becomes ready*)
@@ -127,15 +123,16 @@ MODULE* BootLoad;
   BEGIN
     SDShift(src); SPICmd(17, src); (*CMD17 read one block*)
     i := 0; (*wait for start data marker*)
-    REPEAT SPI(-1); SYSTEM.GET(spiData, data); INC(i) UNTIL data = 254;
     LED(LEDbase + 11);
+    REPEAT SPI(-1); SYSTEM.GET(spiData, data); INC(i) UNTIL data = 254;
+    LED(LEDbase + 12);
     SYSTEM.PUT(spiCtrl, SPIWORD + SPIFAST + CARD0);
     FOR i := 0 TO 508 BY 4 DO
       SYSTEM.PUT(spiData, -1);
       REPEAT UNTIL SYSTEM.BIT(spiCtrl, 0);
       SYSTEM.GET(spiData, data); SYSTEM.PUT(dst, data); INC(dst, 4)
     END;
-    LED(LEDbase + 12);
+    LED(LEDbase + 13);
     SPI(255); SPI(255); SPIIdle(1) (*may be a checksum; deselect card*)
   END ReadSD;
 
