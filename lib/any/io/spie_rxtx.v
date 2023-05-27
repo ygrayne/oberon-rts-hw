@@ -1,19 +1,9 @@
 /**
-  Serial Peripheral Interfasclk_e (SPI) Resclk_eiver/Transmitter (Master)
+  Serial Peripheral Interface (SPI) Receiver/Transmitter (Master)
   --
   Base: Project Oberon, PDR 23.3.12 / 16.10.13
   --
   Architecture: ANY
-  --
-  New features:
-  * Separation of data width and speed selection
-  * Data can be 8, 16, or 32 bits wide
-  * Data can be sent out (MOSI) as LSByte or MSByte first
-  * Clock frequencies are parameterised
-  --
-  Serial clock frequency/speed:
-  * fast => fast_sclk: 10 MHz with 50 MHz clock
-  * slow => slow_sclk: 400 kHz with 50 MHz clock
   --
   Data width:
   * [1:0] data_width:
@@ -22,7 +12,7 @@
     * 2'b10 => 16 bits
   --
   SPI modes:
-                      idle     transsclk_eive
+                      idle     transceive
              cpol = 0               ++++++    ++++++
   mode = 0:  cpha = 0          |   bit   |   bit   |  ...    mosi/miso
                        ++++++++++++++    ++++++    ++++++    sclk
@@ -40,11 +30,20 @@
                                ++++++    ++++++    ++++++
  
   --
+  Frequency dividers for the serial clock:
+  * fast_div: fast transmit
+    * must be >= 3
+    * aim for about 10 MHz or lower
+  * slow_div: slow transmit
+    * must result in a frequency between 100 and 400 kHz (SD card specs)
+  Odd dividers will result in a non 50%/50% duty-cycle of the serial clock,
+  with the low half period being longer by one 'clk' period.
+  --
   SD card works with modes 0 and 3
   RTC works with modes 2 and 3
   -- 
   (c) 2022 - 2023 Gray, gray@grayraven.org
-  https://oberon-rts.org/lisclk_ensclk_es
+  https://oberon-rts.org/licences
 **/
 
 `timescale 1ns / 1ps
@@ -52,9 +51,8 @@
 
 module spie_rxtx #(
   parameter
-    clock_freq = 50_000_000,  // Hz
-    fast_sclk = 10_000_000,   // Hz
-    slow_sclk = 400_000       // Hz
+    fast_div = 5,             // cf. above
+    slow_div = 125
   )(
   // internal
   input wire clk,
@@ -67,15 +65,15 @@ module spie_rxtx #(
   input wire cpha,              // serial clock phase
   input wire [31:0] data_tx,
   output wire [31:0] data_rx,
-  output wire rdy,              // ready for transmission
+  output wire rdy,              // ready for transmission (via 'start')
   // external
   input wire miso,
   output wire mosi,
   output wire sclk
 );
-
-  localparam ticks_period_fast = (clock_freq / fast_sclk) - 1;
-  localparam ticks_period_slow = (clock_freq / slow_sclk) - 1;
+    
+  localparam ticks_period_fast = fast_div - 1;
+  localparam ticks_period_slow = slow_div - 1;
   localparam ticks_half_period_fast = ticks_period_fast / 2;
   localparam ticks_half_period_slow = ticks_period_slow / 2;
 
@@ -83,14 +81,14 @@ module spie_rxtx #(
   wire w16 = (data_width == 2'b10);
   wire w32 = (data_width == 2'b01);
 
-  reg [7:0] ticks;        // count clock ticks in a serial clock phase
+  reg [7:0] ticks;        // count clock ticks in one serial clock phase
   reg [4:0] bit_cnt;      // count bits in a transmission
   reg sclk_e;             // serial clock enable
   assign rdy = ~sclk_e;
   reg [31:0] shreg;
 
   wire last_tick = fast ? (ticks == ticks_period_fast) : (ticks == ticks_period_slow);                // end of one bit
-  wire sclk_switch = fast ? (ticks >= ticks_half_period_fast) : (ticks >= ticks_half_period_slow);    // starts low
+  wire sclk_switch = fast ? (ticks > ticks_half_period_fast) : (ticks > ticks_half_period_slow);      // starts low
   assign sclk = (rst | ~sclk_e) ? cpol :
     (cpol == 1'b0) ?  ((cpha == 1'b0) ? sclk_switch : ~sclk_switch) : 
                       ((cpha == 1'b0) ? ~sclk_switch : sclk_switch);
