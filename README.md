@@ -11,27 +11,9 @@ Here is the sister repo for the corresponding software: [oberon-rts-sw](https://
 Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but it's the best there is for now, apart from this and the corresponding software repository. As the saying goes, only debug code, don't get deceived by the comments.
 
 
-## Current Status
-
-* 2023-04-18: added call trace feature, cleaned up error handling and reporting
-
-* 2023-04-18: improved system reset and restart circuitry
-
-* 2023-04-10: added RTC
-
-* 2023-04-09: extended the system control and status register for the new error handling.
-
-* 2023-04-05: (re-) implemented the watchdog and the stack overflow monitor. Their error signals result in an error handling that is unified together with the trap handling.
-
-* 2023-03-29:: two platforms, P3 and P4, each implement the same functionality needed to run a simplified version of Oberon RTS (Embedded Project Oberon software runs as well, out of the box). These two platforms shall serve as basis for all work going forward.
-
-* 2023-03-30: Added log buffer
-
-Most on-chip devices, such as process timers, reset circuits, or SPI and RS232 interfaces, can now directly be (and are) used by either architecture without adaptations or specific configurations.
-
-
 ## Next Up
 
+* SRAM integration
 * Hardware-signal based process scheduling.
 * Hardware support for critical region protection for processes.
 
@@ -89,9 +71,7 @@ Tools:
 * Digilent Arty A7-100 (Artix-7), "arty-a7-100"
 * Terasic DE2-115 (Cyclone IV), "de2-115"
 * Digilent Nexys Video (Artix-7), "nexys-a7-100"
-* Terasic Cyclone V GX Starter Kit (Cyclone V), "cvgx-sk"
-
-The focus is currently on the Arty and the DE2-115.
+* Terasic Cyclone V GX Starter Kit (Cyclone V), "cv-sk"
 
 
 ## Directory Structure
@@ -99,82 +79,37 @@ The focus is currently on the Arty and the DE2-115.
 Note: these directories may or may not be visible in the repo, as some are still empty, or just placeholders for the structure's sake.
 
 * lib
-  * eth: Verilog modules for ETH architecture (see remarks below)
-    * cpu
-    * base: basic functionality
-    * ext: extended functionality
-    * io: well, IO, eg. RS232, GPI, SPI
-    * mon: system monitoring and instrumention
-    * gen: general functionality, eg. fifos, stacks
-  * thm: Verilog modules for THM architecture
-    * (as for eth)
   * any: modules for both architectures
-    * (as for eth)
+  * eth: Verilog modules for ETH architecture
+  * thm: Verilog modules for THM architecture
   * board: board-specific modules
-    * eth
-      * arty-a7-100
-        * eg. board specific IO, such as for LEDs and switches
-      * cvgx-sk
-      * de2-115
-      * nexys-a7-200
-    * thm
-      * (as for eth)
-  * tech: technology-specific modules
-    * eth
-      * artix-7
-        * eg. for clocks
-      * cyclone-iv
-      * cyclone-v
-    * thm
-      * (as for eth)
 * platform:
   * p3-thm-de2-115
-    * risc5.v (top Verilog file)
-    * risc5.sdc (constraints)
+    * lib: platform specific modules, eg.
+      * risc5.v (top Verilog file)
+      * risc5.sdc (constraints)
+      * clocks
     * build: Quartus project directory
       * risc5.qsf (project settings, pin allocations, list of Verilog design files)
       * risc5.qpf (project file for Quartus)
-    * promfiles: PROM load files, incl. Oberon source
+    * bootload: PROM load files, incl. Oberon source
   * p4-eth-arty-a7-100
-    * RISC5Top.v (top Verilog file)
-    * arty-a7.xdc (constraints, includes pin allocations)
+    * lib
+      * RISC5Top.v (top Verilog file)
+      * arty-a7.xdc (constraints, includes pin allocations)
     * build: Vivado project directory
       * p4-eth-arty-a7-100.xpr (project file for Vivado, list of Verilog design files)
-    * promfiles: PROM load files, incl. Oberon source
-* orig: the original modules
+    * bootload
+  * p5-eth-de2-115
+  * p6-eth-cv-sk
+* base: the original modules
   * epo: Embedded Project Oberon (which uses ETH architecture)
   * thm: THM-Oberon
 * epo-base: all libs and build directories to build the two base platforms for EPO using ETH and THM architectures
   * lib (see above)
-    * eth
-    * thm
-    * board
-    * tech
   * platform
     * p1-eth-arty-a7-100: EPO on ETH architecture
     * p2-thm-de2-115: EPO on THM architecture
-
-With directories
-* 'cpu' and 'base' a processor can be constructed for EPO
-  * eg. CPU, RAM, clock, reset
-* 'ext' in addition, a processor can be constructed for Oberon RTS
-  * eg. process timing, stack monitoring, error handling
-* 'mon' in addition, the processor for RTS can be instrumented for monitoring
-  * logging, process performance monitoring, calltracing
-
-
-## Specific Platforms
-
-See the README file in the platform directory.
-
-* In epo-base
-  * p1-eth-arty-a7-100: runs EPO 8.0 out-of-the-box
-  * p2-thm-de-115: same as P1
-* In main platform dir
-  * p3-thm-de-115: runs minimal version of Oberon RTS (as well as EPO)
-  * p4-eth-arty-a7-100: same as P3
-
-"Same" means the SD card can be swapped.
 
 
 ## Licences and Copyright
