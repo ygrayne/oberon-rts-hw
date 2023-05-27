@@ -1,10 +1,8 @@
 /**
   Clock generator
   --
-  Generate three clocks: system, sram, sram phase shifted
-  --
   Board: DE2-115
-  Technology: Cyclone IV
+  Technology: Cyclone IV E
   --
   2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
@@ -15,7 +13,7 @@
 
 module clocks (
   input wire clk_in,
-  output wire clk_sys,
+  output wire clk,
   output wire clk_sram,
   output wire clk_sram_ps,
   output wire clk_ok
@@ -42,14 +40,14 @@ module clocks (
     .clk2_divide_by(8),
     .clk2_duty_cycle(50),		    // in %
     .clk2_phase_shift(10000),		// in picosec
-    // 50 MHz output, in phase
+    // 40 MHz output, in phase
     .clk1_multiply_by(8),
-    .clk1_divide_by(8),
+    .clk1_divide_by(10),
     .clk1_duty_cycle(50),		    // in %
     .clk1_phase_shift(0),		    // in picosec
-    // 25 MHz output, in phase
+    // 20 MHz output, in phase
     .clk0_multiply_by(8),
-    .clk0_divide_by(16),
+    .clk0_divide_by(20),
     .clk0_duty_cycle(50),		    // in %
     .clk0_phase_shift(0)		    // in picosec
   ) clk_pll (
@@ -60,7 +58,7 @@ module clocks (
 
   assign clk_sram_ps = out_clk[2];
   assign clk_sram = out_clk[1];
-  assign clk_sys = out_clk[0];
+  assign clk = out_clk[0];
   assign clk_ok = locked;
 
 endmodule

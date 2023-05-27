@@ -393,8 +393,10 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
 ## pin 30
 #set_location_assignment PIN_A14 -to GPIO0_26
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_26
+
 ## pin 29: GND
 ## pin 28: 3.3 V
+
 ## pin 27
 #set_location_assignment PIN_D13 -to GPIO0_25
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_25
@@ -443,8 +445,10 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
 ## pin 12
 #set_location_assignment PIN_C19 -to GPIO0_10
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_10
+
 ## pin 11: GND
 ## pin 10: 5 V
+
 ## pin 9
 #set_location_assignment PIN_E19 -to GPIO0_9
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_9
@@ -613,29 +617,28 @@ set_instance_assignment -name GLOBAL_SIGNAL GLOBAL_CLOCK -to "clocks:clocks_0|cl
 
 set_global_assignment -name ENABLE_LOGIC_ANALYZER_INTERFACE ON
 set_global_assignment -name USE_LOGIC_ANALYZER_INTERFACE_FILE "C:/Users/gray/Projects/Oberon/WORK/oberon-rts-hw/platform/p6-eth-cv-sk/build/LAI/lai1.lai"
-set_location_assignment PIN_E10 -to altera_reserved_lai_0_0
-set_location_assignment PIN_C9 -to altera_reserved_lai_0_1
-set_location_assignment PIN_E11 -to altera_reserved_lai_0_2
-set_location_assignment PIN_B9 -to altera_reserved_lai_0_3
-set_location_assignment PIN_N12 -to altera_reserved_lai_0_4
-set_location_assignment PIN_D10 -to altera_reserved_lai_0_5
-set_location_assignment PIN_M12 -to altera_reserved_lai_0_6
-set_location_assignment PIN_C10 -to altera_reserved_lai_0_7
+set_location_assignment PIN_L11 -to altera_reserved_lai_0_0
+set_location_assignment PIN_B11 -to altera_reserved_lai_0_1
+set_location_assignment PIN_H18 -to altera_reserved_lai_0_2
+set_location_assignment PIN_B10 -to altera_reserved_lai_0_3
+set_location_assignment PIN_H17 -to altera_reserved_lai_0_4
+set_location_assignment PIN_A11 -to altera_reserved_lai_0_5
+set_location_assignment PIN_L12 -to altera_reserved_lai_0_6
+set_location_assignment PIN_A19 -to altera_reserved_lai_0_7
 
-set_location_assignment PIN_M11 -to altera_reserved_lai_1_0
-set_location_assignment PIN_A12 -to altera_reserved_lai_1_1
-set_location_assignment PIN_L11 -to altera_reserved_lai_1_2
-set_location_assignment PIN_B11 -to altera_reserved_lai_1_3
-set_location_assignment PIN_H18 -to altera_reserved_lai_1_4
-set_location_assignment PIN_B10 -to altera_reserved_lai_1_5
-set_location_assignment PIN_H17 -to altera_reserved_lai_1_6
-set_location_assignment PIN_A11 -to altera_reserved_lai_1_7
+set_location_assignment PIN_K11 -to altera_reserved_lai_1_0
+set_location_assignment PIN_A18 -to altera_reserved_lai_1_1
+set_location_assignment PIN_H15 -to altera_reserved_lai_1_2
+set_location_assignment PIN_C20 -to altera_reserved_lai_1_3
+set_location_assignment PIN_J16 -to altera_reserved_lai_1_4
+set_location_assignment PIN_B19 -to altera_reserved_lai_1_5
+set_location_assignment PIN_J12 -to altera_reserved_lai_1_6
+set_location_assignment PIN_B15 -to altera_reserved_lai_1_7
 
-set_global_assignment -name OPTIMIZATION_MODE BALANCED
+set_global_assignment -name OPTIMIZATION_MODE "AGGRESSIVE PERFORMANCE"
 set_global_assignment -name SLD_NODE_CREATOR_ID 3698176 -section_id auto_lai_0
 set_global_assignment -name SLD_NODE_ENTITY_NAME sld_multitap -section_id auto_lai_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=3698176" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=62680" -section_id auto_lai_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_WIDTH=8" -section_id auto_lai_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SIZE=2" -section_id auto_lai_0
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SEL_WIDTH=1" -section_id auto_lai_0
@@ -659,7 +662,6 @@ set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -t
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][3] -to "risc5_1:risc5_0|STR" -section_id auto_lai_0
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][4] -to "risc5_1:risc5_0|LDR" -section_id auto_lai_0
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][5] -to "risc5_1:risc5_0|regwr" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -to "sram:sram_0|io_en" -section_id auto_lai_0
 
 set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[0] -to altera_reserved_lai_1_0 -section_id auto_lai_1
 set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[1] -to altera_reserved_lai_1_1 -section_id auto_lai_1
@@ -670,33 +672,45 @@ set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[5
 set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[6] -to altera_reserved_lai_1_6 -section_id auto_lai_1
 set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[7] -to altera_reserved_lai_1_7 -section_id auto_lai_1
 
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "sram:sram_0|clk" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][1] -to "sram:sram_0|en" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -to "sram:sram_0|we" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][3] -to "sram:sram_0|sram_we_n" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][4] -to "sram:sram_0|sram_addr[0]" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][5] -to "sram:sram_0|sram_addr[2]" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -to "sram:sram_0|data_out[0]" -section_id auto_lai_1
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][0] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|fast" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][1] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|mosi" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][2] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|sclk" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][3] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|miso" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][4] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|start" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][5] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|sclk_switch" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][6] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|endtick" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][7] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|rdy" -section_id auto_lai_1
 
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=3698177" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=4667" -section_id auto_lai_1
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_WIDTH=8" -section_id auto_lai_1
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SIZE=2" -section_id auto_lai_1
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SEL_WIDTH=1" -section_id auto_lai_1
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_STATE=0" -section_id auto_lai_1
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ACQ_MODE=0" -section_id auto_lai_1
 
-set_global_assignment -name VERILOG_FILE ../../../lib/any/cpu/Registers.v
-set_global_assignment -name VERILOG_FILE IP/regs_base.v
+
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][1] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|rdy" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][2] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|start" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][3] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|sclk" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][4] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|mosi" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][5] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|miso" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][6] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_bit" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][7] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_tick" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -to "sram_test:sram_test_0|sram3:sram_0|io_en" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][3] -to "sram_test:sram_test_0|sram3:sram_0|sram_we_n" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][0] -to "sram_test:sram_test_0|sram3:sram_0|state.idle" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][1] -to "sram_test:sram_test_0|sram3:sram_0|state.wr0" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][2] -to "sram_test:sram_test_0|sram3:sram_0|state.wra" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][3] -to "sram_test:sram_test_0|sram3:sram_0|state.wr1" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][4] -to "sram_test:sram_test_0|sram3:sram_0|state.rd0" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][5] -to "sram_test:sram_test_0|sram3:sram_0|state.rda" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][6] -to "sram_test:sram_test_0|sram3:sram_0|state.rd1" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=8599" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "sram_test:sram_test_0|sram3:sram_0|rdy" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -to "sram_test:sram_test_0|sram_we" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][4] -to "sram_test:sram_test_0|sram3:sram_0|sram_ce_n" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][5] -to "sram_test:sram_test_0|sram3:sram_0|sram_oe_n" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -to "sram_test:sram_test_0|sram3:sram_0|we" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][1] -to "sram_test:sram_test_0|wr_ctrl" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][7] -to "sram_test:sram_test_0|data_in[31]" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=32422" -section_id auto_lai_1
 set_global_assignment -name VERILOG_FILE ../lib/sram.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie_rxtx.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/cpu/Registers.v
 set_global_assignment -name VERILOG_FILE ../lib/RISC5Top.v
 set_global_assignment -name SDC_FILE ../lib/RISC5Top.sdc
 set_global_assignment -name VERILOG_FILE "../../../lib/board/cv-sk/any/reset.v"
@@ -729,8 +743,5 @@ set_global_assignment -name VERILOG_FILE ../../../lib/eth/cpu/FPAdder.v
 set_global_assignment -name VERILOG_FILE ../../../lib/eth/cpu/Divider.v
 set_global_assignment -name VERILOG_FILE ../../../lib/eth/prom.v
 set_global_assignment -name VERILOG_FILE ../lib/clocks.v
-set_global_assignment -name VERILOG_FILE ../lib/spie_rxtx.v
-set_global_assignment -name VERILOG_FILE ../lib/spie.v
 set_global_assignment -name LOGIC_ANALYZER_INTERFACE_FILE LAI/lai1.lai
-
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -17,9 +17,9 @@
 
 module RISC5Top #(
   parameter
-    clock_freq = 20_000_000,  // as set in module clocks, used for timers, RS232, ...
+    clock_freq = 20_000_000,  // as set in module 'clocks'
 //    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad-512k-64k.mem",
-    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad-384k-64k-db.mem",
+    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad-384k-64k.mem",
     rs232_buf_slots = 256,    // RS232 buffer size, same for for tx and rx
     logbuf_entries = 32,
     calltrace_slots = 32,     // depth of each calltrace stack
@@ -93,6 +93,10 @@ module RISC5Top #(
   // ram
   wire ram_stb;
 //  wire [31:0] ram_dout;
+  // sram test
+  wire sram_stb;
+  wire [31:0] sram_dout;
+  wire sram_ack;
   // i/o
   wire io_en;                 // i/o enable
   wire [31:0] io_out;         // io devices output
@@ -164,6 +168,8 @@ module RISC5Top #(
 //  wire [31:0] echo_dout;
 //  wire echo_ack;
 
+  // external test points
+  // TODO: remove
   assign ext[0] = clk;
   assign ext[1] = sdcard_sclk;
   assign ext[2] = clk_in;
@@ -227,51 +233,68 @@ module RISC5Top #(
     .data_out(prom_dout[31:0])
   );
 
-  // SRAM 512k
-  sram sram_0 (
-    // in
-    .io_en(io_en),
-    .clk(clk_sram),
-//    .clk_ps(clk_sram_ps),
-    .rst(rst),
-    .en(ram_stb),
-    .be(ben),
-    .we(wr),
-    .addr(adr[18:0]),
-    .data_in(outbus[31:0]),
-    // out
-    .data_out(inbus0[31:0]),
-    // external
-    .sram_addr(sram_addr[17:0]),
-    .sram_data(sram_data[15:0]),
-    .sram_ce_n(sram_ce_n),
-    .sram_oe_n(sram_oe_n),
-    .sram_we_n(sram_we_n),
-    .sram_ub_n(sram_ub_n),
-    .sram_lb_n(sram_lb_n)
-  );
-
-//  // BRAM 384k
-//  ramg5 #(.num_kbytes(384)) ram_0 (
+//  // SRAM 512k
+//  sram sram_0 (
 //    // in
-//    .clk(clk),
+//    .clk(clk_sram),
+//    .rst(rst),
 //    .en(ram_stb),
-//    .wr(wr),
 //    .be(ben),
+//    .we(wr),
 //    .addr(adr[18:0]),
 //    .data_in(outbus[31:0]),
 //    // out
-//    .data_out(inbus0[31:0])
+//    .data_out(inbus0[31:0]),
+//    // external
+//    .sram_addr(sram_addr[17:0]),
+//    .sram_data(sram_data[15:0]),
+//    .sram_ce_n(sram_ce_n),
+//    .sram_oe_n(sram_oe_n),
+//    .sram_we_n(sram_we_n),
+//    .sram_ub_n(sram_ub_n),
+//    .sram_lb_n(sram_lb_n)
+//  );
+
+  // BRAM 384k
+  ramg5 #(.num_kbytes(384)) ram_0 (
+    // in
+    .clk(clk),
+    .en(ram_stb),
+    .wr(wr),
+    .be(ben),
+    .addr(adr[18:0]),
+    .data_in(outbus[31:0]),
+    // out
+    .data_out(inbus0[31:0])
+  );
+
+//  sram_test sram_test_0 (
+//    .clk(clk),
+//    .clk_sram(clk_sram),
+//    .rst(rst),
+//    .stb(sram_stb),
+//    .we(wr),
+//    .be(ben),
+//    .addr(adr[2]),
+//    .data_in(outbus[31:0]),
+//    .data_out(sram_dout[31:0]),
+//    .ack(sram_ack),
+//    .sram_addr(sram_addr[17:0]),
+//    .sram_data(sram_data[15:0]),
+//    .sram_ce_n(sram_ce_n),
+//    .sram_oe_n(sram_oe_n),
+//    .sram_we_n(sram_we_n),
+//    .sram_ub_n(sram_ub_n),
+//    .sram_lb_n(sram_lb_n)
 //  );
 
   // ms timer
-  // uses one IO address
+  // one IO address
   ms_timer #(.clock_freq(clock_freq)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(tmr_stb),
-    .we(wr),
     // out
     .data_out(tmr_dout[31:0]),
     .ms_tick(tmr_ms_tick),
@@ -279,7 +302,7 @@ module RISC5Top #(
   );
 
   // LEDs, switches, buttons, 7-seg displays
-  // uses one IO address
+  // one IO address
   assign lsb_leds_r_in[9:0] = 10'b0;
   lsb_s lsb_0 (
     // in
@@ -305,7 +328,7 @@ module RISC5Top #(
   );
 
   // RS232 buffered
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   rs232 #(.clock_freq(clock_freq), .buf_slots(rs232_buf_slots)) rs232_0 (
     // in
     .clk(clk),
@@ -323,7 +346,7 @@ module RISC5Top #(
   );
 
   // SPI
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   spie spie_0 (
     // in
     .clk(clk),
@@ -355,7 +378,7 @@ module RISC5Top #(
   assign spi_0_miso_d = sdcard_miso;
 
   // sys control and status
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   // order must correspond with values in SysCtrl.mod for correct logging
   assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, 1'b0, lsb_btn[0]};
   scs scs_0 (
@@ -377,7 +400,7 @@ module RISC5Top #(
   );
 
   // process periodic timers
-  // uses one IO address
+  // one IO address
   proctimers ptmr_0 (
     // in
     .clk(clk),
@@ -392,7 +415,7 @@ module RISC5Top #(
   );
 
   // log buffer
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   logbuf #(.num_entries(logbuf_entries)) logbuf_0 (
     // in
     .clk(clk),
@@ -406,7 +429,7 @@ module RISC5Top #(
   );
 
 //  // watchdog
-//  // uses one IO address
+//  // one IO address
 //  watchdog watchdog_0 (
 //    // in
 //    .clk(clk),
@@ -422,7 +445,7 @@ module RISC5Top #(
 //  );
 
   // stack monitor
-  // uses four consecutive IO addresses
+  // four consecutive IO addresses
   stackmon stackmon_0 (
     // in
     .clk(clk),
@@ -440,7 +463,7 @@ module RISC5Top #(
   );
 
 // // call trace stacks
-// // uses two consecutive IO addresses
+// // two consecutive IO addresses
 // calltrace #(.num_slots(calltrace_slots)) calltrace_0 (
 //   // in
 //   .clk(clk),
@@ -457,7 +480,7 @@ module RISC5Top #(
 // );
 
   // (-re) start tables
-  // uses one IO address
+  // one IO address
   start start_0 (
     // in
     .clk(clk),
@@ -471,7 +494,7 @@ module RISC5Top #(
   );
 
 //  // GPIO
-//  // uses two consecutive IO addresses
+//  // two consecutive IO addresses
 //  gpio #(.num_gpio(num_gpio)) gpio_0 (
 //    // in
 //    .clk(clk),
@@ -499,7 +522,6 @@ module RISC5Top #(
 //  );
 
 
-
   // address decoding
   // ----------------
   // cf. memory map below
@@ -517,7 +539,7 @@ module RISC5Top #(
 
   // inbus multiplexer
   // IO block: 256 bytes (64 words) at 0FFFF00H
-  // there's space for three more 256 bytes IO blocks "above" the PROM region
+  // there's space reserved for three more 256 bytes IO blocks
   // at: 0FFFE00H, 0FFFD00, 0FFFC00
   assign io_en = (adr[23:8] == 16'hFFFF);
   assign inbus[31:0] = ~io_en ? inbus0[31:0] : io_out[31:0];
@@ -533,7 +555,7 @@ module RISC5Top #(
   assign scs_stb     = (io_en && adr[7:3] == 5'b10111);   // -72
 //  assign cts_stb     = (io_en && adr[7:3] == 5'b10110);  // -80, -76 (ctrl/status)
   assign stm_stb     = (io_en && adr[7:4] == 4'b1010);    // -96
-//  assign ram_stb    = (io_en && adr[7:3] == 5'b10011);  // -104
+  assign sram_stb    = (io_en && adr[7:3] == 5'b10011);  // -104
 //  assign wd_stb      = (io_en && adr[7:2] == 6'b100100);  // -112
   assign ptmr_stb    = (io_en && adr[7:2] == 6'b011111);  // -132
   assign start_stb   = (io_en && adr[7:2] == 6'b010001);  // -188
@@ -552,7 +574,7 @@ module RISC5Top #(
     scs_stb     ? scs_dout[31:0] :
 //    cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
-//    ram_stb    ? sram_dout[31:0] :
+    sram_stb    ? sram_dout[31:0] :
 //    wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :
     start_stb   ? start_dout[31:0] :
