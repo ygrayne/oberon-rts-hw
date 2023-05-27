@@ -1,4 +1,4 @@
-<session>
+<session jtag_chain="USB-Blaster [USB-1]" jtag_device="@1: 10CL120(Y|Z)/EP3C120/.. (0x020F70DD)">
   <display_attributes active_instance="1" active_tab="2"/>
   <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_0" type="generic">
     <node_ip_info instance_id="0" mfg_id="110" node_id="7" version="0"/>
@@ -38,7 +38,7 @@
   </instance>
   <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_1" type="generic">
     <node_ip_info instance_id="1" mfg_id="110" node_id="7" version="0"/>
-    <core_parameters bank_count="1" capture_mode="timing" crc_value="BC1F" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <core_parameters bank_count="1" capture_mode="timing" crc_value="8971" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
     <pins>
       <pin io_standard="2.5 V" location="PIN_G26" name="altera_reserved_lai_1_0"/>
       <pin io_standard="2.5 V" location="PIN_G24" name="altera_reserved_lai_1_1"/>
@@ -51,7 +51,7 @@
     </pins>
     <banks>
       <bank name="Bank 0">
-        <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|clk" type="comb"/>
+        <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|fast" type="comb"/>
         <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|last_bit" type="comb"/>
         <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|last_tick" type="comb"/>
         <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|miso" type="comb"/>
@@ -61,6 +61,6 @@
         <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|start" type="comb"/>
       </bank>
     </banks>
-    <display_attributes connected_bank="-3"/>
+    <display_attributes connected_bank="0"/>
   </instance>
 </session>

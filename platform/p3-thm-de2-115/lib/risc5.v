@@ -2,7 +2,7 @@
   RISC5 CPU and environment definition for Oberon RTS p3-thm-de2-115
   --
   Architecture: THM
-  Board and technology: DE2-115, Altera Cyclone IV
+  Board and technology: DE2-115, Altera Cyclone IV E
   --
   Base/origin:
     * THM-oberon
@@ -10,23 +10,6 @@
   --
   2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
-
-  * no video RAM
-  * no keyboard and mouse
-  * separate clock and reset, move clock into platform directory
-  * improved SPI device
-  * extended IO address space
-  * 16 MB SDRAM (only 512k in use currently)
-  * parameterised clock frequency for perpiherals
-  * process timers (periodic)
-  * (re-) start tables
-  * system control and status, incl. error handling
-  * buffered RS232 device
-  * log buffer
-  * watchdog
-  * stack monitor
-  * calltrace stacks
-  * gpio
 **/
 
 `timescale 1ns / 1ps
@@ -88,7 +71,7 @@ module risc5 #(
   // clk
   wire clk_ok;                // clocks stable
   wire clk;                   // system clock, 50 MHz
-  wire mclk;                  // memory clock, 100 MHz
+  wire mem_clk;               // memory clock, 100 MHz
   // reset
   wire rst_out;               // active high
   // cpu
@@ -178,7 +161,8 @@ module risc5 #(
   wire [31:0] gpio_dout;      // pin data, in/out control status
   wire gpio_ack;
 
-
+  // external test points
+  // TODO: bad for clock performance, don't leave in!
   assign ext[0] = clk;
   assign ext[1] = sdcard_sclk;
   assign ext[2] = clk_in;
@@ -186,15 +170,14 @@ module risc5 #(
   assign ext[4] = 1'b0;
   assign ext[5] = 1'b0;
 
-
   // clocks
   clocks clocks_0 (
     // in
     .clk_in(clk_in),
     //out
     .clk_ok(clk_ok),
-    .clk_2x(mclk),           // 100 MHz
     .clk(clk),               // 50 MHz
+    .clk_2x(mem_clk),        // 100 MHz
     // external out
     .clk_2x_ps(sdram_clk)    // 100 MHz, phase-shifted
   );
@@ -244,16 +227,19 @@ module risc5 #(
   // SDRAM
   assign ram_addr[26:2] = {3'b000, bus_addr[23:2]};
   ram ram_0 (
+    // in
     .clk_ok(clk_ok),
-    .clk2(mclk),
+    .clk2(mem_clk),
     .clk(clk),
     .rst(rst),
     .stb(ram_stb),
     .we(bus_we),
     .addr(ram_addr[26:2]),
     .data_in(bus_dout[31:0]),
+    // out
     .data_out(ram_dout[31:0]),
     .ack(ram_ack),
+    // external
     .sdram_cke(sdram_cke),
     .sdram_cs_n(sdram_cs_n),
     .sdram_ras_n(sdram_ras_n),
@@ -265,23 +251,23 @@ module risc5 #(
     .sdram_dq(sdram_dq[31:0])
   );
 
-  // ms timer
-  // uses one IO address
+  // milliseconds timer
+  // one IO address
+  // read-only
   ms_timer #(.clock_freq(clock_freq)) tmr_0 (
     // in
     .clk(clk),
     .rst(rst),
     .stb(tmr_stb),
-    .we(bus_we),
     // out
     .data_out(tmr_dout[31:0]),
     .ms_tick(tmr_ms_tick),
     .ack(tmr_ack)
   );
 
-  // LEDs, switches, buttons
-  // uses one IO address
-  assign lsb_leds_r_in[17:0] = 18'b0;
+  // LEDs, switches, buttons, 7-seg displays
+  // one IO address
+  assign lsb_leds_r_in[17:0] = 18'b0; // only 'clk'-sync-ed signals
   lsb_s lsb_0 (
     // in
     .clk(clk),
@@ -312,7 +298,7 @@ module risc5 #(
   );
 
   // RS232 buffered
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   rs232 #(.clock_freq(clock_freq), .buf_slots(rs232_buf_slots)) rs232_0 (
     // in
     .clk(clk),
@@ -330,8 +316,8 @@ module risc5 #(
   );
 
   // SPI
-  // uses two consecutive IO addresses
-  spie #(.clock_freq(clock_freq)) spie_0 (
+  // two consecutive IO addresses
+  spie spie_0 (
     // in
     .clk(clk),
     .rst(rst),
@@ -361,8 +347,9 @@ module risc5 #(
   assign spi_0_miso_d = sdcard_miso & rtc_miso;
 
   // sys control and status
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   // order must correspond with values in SysCtrl.mod for correct logging
+  // only 'clk'-sync-ed signals
   assign scs_err_sig_in[7:0] = {3'b0, stm_trig_hot, stm_trig_lim, wd_trig, 1'b0, lsb_btn[0]};
   scs scs_0 (
     // in
@@ -383,7 +370,7 @@ module risc5 #(
   );
 
   // process periodic timers
-  // uses one IO address
+  // one IO address
   proctimers ptmr_0 (
     // in
     .clk(clk),
@@ -398,7 +385,7 @@ module risc5 #(
   );
 
   // log buffer
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   logbuf #(.num_entries(logbuf_entries)) logbuf_0 (
     // in
     .clk(clk),
@@ -412,7 +399,7 @@ module risc5 #(
   );
 
   // watchdog
-  // uses one IO address
+  // one IO address
   watchdog watchdog_0 (
     // in
     .clk(clk),
@@ -428,7 +415,7 @@ module risc5 #(
   );
 
   // stack monitor
-  // uses four consecutive IO addresses
+  // four consecutive IO addresses
   stackmon stackmon_0 (
     // in
     .clk(clk),
@@ -446,7 +433,7 @@ module risc5 #(
   );
 
  // call trace stacks
- // uses two consecutive IO addresses
+ // two consecutive IO addresses
  calltrace #(.num_slots(calltrace_slots)) calltrace_0 (
    // in
    .clk(clk),
@@ -463,7 +450,7 @@ module risc5 #(
  );
 
   // (-re) start tables
-  // uses one IO address
+  // one IO address
   start start_0 (
     // in
     .clk(clk),
@@ -477,7 +464,7 @@ module risc5 #(
   );
 
   // GPIO
-  // uses two consecutive IO addresses
+  // two consecutive IO addresses
   gpio #(.num_gpio(num_gpio)) gpio_0 (
     // in
     .clk(clk),
@@ -497,33 +484,35 @@ module risc5 #(
   // ----------------
   // cf. memory map below
 
-  // PROM: 2 kB at 0FFE000H => initial code address for CPU
-  assign prom_stb = (bus_stb && bus_addr[23:12] == 12'hFFE && bus_addr[11] == 1'b0) ? 1'b1 : 1'b0;
-
   // RAM: (16 MB - 8 kB) at 000000H to 0FFE000H
   // adr[23:0] = 0FFE000H => adr[23:13] = 11'h7FF
-  assign ram_stb = (bus_stb && bus_addr[23:13] != 11'h7FF) ? 1'b1 : 1'b0;
+  assign ram_stb = (bus_stb && bus_addr[23:13] != 11'h7FF);
+
+  // PROM: 2 kB at 0FFE000H => initial code address for CPU
+  // PROM uses adr[10:2] (word address)
+  // PROM could be extended to 4kB "below" the IO addresses
+  assign prom_stb = (bus_stb && bus_addr[23:12] == 12'hFFE && bus_addr[11] == 1'b0);
 
   // I/O: 256 bytes (64 words) at 0FFFF00H
   // there's space for three more 256 bytes IO blocks "above" the PROM region
   // at: 0FFFE00H, 0FFFD00, 0FFFC00
-  assign io_stb = (bus_stb && bus_addr[23:8] == 16'hFFFF) ? 1'b1 : 1'b0;
+  assign io_stb = (bus_stb && bus_addr[23:8] == 16'hFFFF);
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
-  assign gpio_stb    = (io_stb && bus_addr[7:3] == 5'b11100)  ? 1'b1 : 1'b0;  // -32 (data), -28 (ctrl/status)
-  assign spi_0_stb   = (io_stb && bus_addr[7:3] == 5'b11010)  ? 1'b1 : 1'b0;  // -48 (data), -44 (ctrl/status)
-  assign rs232_0_stb = (io_stb && bus_addr[7:3] == 5'b11001)  ? 1'b1 : 1'b0;  // -56 (data), -52 (ctrl/status)
-  assign lsb_stb     = (io_stb && bus_addr[7:2] == 6'b110001) ? 1'b1 : 1'b0;  // -60 note: system LEDs via LED()
-  assign tmr_stb     = (io_stb && bus_addr[7:2] == 6'b110000) ? 1'b1 : 1'b0;  // -64
+  assign gpio_stb    = (io_stb && bus_addr[7:3] == 5'b11100);   // -32 (data), -28 (ctrl/status)
+  assign spi_0_stb   = (io_stb && bus_addr[7:3] == 5'b11010);   // -48 (data), -44 (ctrl/status)
+  assign rs232_0_stb = (io_stb && bus_addr[7:3] == 5'b11001);   // -56 (data), -52 (ctrl/status)
+  assign lsb_stb     = (io_stb && bus_addr[7:2] == 6'b110001);  // -60 note: system LEDs via LED()
+  assign tmr_stb     = (io_stb && bus_addr[7:2] == 6'b110000);  // -64
 
   // extended IO address range
-  assign scs_stb     = (io_stb && bus_addr[7:3] == 5'b10111)  ? 1'b1 : 1'b0;  // -72
-  assign cts_stb     = (io_stb && bus_addr[7:3] == 5'b10110)  ? 1'b1 : 1'b0;  // -80 (data), -76 (ctrl/status)
-  assign stm_stb     = (io_stb && bus_addr[7:4] == 4'b1010)   ? 1'b1 : 1'b0;  // -96
-  assign wd_stb      = (io_stb && bus_addr[7:2] == 6'b100100) ? 1'b1 : 1'b0;  // -112
-  assign ptmr_stb    = (io_stb && bus_addr[7:2] == 6'b011111) ? 1'b1 : 1'b0;  // -132
-  assign start_stb   = (io_stb && bus_addr[7:2] == 6'b010001) ? 1'b1 : 1'b0;  // -188
-  assign log_stb     = (io_stb && bus_addr[7:3] == 5'b00100)  ? 1'b1 : 1'b0;  // -224 (data), -220 (indices)
+  assign scs_stb     = (io_stb && bus_addr[7:3] == 5'b10111);   // -72
+  assign cts_stb     = (io_stb && bus_addr[7:3] == 5'b10110);   // -80 (data), -76 (ctrl/status)
+  assign stm_stb     = (io_stb && bus_addr[7:4] == 4'b1010);    // -96
+  assign wd_stb      = (io_stb && bus_addr[7:2] == 6'b100100);  // -112
+  assign ptmr_stb    = (io_stb && bus_addr[7:2] == 6'b011111);  // -132
+  assign start_stb   = (io_stb && bus_addr[7:2] == 6'b010001);  // -188
+  assign log_stb     = (io_stb && bus_addr[7:3] == 5'b00100);   // -224 (data), -220 (indices)
 
 
   // data out multiplexing
@@ -573,18 +562,18 @@ endmodule
 FFFFFC  +---------------------------+
         | 64 dev addr (1 word each) |     256 Bytes
 FFFF00  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+        | 64 dev addr (unused)      |     256 Bytes
 FFFE00  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+        | 64 dev addr (unused)      |     256 Bytes
 FFFD00  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+        | 64 dev addr (unused)      |     256 Bytes
 FFFC00  +---------------------------+
         |                           |
         |      -- unused --         |     3 kB
         |                           !
 FFF000  +---------------------------+
         |                           !
-        |          PROM             |     4 KB
+        |     PROM (2k used)        |     4 KB
         |                           |
 FFE000  +---------------------------+
         |                           |

@@ -63,14 +63,6 @@ module risc5_1 #(parameter start_addr = 24'hFFE000) (
   reg [25:0] SPC;     // saved PC on interrupt
   wire intAck;
 
-  // gray: externalised signals
-  assign intackx = intAck;          // 'intAck' signal for external interrupt controller
-  assign rtix = RTI;                // 'RTI' signal for external interrupt controller
-  assign spcx = {SPC[21:0], 2'b0};  // interrupt return address for abort handler = offending location
-  assign irx = IR;                  // instruction register value for calltrace stack
-  assign pcx = PC;                  // program counter for calltrace stack
-  // gray end
-
   // ALU, arith units
   wire regwr;
   wire [31:0] A, B, C0, C1, aluRes, regmux, inbus1;
@@ -82,6 +74,14 @@ module risc5_1 #(parameter start_addr = 24'hFFE000) (
   wire ADD, SUB, MUL, DIV;
   wire FAD, FSB, FML, FDV;
   wire LDR, STR, BR, RTI;
+
+  // gray: externalised signals
+  assign intackx = intAck;          // 'intAck' signal for external interrupt controller
+  assign rtix = RTI;                // 'RTI' signal for external interrupt controller
+  assign spcx = {SPC[21:0], 2'b0};  // interrupt return address for abort handler = offending location
+  assign irx = IR;                  // instruction register value for calltrace stack
+  assign pcx = PC;                  // program counter for calltrace stack
+  // gray end
 
   Registers regs (
     // in
