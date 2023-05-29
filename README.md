@@ -11,8 +11,29 @@ Here is the sister repo for the corresponding software: [oberon-rts-sw](https://
 Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but it's the best there is for now, apart from this and the corresponding software repository. As the saying goes, only debug code, don't get deceived by the comments.
 
 
+## Status
+
+* two architectures: ETH and THM
+* CPU, PROM, RAM
+* clocks, reset
+* process timers
+* millisecond timer
+* RS232 (buffered)
+* SPI
+* LEDs, switches, buttons, 7-seg displays (if available)
+* GPIO
+* Reatl-time clock
+* logging
+* watchdog
+* stack monitor
+* system control and status
+* calltrace
+* (re-) start tables
+
+
 ## Next Up
 
+* I2C
 * SRAM integration
 * Hardware-signal based process scheduling.
 * Hardware support for critical region protection for processes.
