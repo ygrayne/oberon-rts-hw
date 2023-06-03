@@ -27,7 +27,7 @@ module  clocks (
 		.operation_mode("source synchronous"),
 //		.operation_mode("normal"),
 		.number_of_clocks(2),
-		.output_clock_frequency0("20.000000 MHz"),
+		.output_clock_frequency0("25.000000 MHz"),
 		.phase_shift0("0 ps"),
 		.duty_cycle0(50),
 		.output_clock_frequency1("80.000000 MHz"),

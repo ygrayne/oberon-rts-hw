@@ -48,7 +48,8 @@ MODULE* BootLoad;
     (* total: 192k, heap: 32k *) (* MemLim = 030000H; stackOrg = 028000H; *)
     (* total: 256k, heap: 64k *) (* MemLim = 040000H; stackOrg = 030000H; *)
     (* total: 256k, heap: 32k *) (* MemLim = 040000H; stackOrg = 037F00H; *)
-    (* total: 384k, heap: 64k *) MemLim = 060000H; stackOrg = 050000H;
+    (* total: 384k, heap: 64k *) (* MemLim = 060000H; stackOrg = 050000H; *)
+    (* total: 416k, heap: 64k *) MemLim = 068000H; stackOrg = 058000H;
     (* total: 512k, heap: 64k *) (* MemLim = 080000H; stackOrg = 070000H; *)
     (* total: 650k, heap: 64k *) (* MemLim = 090000H; stackOrg = 080000H; *)
 

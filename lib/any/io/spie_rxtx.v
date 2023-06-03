@@ -16,32 +16,33 @@
              cpol = 0               ++++++    ++++++
   mode = 0:  cpha = 0          |   bit   |   bit   |  ...    mosi/miso
                        ++++++++++++++    ++++++    ++++++    sclk
-  
+
              cpol = 1  ++++++++++++++    ++++++    ++++++
   mode = 1:  cpha = 0          |   bit   |   bit   |  ...
                                     ++++++    ++++++
-                         
+
              cpol = 0          ++++++    ++++++    ++++++
   mode = 2:  cpha = 1          |   bit   |   bit   |  ...
                        +++++++++    ++++++    ++++++
-  
+
              cpol = 1  +++++++++    ++++++    ++++++
   mode = 3:  cpha = 1          |   bit   |   bit   |  ...
                                ++++++    ++++++    ++++++
- 
+
   --
   Frequency dividers for the serial clock:
   * fast_div: fast transmit
     * must be >= 3
     * aim for about 10 MHz or lower
   * slow_div: slow transmit
-    * must result in a frequency between 100 and 400 kHz (SD card specs)
+    * must result in a frequency between 100 and 400 kHz as per SD card specs
+    * however, experience shows that moat SD cards prefer a value between 300 and 400 kHz
   Odd dividers will result in a non 50%/50% duty-cycle of the serial clock,
   with the low half period being longer by one 'clk' period.
   --
   SD card works with modes 0 and 3
   RTC works with modes 2 and 3
-  -- 
+  --
   (c) 2022 - 2023 Gray, gray@grayraven.org
   https://oberon-rts.org/licences
 **/
@@ -71,7 +72,7 @@ module spie_rxtx #(
   output wire mosi,
   output wire sclk
 );
-    
+
   localparam ticks_period_fast = fast_div - 1;
   localparam ticks_period_slow = slow_div - 1;
   localparam ticks_half_period_fast = ticks_period_fast / 2;
@@ -90,7 +91,7 @@ module spie_rxtx #(
   wire last_tick = fast ? (ticks == ticks_period_fast) : (ticks == ticks_period_slow);                // end of one bit
   wire sclk_switch = fast ? (ticks > ticks_half_period_fast) : (ticks > ticks_half_period_slow);      // starts low
   assign sclk = (rst | ~sclk_e) ? cpol :
-    (cpol == 1'b0) ?  ((cpha == 1'b0) ? sclk_switch : ~sclk_switch) : 
+    (cpol == 1'b0) ?  ((cpha == 1'b0) ? sclk_switch : ~sclk_switch) :
                       ((cpha == 1'b0) ? ~sclk_switch : sclk_switch);
 
   wire last_bit = w32 ? (bit_cnt == 31) : w16 ? (bit_cnt == 15) : (bit_cnt == 7);
@@ -116,7 +117,7 @@ module spie_rxtx #(
         )
       ) : shreg;
   end
-  
+
 endmodule
 
 `resetall

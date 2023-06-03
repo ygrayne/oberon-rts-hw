@@ -135,8 +135,9 @@ set_instance_assignment -name IO_STANDARD "1.2 V" -to hex1_n[5]
 set_location_assignment PIN_AF24 -to hex1_n[6]
 set_instance_assignment -name IO_STANDARD "1.2 V" -to hex1_n[6]
 
-# !! these pins are shared with gpio[22] to gpio[35] !!
-# There's flipping of DIP switches involved... RTFM!
+# !! these pins are shared with exp header pins 24 to 39 !!
+# there's flipping of DIP switches involved... RTFM!
+
 #set_location_assignment PIN_AD7 -to hex2[0]
 #set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to hex2[0]
 #set_location_assignment PIN_AD6 -to hex2[1]
@@ -168,87 +169,141 @@ set_instance_assignment -name IO_STANDARD "1.2 V" -to hex1_n[6]
 #set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to hex3[6]
 
 
+# Expansion header
+# ----------------
 # GPIO
 # ----
-# external test pins
-# pin 0 (left bottom corner)
-#set_location_assignment PIN_T21 -to ext[0]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[0]
-## pin 1
-#set_location_assignment PIN_D26 -to ext[1]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[1]
-## pin 2
-#set_location_assignment PIN_K25 -to ext[2]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[2]
-## pin 3
-#set_location_assignment PIN_E26 -to ext[3]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[3]
+# pin 0
+set_location_assignment PIN_T21 -to gpio[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[0]
+# pin 1
+set_location_assignment PIN_D26 -to gpio[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[1]
+# pin 2
+set_location_assignment PIN_K25 -to gpio[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[2]
+# pin 3
+set_location_assignment PIN_E26 -to gpio[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[3]
+# pin 4
+set_location_assignment PIN_K26 -to gpio[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[4]
+# pin 5
+set_location_assignment PIN_M26 -to gpio[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[5]
+# pin 6
+set_location_assignment PIN_M21 -to gpio[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[6]
+# pin 7
+set_location_assignment PIN_P20 -to gpio[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[7]
+# pin 8
+set_location_assignment PIN_T22 -to gpio[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[8]
+# pin 9
+set_location_assignment PIN_T19 -to gpio[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[9]
 
-#set_location_assignment PIN_M26 -to gpio[5]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[5]
-#set_location_assignment PIN_M21 -to gpio[6]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[6]
-#set_location_assignment PIN_P20 -to gpio[7]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[7]
-#set_location_assignment PIN_T22 -to gpio[8]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[8]
-#set_location_assignment PIN_T19 -to gpio[9]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[9]
-#set_location_assignment PIN_U19 -to gpio[10]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[10]
-#set_location_assignment PIN_U22 -to gpio[11]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[11]
-#set_location_assignment PIN_P8 -to gpio[12]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[12]
-#set_location_assignment PIN_R8 -to gpio[13]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[13]
-#set_location_assignment PIN_R9 -to gpio[14]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[14]
-#set_location_assignment PIN_R10 -to gpio[15]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[15]
-#set_location_assignment PIN_F26 -to gpio[16]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[16]
-#set_location_assignment PIN_Y9 -to gpio[17]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[17]
-#set_location_assignment PIN_G26 -to gpio[18]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[18]
-#set_location_assignment PIN_Y8 -to gpio[19]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[19]
-#set_location_assignment PIN_AA7 -to gpio[20]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[20]
-#set_location_assignment PIN_AA6 -to gpio[21]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[21]
+# pin 10: 5 V
+# pin 11: GND
 
-# !! these pins are shared with hex2 and hex3 !!
-# There's flipping of DIP switches involved... RTFM!
-#set_location_assignment PIN_AD7 -to gpio[22]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[22]
-#set_location_assignment PIN_AD6 -to gpio[23]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[23]
-#set_location_assignment PIN_U20 -to gpio[24]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[24]
-#set_location_assignment PIN_V22 -to gpio[25]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[25]
-#set_location_assignment PIN_V20 -to gpio[26]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[26]
-#set_location_assignment PIN_W21 -to gpio[27]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[27]
-#set_location_assignment PIN_W20 -to gpio[28]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[28]
-#set_location_assignment PIN_Y24 -to gpio[29]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[29]
-#set_location_assignment PIN_Y23 -to gpio[30]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[30]
-#set_location_assignment PIN_AA23 -to gpio[31]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[31]
-#set_location_assignment PIN_AA22 -to gpio[32]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[32]
-#set_location_assignment PIN_AC24 -to gpio[33]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[33]
-#set_location_assignment PIN_AC23 -to gpio[34]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[34]
-#set_location_assignment PIN_AC22 -to gpio[35]
-#set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[35]
+# pin 12
+set_location_assignment PIN_U19 -to gpio[10]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[10]
+# pin 13
+set_location_assignment PIN_U22 -to gpio[11]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[11]
+# pin 14
+set_location_assignment PIN_P8 -to gpio[12]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[12]
+# pin 15
+set_location_assignment PIN_R8 -to gpio[13]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[13]
+# pin 16
+set_location_assignment PIN_R9 -to gpio[14]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[14]
+# pin 17
+set_location_assignment PIN_R10 -to gpio[15]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[15]
+# pin 18
+set_location_assignment PIN_F26 -to gpio[16]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[16]
+# pin 19
+set_location_assignment PIN_Y9 -to gpio[17]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[17]
+# pin 20
+set_location_assignment PIN_G26 -to gpio[18]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[18]
+# pin 21
+set_location_assignment PIN_Y8 -to gpio[19]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[19]
+# pin 22
+set_location_assignment PIN_AA7 -to gpio[20]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[20]
+# pin 23
+set_location_assignment PIN_AA6 -to gpio[21]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[21]
+
+# !! pins 24 to 39 are shared with hex2 and hex3 !!
+# there's flipping of DIP switches involved... read the manual!
+
+# pin 24
+set_location_assignment PIN_AD7 -to gpio[22]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[22]
+# pin 25
+set_location_assignment PIN_AD6 -to gpio[23]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[23]
+# pin 26
+set_location_assignment PIN_U20 -to gpio[24]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[24]
+# pin 27
+set_location_assignment PIN_V22 -to gpio[25]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[25]
+
+# pin 28: 3.3 V
+# pin 29: GND
+
+# SPI CS = 1 and 2 (CS = 0 => SD card, see below)
+# -----------------------------------------------
+# pin 30
+set_location_assignment PIN_V20 -to spi_sclk[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_sclk[1]
+# pin 31
+set_location_assignment PIN_W21 -to spi_cs_n[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_cs_n[1]
+# pin 32
+set_location_assignment PIN_W20 -to spi_miso[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_miso[1]
+# pin 33
+set_location_assignment PIN_Y24 -to spi_mosi[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_mosi[1]
+# pin 34
+set_location_assignment PIN_Y23 -to spi_sclk[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_sclk[2]
+# pin 35
+set_location_assignment PIN_AA23 -to spi_cs_n[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_cs_n[2]
+# pin 36
+set_location_assignment PIN_AA22 -to spi_miso[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_miso[2]
+# pin 37
+set_location_assignment PIN_AC24 -to spi_mosi[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_mosi[2]
+
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to spi_miso[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to spi_miso[2]
+
+# I2C
+# ---
+# pin 38
+set_location_assignment PIN_AC23 -to i2c_scl
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to i2c_scl
+# pin 39
+set_location_assignment PIN_AC22 -to i2c_sda
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to i2c_sda
+
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to i2c_scl
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to i2c_sda
 
 # SD card (SPI CS = 0)
 # --------------------
@@ -363,6 +418,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
 # GPIO on HSMC to PIO adapter card
 # --------------------------------
 # connector J2 (edge, opposite HSMC connector)
+# ------------
 # pin 39
 #set_location_assignment PIN_A8 -to GPIO0_35
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_35
@@ -373,11 +429,11 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
 #set_location_assignment PIN_A9 -to GPIO0_33
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_33
 ## pin 36
-#set_location_assignment PIN_F16 -to GPIO0_31
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_31
-## pin 35
 #set_location_assignment PIN_A13 -to GPIO0_32
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_32
+## pin 35
+#set_location_assignment PIN_F16 -to GPIO0_31
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_31
 ## pin 34
 #set_location_assignment PIN_C23 -to GPIO0_30
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_30
@@ -481,7 +537,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO0_0
 
 # connector J3 (middle)
-## external logic analiser begin (16 pins)
+# ------------
 ## pin 39
 #set_location_assignment PIN_E10 -to GPIO1_35
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_35
@@ -516,6 +572,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
 ## pin 29: GND
 ## pin 28: 3.3 V
 
+## external logic analiser begin (16 pins)
 ## pin 27
 #set_location_assignment PIN_L11 -to GPIO1_25
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_25
@@ -566,41 +623,41 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to sram_we_n
 ## pin 12
 #set_location_assignment PIN_B15 -to GPIO1_10
 #set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_10
+## external logic analiser end (16 pins)
 
 # pin 11: GND
 # pin 10: 5 V
 
-# pin 9
-#set_location_assignment PIN_J11 -to GPIO1_9
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_9
+## pin 9
+#set_location_assignment PIN_J11 -to spi_sclk[1]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_sclk[1]
 ## pin 8
-#set_location_assignment PIN_C15 -to GPIO1_8
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_8
+#set_location_assignment PIN_C15 -to spi_cs_n[1]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_cs_n[1]
 ## pin 7
-#set_location_assignment PIN_G16 -to GPIO1_7
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_7
+#set_location_assignment PIN_G16 -to spi_miso[1]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_miso[1]
 ## pin 6
-#set_location_assignment PIN_B22 -to GPIO1_6
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_6
+#set_location_assignment PIN_B22 -to spi_mosi[1]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_mosi[1]
 ## pin 5
-#set_location_assignment PIN_G17 -to GPIO1_5
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_5
+#set_location_assignment PIN_G17 -to spi_sclk[2]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_sclk[2]
 ## pin 4
-#set_location_assignment PIN_A21 -to GPIO1_4
-#set_instance_assignment -name IO_STANDARD "2.5 V" -to GPIO1_4
-
-# pin 3
-set_location_assignment PIN_G12 -to ext[3]
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ext[3]
-# pin 2
-set_location_assignment PIN_G15 -to ext[2]
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ext[2]
-# pin 1
-set_location_assignment PIN_F12 -to ext[1]
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ext[1]
-# pin 0
-set_location_assignment PIN_G14 -to ext[0]
-set_instance_assignment -name IO_STANDARD "2.5 V" -to ext[0]
+#set_location_assignment PIN_A21 -to spi_cs_n[2]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_cs_n[2]
+## pin 3
+#set_location_assignment PIN_G12 -to spi_miso[2]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_miso[2]
+## pin 2
+#set_location_assignment PIN_G15 -to spi_mosi[2]
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to spi_mosi[2]
+## pin 1
+#set_location_assignment PIN_F12 -to i2c_scl
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to i2c_scl
+## pin 0
+#set_location_assignment PIN_G14 -to i2c_sda
+#set_instance_assignment -name IO_STANDARD "2.5 V" -to i2c_sda
 
 
 
@@ -635,78 +692,16 @@ set_location_assignment PIN_B19 -to altera_reserved_lai_1_5
 set_location_assignment PIN_J12 -to altera_reserved_lai_1_6
 set_location_assignment PIN_B15 -to altera_reserved_lai_1_7
 
-set_global_assignment -name OPTIMIZATION_MODE "AGGRESSIVE PERFORMANCE"
-set_global_assignment -name SLD_NODE_CREATOR_ID 3698176 -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_ENTITY_NAME sld_multitap -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=3698176" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_WIDTH=8" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SIZE=2" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SEL_WIDTH=1" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_STATE=0" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ACQ_MODE=0" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_CREATOR_ID 3698176 -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_ENTITY_NAME sld_multitap -section_id auto_lai_1
-
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[0] -to altera_reserved_lai_0_0 -section_id auto_lai_0
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[1] -to altera_reserved_lai_0_1 -section_id auto_lai_0
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[2] -to altera_reserved_lai_0_2 -section_id auto_lai_0
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[3] -to altera_reserved_lai_0_3 -section_id auto_lai_0
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[4] -to altera_reserved_lai_0_4 -section_id auto_lai_0
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[5] -to altera_reserved_lai_0_5 -section_id auto_lai_0
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[6] -to altera_reserved_lai_0_6 -section_id auto_lai_0
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[7] -to altera_reserved_lai_0_7 -section_id auto_lai_0
-
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "risc5_1:risc5_0|clk" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][1] -to "risc5_1:risc5_0|wr" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -to "risc5_1:risc5_0|rd" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][3] -to "risc5_1:risc5_0|STR" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][4] -to "risc5_1:risc5_0|LDR" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][5] -to "risc5_1:risc5_0|regwr" -section_id auto_lai_0
-
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[0] -to altera_reserved_lai_1_0 -section_id auto_lai_1
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[1] -to altera_reserved_lai_1_1 -section_id auto_lai_1
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[2] -to altera_reserved_lai_1_2 -section_id auto_lai_1
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[3] -to altera_reserved_lai_1_3 -section_id auto_lai_1
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[4] -to altera_reserved_lai_1_4 -section_id auto_lai_1
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[5] -to altera_reserved_lai_1_5 -section_id auto_lai_1
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[6] -to altera_reserved_lai_1_6 -section_id auto_lai_1
-set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[7] -to altera_reserved_lai_1_7 -section_id auto_lai_1
-
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][0] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|fast" -section_id auto_lai_1
-
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=3698177" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_WIDTH=8" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SIZE=2" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SEL_WIDTH=1" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_STATE=0" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ACQ_MODE=0" -section_id auto_lai_1
+set_global_assignment -name OPTIMIZATION_MODE BALANCED
 
 
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][1] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|rdy" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][2] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|start" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][3] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|sclk" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][4] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|mosi" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][5] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|miso" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][6] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_bit" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][7] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_tick" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -to "sram_test:sram_test_0|sram3:sram_0|io_en" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][3] -to "sram_test:sram_test_0|sram3:sram_0|sram_we_n" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][0] -to "sram_test:sram_test_0|sram3:sram_0|state.idle" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][1] -to "sram_test:sram_test_0|sram3:sram_0|state.wr0" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][2] -to "sram_test:sram_test_0|sram3:sram_0|state.wra" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][3] -to "sram_test:sram_test_0|sram3:sram_0|state.wr1" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][4] -to "sram_test:sram_test_0|sram3:sram_0|state.rd0" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][5] -to "sram_test:sram_test_0|sram3:sram_0|state.rda" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][6] -to "sram_test:sram_test_0|sram3:sram_0|state.rd1" -section_id auto_lai_0
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=8599" -section_id auto_lai_0
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "sram_test:sram_test_0|sram3:sram_0|rdy" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -to "sram_test:sram_test_0|sram_we" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][4] -to "sram_test:sram_test_0|sram3:sram_0|sram_ce_n" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][5] -to "sram_test:sram_test_0|sram3:sram_0|sram_oe_n" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -to "sram_test:sram_test_0|sram3:sram_0|we" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][1] -to "sram_test:sram_test_0|wr_ctrl" -section_id auto_lai_1
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][7] -to "sram_test:sram_test_0|data_in[31]" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=32422" -section_id auto_lai_1
+
+
+
+
+
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/i2ce.v
+set_global_assignment -name VERILOG_FILE ../../../lib/any/io/i2c.v
 set_global_assignment -name VERILOG_FILE ../lib/sram.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie_rxtx.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie.v
@@ -744,4 +739,70 @@ set_global_assignment -name VERILOG_FILE ../../../lib/eth/cpu/Divider.v
 set_global_assignment -name VERILOG_FILE ../../../lib/eth/prom.v
 set_global_assignment -name VERILOG_FILE ../lib/clocks.v
 set_global_assignment -name LOGIC_ANALYZER_INTERFACE_FILE LAI/lai1.lai
+set_global_assignment -name SLD_NODE_CREATOR_ID 3698176 -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_ENTITY_NAME sld_multitap -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[0] -to altera_reserved_lai_0_0 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[1] -to altera_reserved_lai_0_1 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[2] -to altera_reserved_lai_0_2 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[3] -to altera_reserved_lai_0_3 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[4] -to altera_reserved_lai_0_4 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[5] -to altera_reserved_lai_0_5 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[6] -to altera_reserved_lai_0_6 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[7] -to altera_reserved_lai_0_7 -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "risc5_1:risc5_0|clk" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][1] -to "risc5_1:risc5_0|wr" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -to "risc5_1:risc5_0|rd" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][3] -to "risc5_1:risc5_0|STR" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][4] -to "risc5_1:risc5_0|LDR" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][5] -to "risc5_1:risc5_0|regwr" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][0] -to "i2ce:i2ce_0|I2C:i2c_0|status[0]" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][1] -to "i2ce:i2ce_0|I2C:i2c_0|status[1]" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][2] -to "i2ce:i2ce_0|I2C:i2c_0|status[2]" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][3] -to "i2ce:i2ce_0|I2C:i2c_0|status[3]" -section_id auto_lai_0
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][4] -to "i2ce:i2ce_0|I2C:i2c_0|status[4]" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=3698176" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_WIDTH=8" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SIZE=2" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SEL_WIDTH=1" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_STATE=0" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ACQ_MODE=0" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_CREATOR_ID 3698176 -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_ENTITY_NAME sld_multitap -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[0] -to altera_reserved_lai_1_0 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[1] -to altera_reserved_lai_1_1 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[2] -to altera_reserved_lai_1_2 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[3] -to altera_reserved_lai_1_3 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[4] -to altera_reserved_lai_1_4 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[5] -to altera_reserved_lai_1_5 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[6] -to altera_reserved_lai_1_6 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_PIN_FROM_SLD_NODE_ENTITY_PORT acq_output[7] -to altera_reserved_lai_1_7 -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "i2ce:i2ce_0|I2C:i2c_0|control[7]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][1] -to "i2ce:i2ce_0|I2C:i2c_0|control[6]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -to "i2ce:i2ce_0|I2C:i2c_0|control[5]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][3] -to "i2ce:i2ce_0|I2C:i2c_0|control[4]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][4] -to "i2ce:i2ce_0|I2C:i2c_0|control[3]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][5] -to "i2ce:i2ce_0|I2C:i2c_0|control[2]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -to "i2ce:i2ce_0|I2C:i2c_0|control[1]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][7] -to "i2ce:i2ce_0|I2C:i2c_0|control[0]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][0] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|fast" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][1] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|rdy" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][2] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|start" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][3] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|sclk" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][4] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|mosi" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][5] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|miso" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][6] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_bit" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[1][7] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_tick" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[2][0] -to "i2ce:i2ce_0|I2C:i2c_0|status[0]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[2][1] -to "i2ce:i2ce_0|I2C:i2c_0|status[1]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[2][2] -to "i2ce:i2ce_0|I2C:i2c_0|status[2]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[2][3] -to "i2ce:i2ce_0|I2C:i2c_0|status[3]" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[2][4] -to "i2ce:i2ce_0|I2C:i2c_0|status[4]" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_INFO=3698177" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_WIDTH=8" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SIZE=3" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_BANK_SEL_WIDTH=2" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_POWER_UP_STATE=0" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_ACQ_MODE=0" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=12363" -section_id auto_lai_0
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=44737" -section_id auto_lai_1
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
