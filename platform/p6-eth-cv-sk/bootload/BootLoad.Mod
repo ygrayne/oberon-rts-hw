@@ -12,6 +12,7 @@ MODULE* BootLoad;
   2021-07: Added stack monitor to measure start-up stack usage
   2021-08: Added call trace monitor
   2023-04: Check system control and status reg for reset with or without reload
+  2023-06: Read MemLim, stackOrg, and stack size from FPGA sys config device
 **)
 
   IMPORT SYSTEM;
@@ -36,13 +37,19 @@ MODULE* BootLoad;
     SysCtrlAdr = -72;
     SysCtrlNoReload = 0;
 
+    (* sys config *)
+    SysCfgAdr = -108;
+    GetMemLimCmd = 0;
+    GetStackOrgCmd = 1;
+    GetStackSizeCmd = 2;
+
     (***
     (* call trace *)
     CalltraceStatusAdr = -272;
     SelectCtrl = 1;
     ClearCtrl = 4;
     *)
-
+    (*
     (* MemLim: total, stackOrg: address of boundary between modules/stack and heap space *)
     (* the stack space is set in module Kernel *)
     (* total: 192k, heap: 32k *) (* MemLim = 030000H; stackOrg = 028000H; *)
@@ -55,7 +62,15 @@ MODULE* BootLoad;
 
     (* total: 1M, heap: 512k *) (*MemLim = 0100000H; stackOrg = 080000H;*)
     (* total: 16M - 8k, heap: 8M *) (*MemLim = 01000000H - 02000H; stackOrg = 0800000H;*)
+    *)
 
+  VAR
+    (* use RAM address 12 for tmp variable *)
+    (* the pre-linked boot file will overwrite the low RAM space *)
+    (* address 12: MemLim value, but this is expected to be "filled in" *)
+    (* by the bootloader, see below *)
+    addr08: INTEGER; (* unused *)
+    addr12: INTEGER;
 
   PROCEDURE SPIIdle(n: INTEGER); (*send n FFs slowly with no card selected*)
   BEGIN
@@ -150,10 +165,14 @@ MODULE* BootLoad;
 BEGIN
   LED(LEDbase + 1);
   (* set registers to run the boot loader *)
-  SYSTEM.LDREG(SP, stackOrg);
+  (* get stackOrg from FPGA sys config *)
+  SYSTEM.PUT(SysCfgAdr, GetStackOrgCmd);
+  SYSTEM.GET(SysCfgAdr, addr12);
+  SYSTEM.LDREG(SP, addr12);
+  (* MTOrg is the same for all configs *)
   SYSTEM.LDREG(MT, MTOrg);
   (* set min address to monitor stack usage for system start and error handling *)
-  SYSTEM.PUT(StackMonMinAdr, stackOrg);
+  SYSTEM.PUT(StackMonMinAdr, addr12);
   (* but disable stack monitor errors *)
   SYSTEM.PUT(StackMonLimAdr, 0);
   SYSTEM.PUT(StackMonHotAdr, 0);
@@ -176,7 +195,20 @@ BEGIN
 
   (* put the memory info for Modules and Kernel *)
   (* note: the statically linked boot file adds some more, eg. for AllocPtr *)
-  SYSTEM.PUT(12, MemLim);
-  SYSTEM.PUT(24, stackOrg);
+  (* the boot file has now overwritten RAM address 12, ie. addr12, get it again *)
+  (* set stackOrg at RAM address 24 *)
+  (* read by Kernel and Modules *)
+  SYSTEM.PUT(SysCfgAdr, GetStackOrgCmd);
+  SYSTEM.GET(SysCfgAdr, addr12);
+  SYSTEM.PUT(24, addr12);
+  (* set stack size at RAM address 4 *)
+  (* read by Kernel *)
+  SYSTEM.PUT(SysCfgAdr, GetStackSizeCmd);
+  SYSTEM.GET(SysCfgAdr, addr12);
+  SYSTEM.PUT(4, addr12);
+  (* set MemLim at RAM address 12 *)
+  (* read by Kernel *)
+  SYSTEM.PUT(SysCfgAdr, GetMemLimCmd);
+  SYSTEM.GET(SysCfgAdr, addr12); (* set directly via GET *)
   LED(LEDbase + 6)
 END BootLoad.

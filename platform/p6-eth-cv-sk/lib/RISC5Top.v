@@ -20,7 +20,11 @@ module RISC5Top #(
     clock_freq = 25_000_000,  // as set in module 'clocks'
 //    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad-512k-64k.mem",
 //    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad-384k-64k.mem",
-    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad-416k-64k.mem",
+//    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad-416k-64k.mem",
+    prom_file = "../../platform/p6-eth-cv-sk/bootload/BootLoad.mem",
+    mem_lim = 'h68000,        // RAM size
+    stack_org = 'h58000,      // initial stack pointer value
+    stack_size = 'h4000,
     rs232_buf_slots = 256,    // RS232 buffer size, same for for tx and rx
     logbuf_entries = 32,
     calltrace_slots = 32,     // depth of each calltrace stack
@@ -80,6 +84,7 @@ module RISC5Top #(
   wire cpu_wr;                // CPU write signal
   wire cpu_ben;               // CPU byte enable
   wire cpu_irq;               // interrupt request to CPU
+  wire cpu_wait;
   // cpu extensions
   wire cpu_intack;            // CPU out: interrupt ack
   wire cpu_rti;               // CPU out: return from interrupt
@@ -98,6 +103,7 @@ module RISC5Top #(
   // sram test
   wire sram_stb;
   wire [31:0] sram_dout;
+  wire wait_req;
   wire sram_ack;
   // i/o
   wire io_en;                 // i/o enable
@@ -169,6 +175,10 @@ module RISC5Top #(
   wire i2c_stb;
   wire [31:0] i2c_dout;
   wire i2c_ack;
+  // sys config
+  wire scfg_stb;
+  wire [31:0] scfg_dout;
+  wire scfg_ack;
 //  // echo
 //  wire echo_stb;
 //  wire [31:0] echo_dout;
@@ -197,10 +207,12 @@ module RISC5Top #(
   );
 
   // CPU
-  risc5_1 #(.start_addr(24'hFFE000)) risc5_0 (
+//  assign cpu_wait= lsb_btn[1];
+  risc5_2 #(.start_addr(24'hFFE000), .init_sp(32'h58000)) risc5_0 (
     // in
     .clk(clk),
     .rst(rst_n),
+    .wait_req(cpu_wait),
     .irq(cpu_irq),
     .codebus(cpu_codebus[31:0]),
     .inbus(cpu_inbus[31:0]),
@@ -240,10 +252,12 @@ module RISC5Top #(
 //    .en(ram_stb),
 //    .be(cpu_ben),
 //    .we(cpu_wr),
+//    .re(cpu_rd),
 //    .addr(cpu_adr[18:0]),
 //    .data_in(cpu_outbus[31:0]),
 //    // out
 //    .data_out(ram_dout[31:0]),
+//    .wait_req(cpu_wait),
 //    // external
 //    .sram_addr(sram_addr[17:0]),
 //    .sram_data(sram_data[15:0]),
@@ -254,7 +268,7 @@ module RISC5Top #(
 //    .sram_lb_n(sram_lb_n)
 //  );
 
-  // BRAM 384k
+  // RAM
   ramg5 #(.num_kbytes(416)) ram_0 (
     // in
     .clk(clk),
@@ -267,25 +281,29 @@ module RISC5Top #(
     .data_out(ram_dout[31:0])
   );
 
-//  sram_test sram_test_0 (
-//    .clk(clk),
-//    .clk_sram(clk_sram),
-//    .rst(rst),
-//    .stb(sram_stb),
-//    .we(cpu_wr),
-//    .be(cpu_ben),
-//    .addr(cpu_adr[2]),
-//    .data_in(cpu_outbus[31:0]),
-//    .data_out(sram_dout[31:0]),
-//    .ack(sram_ack),
-//    .sram_addr(sram_addr[17:0]),
-//    .sram_data(sram_data[15:0]),
-//    .sram_ce_n(sram_ce_n),
-//    .sram_oe_n(sram_oe_n),
-//    .sram_we_n(sram_we_n),
-//    .sram_ub_n(sram_ub_n),
-//    .sram_lb_n(sram_lb_n)
-//  );
+  sram_test sram_test_0 (
+    // in
+    .clk(clk),
+    .clk_sram(clk_sram),
+    .rst(rst),
+    .stb(sram_stb),
+    .we(cpu_wr),
+    .be(cpu_ben),
+    .addr(cpu_adr[2]),
+    .data_in(cpu_outbus[31:0]),
+    //out
+    .data_out(sram_dout[31:0]),
+    .wait_req(cpu_wait),
+    .ack(sram_ack),
+    // external
+    .sram_addr(sram_addr[17:0]),
+    .sram_data(sram_data[15:0]),
+    .sram_ce_n(sram_ce_n),
+    .sram_oe_n(sram_oe_n),
+    .sram_we_n(sram_we_n),
+    .sram_ub_n(sram_ub_n),
+    .sram_lb_n(sram_lb_n)
+  );
 
   // ms timer
   // one IO address
@@ -302,7 +320,8 @@ module RISC5Top #(
 
   // LEDs, switches, buttons, 7-seg displays
   // one IO address
-  assign lsb_leds_r_in[9:0] = 10'b0;
+  assign lsb_leds_r_in[9] = cpu_wait;
+  assign lsb_leds_r_in[8:0] = 9'b0;
   lsb_s lsb_0 (
     // in
     .clk(clk),
@@ -523,12 +542,30 @@ module RISC5Top #(
     .addr(cpu_adr[3:2]),
     .data_in(cpu_outbus[31:0]),
     // out
-    .data_out(i2c_dout),
+    .data_out(i2c_dout[31:0]),
     .ack(i2c_ack),
     // external
     .scl(i2c_scl),
     .sda(i2c_sda)
   );
+
+  // sys config
+  // one IO address
+  sysconf #(
+    .mem_lim(mem_lim),
+    .stack_org(stack_org),
+    .stack_size(stack_size)
+    ) sysconf_0 (
+    // in
+    .clk(clk),
+    .stb(scfg_stb),
+    .we(cpu_wr),
+    .data_in(cpu_outbus[31:0]),
+    // out
+    .data_out(scfg_dout[31:0]),
+    .ack(scfg_ack)
+  );
+
 
 //  // echo testing
 //  echo echo_0 (
@@ -537,7 +574,7 @@ module RISC5Top #(
 //    .we(cpu_wr),
 //    .addr(cpu_adr[2]),
 //    .data_in(cpu_outbus[31:0]),
-//    .data_out(echo_dout),
+//    .data_out(echo_dout[31:0]),
 //    .ack(echo_ack)
 //  );
 
@@ -577,6 +614,7 @@ module RISC5Top #(
 //  assign cts_stb     = (io_en && cpu_adr[7:3] == 5'b10110);  // -80, -76 (ctrl/status)
   assign stm_stb     = (io_en && cpu_adr[7:4] == 4'b1010);    // -96
   assign sram_stb    = (io_en && cpu_adr[7:3] == 5'b10011);  // -104
+  assign scfg_stb    = (io_en && cpu_adr[7:2] == 6'b100101);  // -108
 //  assign wd_stb      = (io_en && cpu_adr[7:2] == 6'b100100);  // -112
   assign ptmr_stb    = (io_en && cpu_adr[7:2] == 6'b011111);  // -132
   assign start_stb   = (io_en && cpu_adr[7:2] == 6'b010001);  // -188
@@ -597,6 +635,7 @@ module RISC5Top #(
 //    cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
     sram_stb    ? sram_dout[31:0] :
+    scfg_stb    ? scfg_dout[31:0] :
 //    wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :
     start_stb   ? start_dout[31:0] :
