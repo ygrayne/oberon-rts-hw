@@ -14,11 +14,12 @@ module  clocks (
 	input wire rst,
 	input wire clk_in,
 	output wire clk,
-	output wire clk_2x,
+	output wire clk_2x_ps0,
+	output wire clk_2x_ps1,
 	output wire clk_ok
 );
 
-  wire [1:0] clk_out;
+  wire [2:0] clk_out;
   wire locked;
 
 	altera_pll #(
@@ -26,16 +27,16 @@ module  clocks (
 		.reference_clock_frequency("50.0 MHz"),
 		.operation_mode("source synchronous"),
 //		.operation_mode("normal"),
-		.number_of_clocks(2),
-		.output_clock_frequency0("25.000000 MHz"),
+		.number_of_clocks(3),
+		.output_clock_frequency0("15.000000 MHz"),
 		.phase_shift0("0 ps"),
 		.duty_cycle0(50),
-		.output_clock_frequency1("80.000000 MHz"),
-		.phase_shift1("0 ps"),
-		.duty_cycle1(50),
-		.output_clock_frequency2("0 MHz"),
-		.phase_shift2("0 ps"),
-		.duty_cycle2(50),
+		.output_clock_frequency1("30.000000 MHz"),
+		.phase_shift1("10000 ps"),
+		.duty_cycle1(80),
+		.output_clock_frequency2("30.000000 MHz"),
+		.phase_shift2("15000 ps"),
+		.duty_cycle2(80),
 		.output_clock_frequency3("0 MHz"),
 		.phase_shift3("0 ps"),
 		.duty_cycle3(50),
@@ -85,13 +86,14 @@ module  clocks (
 		.pll_subtype("General")
   ) clk_pll (
 		.rst(rst),
-		.outclk(clk_out[1:0]),
+		.outclk(clk_out[2:0]),
 		.locked(locked),
 		.refclk(clk_in)
 	);
 
   assign clk = clk_out[0];
-	assign clk_2x = clk_out[1];
+	assign clk_2x_ps0 = clk_out[1];
+	assign clk_2x_ps1 = clk_out[2];
   assign clk_ok = locked;
 
 endmodule

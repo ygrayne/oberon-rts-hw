@@ -2,7 +2,7 @@
   <display_attributes active_instance="1" active_tab="4"/>
   <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_0" type="generic">
     <node_ip_info instance_id="0" mfg_id="110" node_id="7" version="0"/>
-    <core_parameters bank_count="2" capture_mode="timing" crc_value="304B" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <core_parameters bank_count="3" capture_mode="timing" crc_value="771F" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
     <pins>
       <pin io_standard="2.5 V" location="PIN_L11" name="altera_reserved_lai_0_0"/>
       <pin io_standard="2.5 V" location="PIN_B11" name="altera_reserved_lai_0_1"/>
@@ -15,21 +15,31 @@
     </pins>
     <banks>
       <bank name="Bank 0">
-        <signal name="risc5_1:risc5_0|clk" type="comb"/>
-        <signal name="risc5_1:risc5_0|wr" type="comb"/>
-        <signal name="risc5_1:risc5_0|rd" type="comb"/>
-        <signal name="risc5_1:risc5_0|STR" type="comb"/>
-        <signal name="risc5_1:risc5_0|LDR" type="comb"/>
-        <signal name="risc5_1:risc5_0|regwr" type="comb"/>
+        <signal name="risc5_2:cpu|clk" type="comb"/>
+        <signal name="risc5_2:cpu|wr" type="comb"/>
+        <signal name="risc5_2:cpu|rd" type="comb"/>
+        <signal name="risc5_2:cpu|STR" type="comb"/>
+        <signal name="risc5_2:cpu|LDR" type="comb"/>
+        <signal name="risc5_2:cpu|stallL0" type="comb"/>
+        <signal name="risc5_2:cpu|stallL1" type="reg"/>
+        <signal name="risc5_2:cpu|stall" type="comb"/>
+      </bank>
+      <bank name="Bank 1">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
         <signal name="" type="unused"/>
         <signal name="" type="unused"/>
       </bank>
-      <bank name="Bank 1">
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[0]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[1]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[2]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[3]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[4]" type="comb"/>
+      <bank name="Bank 2">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
         <signal name="" type="unused"/>
         <signal name="" type="unused"/>
         <signal name="" type="unused"/>
@@ -39,7 +49,7 @@
   </instance>
   <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_1" type="generic">
     <node_ip_info instance_id="1" mfg_id="110" node_id="7" version="0"/>
-    <core_parameters bank_count="3" capture_mode="timing" crc_value="AEC1" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <core_parameters bank_count="4" capture_mode="timing" crc_value="931" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
     <pins>
       <pin io_standard="2.5 V" location="PIN_K11" name="altera_reserved_lai_1_0"/>
       <pin io_standard="2.5 V" location="PIN_A18" name="altera_reserved_lai_1_1"/>
@@ -52,14 +62,14 @@
     </pins>
     <banks>
       <bank name="Bank 0">
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[7]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[6]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[5]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[4]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[3]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[2]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[1]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|control[0]" type="comb"/>
+        <signal name="ramg5:ram_0|en" type="comb"/>
+        <signal name="ramg5:ram_0|we" type="comb"/>
+        <signal name="ramg5:ram_0|addr[2]" type="comb"/>
+        <signal name="ramg5:ram_0|addr[3]" type="comb"/>
+        <signal name="ramg5:ram_0|addr[4]" type="comb"/>
+        <signal name="ramg5:ram_0|addr[5]" type="comb"/>
+        <signal name="ramg5:ram_0|addr[6]" type="comb"/>
+        <signal name="ramg5:ram_0|addr[7]" type="comb"/>
       </bank>
       <bank name="Bank 1">
         <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|fast" type="comb"/>
@@ -72,11 +82,21 @@
         <signal name="spie:spie_0|spie_rxtx:spie_rxtx_0|last_tick" type="comb"/>
       </bank>
       <bank name="Bank 2">
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[0]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[1]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[2]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[3]" type="comb"/>
-        <signal name="i2ce:i2ce_0|I2C:i2c_0|status[4]" type="comb"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+      <bank name="Bank 3">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
         <signal name="" type="unused"/>
         <signal name="" type="unused"/>
         <signal name="" type="unused"/>

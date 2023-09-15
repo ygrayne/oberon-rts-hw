@@ -19,12 +19,12 @@
     mem_lim = 'h68000, stackOrg = 'h58000, stack_size = 'h4000
   * total: 512k, heap: 64k, stack: 16k
     mem_lim = 'h80000, stackOrg = 'h70000, stack_size = 'h4000
-  * total: 650k, heap: 64k, stack: 16k
-    mem_lim = 'h90000, stackOrg = 'h80000, stack_size = 'h4000
-  * total: 1M, heap: 512k, stack: 16k
-    mem_lim = 'h100000, stackOrg = 'h80000, stack_size = 'h4000
-  * total: 16M - 8k, heap: 8M, stack: 16k
-    mem_lim = 'h1000000 - 'h2000, stackOrg = 'h800000, stack_size = 'h4000
+  * total: 650k, heap: 64k, stack: 32k
+    mem_lim = 'h90000, stackOrg = 'h80000, stack_size = 'h8000
+  * total: 1M, heap: 512k, stack: 64k
+    mem_lim = 'h100000, stackOrg = 'h80000, stack_size = 'h10000
+  * total: 16M - 8k, heap: 8M, stack: 128k
+    mem_lim = 'h1000000 - 'h2000, stackOrg = 'h800000, stack_size = 'h20000
   --
   Architecture: ANY
   --
@@ -45,7 +45,7 @@ module sysconf #(
   input wire clk,
   input wire stb,
   input wire we,
-  input wire [31:0] data_in,
+  input wire [1:0] data_in,
   output reg [31:0] data_out,
   output wire ack
 );
@@ -57,13 +57,14 @@ module sysconf #(
 
   wire wr_select = stb &  we;
 
-  reg [31:0] par [0:2];
+  reg [31:0] par [0:3];
   wire [1:0] select = data_in[1:0];
 
   initial begin
     par[mem_lim_ix] = mem_lim;
     par[stack_org_ix] = stack_org;
     par[stack_size_ix] = stack_size;
+    par[3] = 32'h0;
   end
 
   always @(posedge clk) begin

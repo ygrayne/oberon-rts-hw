@@ -4,7 +4,7 @@
   Architecture: THM
   Board and technology: DE2-115, Altera Cyclone IV E
   --
-  Base/origin:
+  Base/origins:
     * THM-oberon
     * Project Oberon
   --
@@ -18,7 +18,10 @@
 module risc5 #(
   parameter
     clock_freq = 50_000_000,
-    prom_file = "../../platform/p3-thm-de2-115/bootload/BootLoad-512k-64k.mem",
+    prom_file = "../../platform/bootload/BootLoad.mem",
+    mem_lim = 'h80000,        // RAM size
+    stack_org = 'h70000,      // initial stack pointer value
+    stack_size = 'h8000,
     rs232_buf_slots = 256,
     logbuf_entries = 32,
     calltrace_slots = 32,
@@ -64,8 +67,7 @@ module risc5 #(
   input [3:0] btn_in_n,
   input [17:0] swi_in,
   // GPIO
-  inout [num_gpio-1:0] gpio,
-  output [5:0] ext
+  inout [num_gpio-1:0] gpio
 );
 
   // clk
@@ -142,7 +144,7 @@ module risc5 #(
   wire [31:0] wd_dout;        // timeout value
   wire wd_trig;               // watchdog trigger signal out
   wire wd_ack;
-  // stack mmonitor
+  // stack monitor
   wire stm_stb;
   wire [31:0] stm_dout;       // stack limit, hotzone address, lowest address reached (usage)
   wire stm_trig_lim;          // stack limit trigger signal out
@@ -160,15 +162,10 @@ module risc5 #(
   wire gpio_stb;
   wire [31:0] gpio_dout;      // pin data, in/out control status
   wire gpio_ack;
-
-  // external test points
-  // TODO: bad for clock performance, don't leave in!
-  assign ext[0] = clk;
-  assign ext[1] = sdcard_sclk;
-  assign ext[2] = clk_in;
-  assign ext[3] = 1'b0;
-  assign ext[4] = 1'b0;
-  assign ext[5] = 1'b0;
+  // sys config
+  wire scfg_stb;
+  wire [31:0] scfg_dout;
+  wire scfg_ack;
 
   // clocks
   clocks clocks_0 (
@@ -480,6 +477,23 @@ module risc5 #(
     .io_pin(gpio[num_gpio-1:0])
   );
 
+  // sys config
+  // one IO address
+  sysconf #(
+    .mem_lim(mem_lim),
+    .stack_org(stack_org),
+    .stack_size(stack_size)
+    ) sysconf_0 (
+    // in
+    .clk(clk),
+    .stb(scfg_stb),
+    .we(bus_we),
+    .data_in(bus_dout[31:0]),
+    // out
+    .data_out(scfg_dout[31:0]),
+    .ack(scfg_ack)
+  );
+
   // address decoding
   // ----------------
   // cf. memory map below
@@ -509,6 +523,7 @@ module risc5 #(
   assign scs_stb     = (io_stb && bus_addr[7:3] == 5'b10111);   // -72
   assign cts_stb     = (io_stb && bus_addr[7:3] == 5'b10110);   // -80 (data), -76 (ctrl/status)
   assign stm_stb     = (io_stb && bus_addr[7:4] == 4'b1010);    // -96
+  assign scfg_stb    = (io_stb && bus_addr[7:2] == 6'b100101);  // -108
   assign wd_stb      = (io_stb && bus_addr[7:2] == 6'b100100);  // -112
   assign ptmr_stb    = (io_stb && bus_addr[7:2] == 6'b011111);  // -132
   assign start_stb   = (io_stb && bus_addr[7:2] == 6'b010001);  // -188
@@ -528,6 +543,7 @@ module risc5 #(
     scs_stb     ? scs_dout[31:0] :
     cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
+    scfg_stb    ? scfg_dout[31:0] :
     wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0]  :
     start_stb   ? start_dout[31:0]  :
@@ -548,6 +564,7 @@ module risc5 #(
     scs_stb     ? scs_ack :
     cts_stb     ? cts_ack :
     stm_stb     ? stm_ack :
+    scfg_stb    ? scfg_ack :
     wd_stb      ? wd_ack :
     ptmr_stb    ? ptmr_ack  :
     start_stb   ? start_ack :
@@ -559,35 +576,29 @@ endmodule
 `resetall
 
 /**
-FFFFFC  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+FFFFFF  +---------------------------+
+        |    64 dev IO addresses    |  256 Bytes
 FFFF00  +---------------------------+
-        | 64 dev addr (unused)      |     256 Bytes
+        | 64 dev addr (reserved)    |  256 Bytes
 FFFE00  +---------------------------+
-        | 64 dev addr (unused)      |     256 Bytes
+        | 64 dev addr (reserved)    |  256 Bytes
 FFFD00  +---------------------------+
-        | 64 dev addr (unused)      |     256 Bytes
+        | 64 dev addr (reserved)    |  256 Bytes
 FFFC00  +---------------------------+
-        |                           |
-        |      -- unused --         |     3 kB
-        |                           !
+        |         unused            |  3 kB
 FFF000  +---------------------------+
-        |                           !
-        |     PROM (2k used)        |     4 KB
-        |                           |
+        |      PROM (reserved)      |  2 kB
+FFE800  +---------------------------+
+        |          PROM             |  2 kB
 FFE000  +---------------------------+
         |                           |
-        |                           |
-        |                           |
-        |                           |
+       ...                         ...
         |                           |
         |          max              |
-        |          RAM              |     16 MB - 8 kB
+        |          RAM              |  16 MB - 8 kB
         |         space             |
         |                           |
-        |                           |
-        |                           |
-        |                           |
+       ...                         ...
         |                           |
 000000  +---------------------------+
 **/
