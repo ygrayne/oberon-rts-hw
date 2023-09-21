@@ -425,19 +425,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to gpio[3]
 # ext
 # ---
 # pin 26
-set_location_assignment PIN_AG22 -to ext[0]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[0]
-set_location_assignment PIN_AE24 -to ext[1]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[1]
-set_location_assignment PIN_AH22 -to ext[2]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[2]
-set_location_assignment PIN_AF26 -to ext[3]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[3]
-set_location_assignment PIN_AE20 -to ext[4]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[4]
 # pin 31
-set_location_assignment PIN_AG23 -to ext[5]
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to ext[5]
 
 
 # GPIO on HSMC to PIO adapter card
@@ -773,6 +761,9 @@ set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][6] -t
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][7] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|start" -section_id auto_lai_1
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][2] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_tick" -section_id auto_lai_1
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][1] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|last_bit" -section_id auto_lai_1
+set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|fast" -section_id auto_lai_1
+set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=35185" -section_id auto_lai_1
+set_global_assignment -name VERILOG_FILE ../../../lib/any/sysconf.v
 set_global_assignment -name VERILOG_FILE ../../../lib/any/io/spie_rxtx.v
 set_global_assignment -name VERILOG_FILE ../lib/risc5.v
 set_global_assignment -name SDC_FILE ../lib/risc5.sdc
@@ -810,6 +801,4 @@ set_global_assignment -name SIGNALTAP_FILE signal_tap/stp2.stp
 set_global_assignment -name SIGNALTAP_FILE signal_tap/rs232.stp
 set_global_assignment -name LOGIC_ANALYZER_INTERFACE_FILE LAI/lai1.lai
 set_global_assignment -name LOGIC_ANALYZER_INTERFACE_FILE LAI/lai2.lai
-set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_input[0][0] -to "spie:spie_0|spie_rxtx:spie_rxtx_0|fast" -section_id auto_lai_1
-set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_NODE_CRC=35185" -section_id auto_lai_1
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

@@ -1,5 +1,5 @@
 /**
-  32-bit PROM initialised from hex file, 2k
+  32-bit PROM initialised from hex file, 4k
   --
   Architecture: ETH
   --
@@ -13,14 +13,14 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-module prom #(parameter mem_file = "BootLoad.mem") (
+module prom_4k #(parameter mem_file = "BootLoad.mem") (
   input wire clk,
   input wire en,
-  input wire [8:0] addr,
+  input wire [9:0] addr,
   output reg [31:0] data_out
 );
 
-  reg [31:0] mem [511:0];
+  reg [31:0] mem [1023:0];
 
   initial begin
     $readmemh(mem_file, mem);

@@ -45,9 +45,9 @@ module clocks (
     .clk1_divide_by(10),
     .clk1_duty_cycle(50),		    // in %
     .clk1_phase_shift(0),		    // in picosec
-    // 20 MHz output, in phase
+    // 25 MHz output, in phase
     .clk0_multiply_by(8),
-    .clk0_divide_by(20),
+    .clk0_divide_by(16),
     .clk0_duty_cycle(50),		    // in %
     .clk0_phase_shift(0)		    // in picosec
   ) clk_pll (

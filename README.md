@@ -20,6 +20,7 @@ Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but
 * millisecond timer
 * RS232 (buffered)
 * SPI
+* I2C
 * LEDs, switches, buttons, 7-seg displays (if available)
 * GPIO
 * Reatl-time clock
@@ -33,7 +34,6 @@ Check out [oberon-rts.org](https://oberon-rts.org), which is awfully behind, but
 
 ## Next Up
 
-* I2C
 * SRAM integration
 * Hardware-signal based process scheduling.
 * Hardware support for critical region protection for processes.
@@ -47,7 +47,7 @@ There are two different architectures for the RISC5 CPU and its environment:
   * [Project Oberon](http://projectoberon.net) (Niklaus Wirth)
   * [Embedded Project Oberon](https://astrobe.com/RISC5/ReadMe.htm) (Chris Burrows)
 * THM: as defined and implemented by
-  * [THM architecture](https://github.com/hgeisse/THM-Oberon) (Hellwig Geisse)
+  * [THM Oberon](https://github.com/hgeisse/THM-Oberon) (Hellwig Geisse)
 
 As used, implemented and extended here, both architectures are to be used with the Oberon cross compiler by Astrobe for RISC5.
 

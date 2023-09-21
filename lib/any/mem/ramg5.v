@@ -26,7 +26,7 @@
 module ramg5 #(parameter num_kbytes = 128) (
   input wire clk,
   input wire en,
-  input wire wr,
+  input wire we,
   input wire be,
   input wire [$clog2(num_kbytes*'h400)-1:0] addr,
   input wire [31:0] data_in,
@@ -39,16 +39,16 @@ module ramg5 #(parameter num_kbytes = 128) (
   // (byte-wise) write enable (addr[1:0])
   // reads are always 32 bits, see above
   wire [1:0] addr10 = addr[1:0];
-  wire [3:0] b_en = ~en ? 4'b0 : (~wr | ~be) ? 4'b1111 : {addr10 == 2'b11, addr10 == 2'b10, addr10 == 2'b01, addr10 == 2'b00};
+  wire [3:0] b_en = ~en ? 4'b0 : (~we | ~be) ? 4'b1111 : {addr10 == 2'b11, addr10 == 2'b10, addr10 == 2'b01, addr10 == 2'b00};
 
   // address bus for the RAM blocks, word-aligned
   wire [addr_width-1:2] addr4 = addr[addr_width-1:2];
 
   // four RAM blocks, each one byte wide, full capacity depth, in parallel
-  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_0 (.clk(~clk), .en(b_en[0]), .we(wr), .addr(addr4), .din(data_in[7:0]), .dout(data_out[7:0]));
-  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_1 (.clk(~clk), .en(b_en[1]), .we(wr), .addr(addr4), .din(data_in[15:8]), .dout(data_out[15:8]));
-  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_2 (.clk(~clk), .en(b_en[2]), .we(wr), .addr(addr4), .din(data_in[23:16]), .dout(data_out[23:16]));
-  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_3 (.clk(~clk), .en(b_en[3]), .we(wr), .addr(addr4), .din(data_in[31:24]), .dout(data_out[31:24]));
+  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_0 (.clk(~clk), .en(b_en[0]), .we(we), .addr(addr4), .din(data_in[7:0]), .dout(data_out[7:0]));
+  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_1 (.clk(~clk), .en(b_en[1]), .we(we), .addr(addr4), .din(data_in[15:8]), .dout(data_out[15:8]));
+  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_2 (.clk(~clk), .en(b_en[2]), .we(we), .addr(addr4), .din(data_in[23:16]), .dout(data_out[23:16]));
+  RAM_Nkx8 #(.num_onekb(num_kwords)) ram_Nkx8_3 (.clk(~clk), .en(b_en[3]), .we(we), .addr(addr4), .din(data_in[31:24]), .dout(data_out[31:24]));
 
 endmodule
 

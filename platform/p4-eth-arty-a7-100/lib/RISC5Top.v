@@ -4,7 +4,7 @@
   Architecture: ETH
   Board and technology: Arty-A7-100, Xilinx Artix-7
   --
-  Origins:
+  Base/origins:
   * Project Oberon, NW 14.6.2018
   * Embedded Project Oberon for Arty-A7, v8.0, CFB 16.10.2021
   --
@@ -22,7 +22,10 @@
 module RISC5Top #(
   parameter
     clock_freq = 40_000_000,
-    prom_file = "../../platform/p4-eth-arty-a7-100/bootload/BootLoad-512k-64k.mem",
+    prom_file = "../../platform/bootload/BootLoad.mem",
+    mem_lim = 'h80000,      // RAM size
+    stack_org = 'h70000,    // initial stack pointer value
+    stack_size = 'h8000,
     rs232_buf_slots = 256,
     logbuf_entries = 32,
     calltrace_slots = 32,
@@ -51,7 +54,6 @@ module RISC5Top #(
   // GPIO
   inout wire [num_gpio-1:0] gpio
  );
-
   // clk
   wire clk_ok;                // clocks stable
   wire clk;                   // system clock
@@ -60,16 +62,14 @@ module RISC5Top #(
   // rst and rst_n: see sys ctrl and status
   wire rst_out;               // active high
   // cpu
-  wire [23:0] adr;            // address bus
-  wire [31:0] inbus;          // data to RISC core
-  wire [31:0] inbus0;         // data & code from RAM
-  wire [31:0] romout;         // code to RISC core from PROM
-  wire [31:0] codebus;        // code to RISC core from RAM
-  wire [31:0] outbus;         // data from RISC core
-  wire rd;                    // CPU read
-  wire wr;                    // CPU write
-  wire ben;                   // CPU byte enable
-  wire irq;                   // interrupt request to CPU
+  wire [23:0] cpu_addr;       // address bus
+  wire [31:0] cpu_inbus;      // data in from RAM or IO
+  wire [31:0] cpu_codebus;    // code in from RAM or PROM
+  wire [31:0] cpu_outbus;     // data out
+  wire cpu_rd;                // CPU read
+  wire cpu_wr;                // CPU write
+  wire cpu_ben;               // CPU byte enable
+  wire cpu_irq;               // interrupt request to CPU
   // cpu extensions
   wire cpu_intack;            // CPU out: interrupt ack
   wire cpu_rti;               // CPU out: return from interrupt
@@ -78,24 +78,25 @@ module RISC5Top #(
   wire [31:0] cpu_lnkx;       // CPU out: link register
   wire [31:0] cpu_irx;        // CPU out: instruction register
   wire [23:0] cpu_spcx;       // CPU out: SPC register (saved PC on interrupt * 4)
-  wire [21:0] cpu_pcx;        // CPU out: current PC
+  wire [21:0] cpu_pcx;        // CPU out: program counter
   // prom
   wire prom_stb;
   wire [31:0] prom_dout;
   // ram
   wire ram_stb;
+  wire [31:0] ram_dout;
   // io
   wire io_en;                 // IO enable
   wire [31:0] io_out;         // io devices output
   // ms timer
   wire tmr_stb;
-  wire [31:0] tmr_dout;       // data out: running milliseconds since reset
+  wire [31:0] tmr_dout;       // running milliseconds since reset
   wire tmr_ms_tick;           // millisecond timer tick
   wire tmr_ack;
   // lsb
   wire lsb_stb;
-  wire [3:0] lsb_leds_g_in;   // signals in for greed LEDs on board
-  wire [31:0] lsb_dout;       // data out: buttons, switches
+  wire [3:0] lsb_leds_g_in;   // direct signals in for greed LEDs on board
+  wire [31:0] lsb_dout;       // buttons, switches
   wire [3:0] lsb_btn;         // button signals out
   wire [3:0] lsb_swi;         // switch signals out
   wire lsb_ack;
@@ -116,7 +117,7 @@ module RISC5Top #(
   wire rst;                   // system reset signal out, active high
   wire rst_n;                 // system reset signal out, active low
   wire [31:0] scs_dout;       // register content, error data
-  wire [7:0] scs_err_sig_in;  // error signals in
+  wire [7:0] scs_err_sig_in;  // error signals in (clk synched)
   wire [4:0] scs_cp_pid;      // current process' pid out
   wire scs_ack;
   // proc periodic timing
@@ -150,6 +151,10 @@ module RISC5Top #(
   wire gpio_stb;
   wire [31:0] gpio_dout;      // pin data, in/out control status
   wire gpio_ack;
+    // sys config
+  wire scfg_stb;
+  wire [31:0] scfg_dout;
+  wire scfg_ack;
 
   // clocks
   clocks clocks_0 (
@@ -175,15 +180,15 @@ module RISC5Top #(
     // in
     .clk(clk),
     .rst(rst_n),
-    .irq(irq),
-    .codebus(codebus[31:0]),
-    .inbus(inbus[31:0]),
+    .irq(cpu_irq),
+    .codebus(cpu_codebus[31:0]),
+    .inbus(cpu_inbus[31:0]),
     // out
-    .rd(rd),
-    .wr(wr),
-    .ben(ben),
-    .adr(adr[23:0]),
-    .outbus(outbus[31:0]),
+    .rd(cpu_rd),
+    .wr(cpu_wr),
+    .ben(cpu_ben),
+    .adr(cpu_addr[23:0]),
+    .outbus(cpu_outbus[31:0]),
     // extensions in
     .intabort(cpu_intabort),
     // extensions out
@@ -201,7 +206,7 @@ module RISC5Top #(
     // in
     .clk(~clk),
     .en(prom_stb),
-    .addr(adr[10:2]),
+    .addr(cpu_addr[10:2]),
     // out
     .data_out(prom_dout[31:0])
   );
@@ -211,12 +216,12 @@ module RISC5Top #(
     // in
     .clk(clk),
     .en(ram_stb),
-    .wr(wr),
-    .be(ben),
-    .addr(adr[18:0]),
-    .data_in(outbus[31:0]),
+    .we(cpu_wr),
+    .be(cpu_ben),
+    .addr(cpu_addr[18:0]),
+    .data_in(cpu_outbus[31:0]),
     // out
-    .data_out(inbus0[31:0])
+    .data_out(ram_dout[31:0])
   );
 
   // ms timer
@@ -241,9 +246,9 @@ module RISC5Top #(
     .clk(clk),
     .rst(rst),
     .stb(lsb_stb),
-    .we(wr),
+    .we(cpu_wr),
     .leds_g_in(lsb_leds_g_in),
-    .data_in(outbus[31:0]),
+    .data_in(cpu_outbus[31:0]),
     // out
     .data_out(lsb_dout[31:0]),
     .btn_out(lsb_btn[3:0]),
@@ -264,9 +269,9 @@ module RISC5Top #(
     .clk(clk),
     .rst(rst),
     .stb(rs232_0_stb),
-    .we(wr),
-    .addr(adr[2]),
-    .data_in(outbus[7:0]),
+    .we(cpu_wr),
+    .addr(cpu_addr[2]),
+    .data_in(cpu_outbus[7:0]),
     // out
     .data_out(rs232_0_dout[31:0]),
     .ack(rs232_0_ack),
@@ -281,9 +286,9 @@ module RISC5Top #(
     .clk(clk),
     .rst(rst),
     .stb(spi_0_stb),
-    .we(wr),
-    .addr(adr[2]),
-    .data_in(outbus[31:0]),
+    .we(cpu_wr),
+    .addr(cpu_addr[2]),
+    .data_in(cpu_outbus[31:0]),
     // out
     .data_out(spi_0_dout[31:0]),
     .ack(spi_0_ack),
@@ -314,11 +319,11 @@ module RISC5Top #(
     .clk(clk),
     .restart(rst_out),
     .stb(scs_stb),
-    .we(wr),
-    .addr(adr[2]),
+    .we(cpu_wr),
+    .addr(cpu_addr[2]),
     .err_sig(scs_err_sig_in),
     .err_addr({cpu_pcx[21:0], 2'b0}), // PC is 22 bit word aligned
-    .data_in(outbus[31:0]),
+    .data_in(cpu_outbus[31:0]),
     // out
     .data_out(scs_dout[31:0]),
     .sys_rst(rst),
@@ -334,9 +339,9 @@ module RISC5Top #(
     .clk(clk),
     .rst(rst),
     .stb(ptmr_stb),
-    .we(wr),
+    .we(cpu_wr),
     .tick(tmr_ms_tick),
-    .data_in(outbus[31:0]),
+    .data_in(cpu_outbus[31:0]),
     // out
     .data_out(ptmr_dout[31:0]),
     .ack(ptmr_ack)
@@ -348,9 +353,9 @@ module RISC5Top #(
     // in
     .clk(clk),
     .stb(log_stb),
-    .we(wr),
-    .addr(adr[2]),
-    .data_in(outbus[15:0]),
+    .we(cpu_wr),
+    .addr(cpu_addr[2]),
+    .data_in(cpu_outbus[15:0]),
     // out
     .data_out(log_dout[31:0]),
     .ack(log_ack)
@@ -364,8 +369,8 @@ module RISC5Top #(
     .rst(rst),
     .tick(tmr_ms_tick),
     .stb(wd_stb),
-    .we(wr),
-    .data_in(outbus[15:0]),
+    .we(cpu_wr),
+    .data_in(cpu_outbus[15:0]),
     // out
     .data_out(wd_dout[31:0]),
     .trig(wd_trig),
@@ -378,10 +383,10 @@ module RISC5Top #(
     .clk(clk),
     .rst(rst),
     .stb(stm_stb),
-    .we(wr),
-    .addr(adr[3:2]),
+    .we(cpu_wr),
+    .addr(cpu_addr[3:2]),
     .sp_in(cpu_spx[23:0]),
-    .data_in(outbus[23:0]),
+    .data_in(cpu_outbus[23:0]),
     .data_out(stm_dout),
     .trig_lim(stm_trig_lim),
     .trig_hot(stm_trig_hot),
@@ -394,12 +399,12 @@ module RISC5Top #(
     // in
     .clk(clk),
     .stb(cts_stb),
-    .we(wr),
-    .addr(adr[2]),
+    .we(cpu_wr),
+    .addr(cpu_addr[2]),
     .ir_in(cpu_irx),
     .lnk_in(cpu_lnkx[23:0]),
     .cp_pid(scs_cp_pid),
-    .data_in(outbus[23:0]),
+    .data_in(cpu_outbus[23:0]),
     // out
     .data_out(cts_dout[31:0]),
     .ack(cts_ack)
@@ -412,8 +417,8 @@ module RISC5Top #(
     .clk(clk),
     .rst(rst),
     .stb(start_stb),
-    .we(wr),
-    .data_in(outbus[15:0]),
+    .we(cpu_wr),
+    .data_in(cpu_outbus[15:0]),
     // out
     .data_out(start_dout),
     .ack(start_ack)
@@ -426,14 +431,31 @@ module RISC5Top #(
     .clk(clk),
     .rst(rst),
     .stb(gpio_stb),
-    .we(wr),
-    .addr(adr[2]),
-    .data_in(outbus[num_gpio-1:0]),
+    .we(cpu_wr),
+    .addr(cpu_addr[2]),
+    .data_in(cpu_outbus[num_gpio-1:0]),
     // out
     .data_out(gpio_dout),
     .ack(gpio_ack),
     // external
     .io_pin(gpio[num_gpio-1:0])
+  );
+
+  // sys config
+  // one IO address
+  sysconf #(
+    .mem_lim(mem_lim),
+    .stack_org(stack_org),
+    .stack_size(stack_size)
+    ) sysconf_0 (
+    // in
+    .clk(clk),
+    .stb(scfg_stb),
+    .we(cpu_wr),
+    .data_in(cpu_outbus[1:0]),
+    // out
+    .data_out(scfg_dout[31:0]),
+    .ack(scfg_ack)
   );
 
 
@@ -443,38 +465,39 @@ module RISC5Top #(
 
   // max RAM address space at 000000H to 0FFE000H (16 MB - 8 kB)
   // the actually used RAM space is defined in the bootloader
-  // adr[23:0] = 0FFE000H => adr[23:13] = 11'h7FF
-  assign ram_stb = (adr[23:13] != 11'h7FF);
+  // cpu_addr[23:0] = 0FFE000H => cpu_addr[23:13] = 11'h7FF
+  assign ram_stb = (cpu_addr[23:13] != 11'h7FF);
 
-  // codebus multiplexer
+  // cpu_codebus multiplexer
   // PROM: 2 kB at 0FFE000H => initial code address for CPU
-  // PROM uses adr[10:2] (word address)
+  // PROM uses cpu_addr[10:2] (word address)
   // PROM could be extended to 4kB "below" the IO addresses
-  assign prom_stb = (adr[23:12] == 12'hFFE && adr[11] == 1'b0);
-  assign codebus[31:0] = ~prom_stb ? inbus0[31:0] : prom_dout[31:0];
+  assign prom_stb = (cpu_addr[23:12] == 12'hFFE && cpu_addr[11] == 1'b0);
+  assign cpu_codebus[31:0] = ~prom_stb ? ram_dout[31:0] : prom_dout[31:0];
 
-  // inbus multiplexer
+  // cpu_inbus multiplexer
   // IO: 256 bytes (64 words) at 0FFFF00H
   // there's space for three more 256 bytes IO blocks "above" the PROM region
   // at: 0FFFE00H, 0FFFD00, 0FFFC00
-  assign io_en = (adr[23:8] == 16'hFFFF);
-  assign inbus[31:0] = ~io_en ? inbus0[31:0] : io_out[31:0];
+  assign io_en = (cpu_addr[23:8] == 16'hFFFF);
+  assign cpu_inbus[31:0] = ~io_en ? ram_dout[31:0] : io_out[31:0];
 
   // the traditional 16 IO addresses of (Embedded) Project Oberon
-  assign gpio_stb    = (io_en && adr[7:3] == 5'b11100);   // -32 (data), -28 (ctrl/status)
-  assign spi_0_stb   = (io_en && adr[7:3] == 5'b11010);   // -48 (data), -44 (ctrl/status)
-  assign rs232_0_stb = (io_en && adr[7:3] == 5'b11001);   // -56 (data), -52 (ctrl/status)
-  assign lsb_stb     = (io_en && adr[7:2] == 6'b110001);  // -60 note: system LEDs via LED()
-  assign tmr_stb     = (io_en && adr[7:2] == 6'b110000);  // -64
+  assign gpio_stb    = (io_en && cpu_addr[7:3] == 5'b11100);   // -32 (data), -28 (ctrl/status)
+  assign spi_0_stb   = (io_en && cpu_addr[7:3] == 5'b11010);   // -48 (data), -44 (ctrl/status)
+  assign rs232_0_stb = (io_en && cpu_addr[7:3] == 5'b11001);   // -56 (data), -52 (ctrl/status)
+  assign lsb_stb     = (io_en && cpu_addr[7:2] == 6'b110001);  // -60 note: system LEDs via LED()
+  assign tmr_stb     = (io_en && cpu_addr[7:2] == 6'b110000);  // -64
 
   // extended IO address range
-  assign scs_stb     = (io_en && adr[7:3] == 5'b10111);   // -72
-  assign cts_stb     = (io_en && adr[7:3] == 5'b10110);   // -80, -76 (ctrl/status)
-  assign stm_stb     = (io_en && adr[7:4] == 4'b1010);    // -96
-  assign wd_stb      = (io_en && adr[7:2] == 6'b100100);  // -112
-  assign ptmr_stb    = (io_en && adr[7:2] == 6'b011111);  // -132
-  assign start_stb   = (io_en && adr[7:2] == 6'b010001);  // -188
-  assign log_stb     = (io_en && adr[7:3] == 5'b00100);   // -224 (data), -220 (indices)
+  assign scs_stb     = (io_en && cpu_addr[7:3] == 5'b10111);   // -72
+  assign cts_stb     = (io_en && cpu_addr[7:3] == 5'b10110);   // -80, -76 (ctrl/status)
+  assign stm_stb     = (io_en && cpu_addr[7:4] == 4'b1010);    // -96
+  assign scfg_stb    = (io_en && cpu_addr[7:2] == 6'b100101);  // -108
+  assign wd_stb      = (io_en && cpu_addr[7:2] == 6'b100100);  // -112
+  assign ptmr_stb    = (io_en && cpu_addr[7:2] == 6'b011111);  // -132
+  assign start_stb   = (io_en && cpu_addr[7:2] == 6'b010001);  // -188
+  assign log_stb     = (io_en && cpu_addr[7:3] == 5'b00100);   // -224 (data), -220 (indices)
 
 
   // IO data out multiplexing
@@ -488,6 +511,7 @@ module RISC5Top #(
     scs_stb     ? scs_dout[31:0] :
     cts_stb     ? cts_dout[31:0]  :
     stm_stb     ? stm_dout[31:0]  :
+    scfg_stb    ? scfg_dout[31:0] :
     wd_stb      ? wd_dout[31:0] :
     ptmr_stb    ? ptmr_dout[31:0] :
     start_stb   ? start_dout[31:0] :
@@ -499,35 +523,29 @@ endmodule
 `resetall
 
 /**
-FFFFFC  +---------------------------+
-        | 64 dev addr (1 word each) |     256 Bytes
+FFFFFF  +---------------------------+
+        |    64 dev IO addresses    |  256 Bytes
 FFFF00  +---------------------------+
-        | 64 dev addr (unused)      |     256 Bytes
+        | 64 dev addr (reserved)    |  256 Bytes
 FFFE00  +---------------------------+
-        | 64 dev addr (unused)      |     256 Bytes
+        | 64 dev addr (reserved)    |  256 Bytes
 FFFD00  +---------------------------+
-        | 64 dev addr (unused)      |     256 Bytes
+        | 64 dev addr (reserved)    |  256 Bytes
 FFFC00  +---------------------------+
-        |                           |
-        |      -- unused --         |     3 kB
-        |                           !
+        |         unused            |  3 kB
 FFF000  +---------------------------+
-        |                           !
-        |     PROM (2k used)        |     4 KB
-        |                           |
+        |      PROM (reserved)      |  2 kB
+FFE800  +---------------------------+
+        |          PROM             |  2 kB
 FFE000  +---------------------------+
         |                           |
-        |                           |
-        |                           |
-        |                           |
+       ...                         ...
         |                           |
         |          max              |
-        |          RAM              |     16 MB - 8 kB
+        |          RAM              |  16 MB - 8 kB
         |         space             |
         |                           |
-        |                           |
-        |                           |
-        |                           |
+       ...                         ...
         |                           |
 000000  +---------------------------+
 **/

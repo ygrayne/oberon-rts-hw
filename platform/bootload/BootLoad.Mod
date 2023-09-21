@@ -52,20 +52,6 @@ MODULE* BootLoad;
     SelectCtrl = 1;
     ClearCtrl = 4;
     *)
-    (*
-    (* MemLim: total, stackOrg: address of boundary between modules/stack and heap space *)
-    (* the stack space is set in module Kernel *)
-    (* total: 192k, heap: 32k *) (* MemLim = 030000H; stackOrg = 028000H; *)
-    (* total: 256k, heap: 64k *) (* MemLim = 040000H; stackOrg = 030000H; *)
-    (* total: 256k, heap: 32k *) (* MemLim = 040000H; stackOrg = 037F00H; *)
-    (* total: 384k, heap: 64k *) (* MemLim = 060000H; stackOrg = 050000H; *)
-    (* total: 416k, heap: 64k *) MemLim = 068000H; stackOrg = 058000H;
-    (* total: 512k, heap: 64k *) (* MemLim = 080000H; stackOrg = 070000H; *)
-    (* total: 650k, heap: 64k *) (* MemLim = 090000H; stackOrg = 080000H; *)
-
-    (* total: 1M, heap: 512k *) (*MemLim = 0100000H; stackOrg = 080000H;*)
-    (* total: 16M - 8k, heap: 8M *) (*MemLim = 01000000H - 02000H; stackOrg = 0800000H;*)
-    *)
 
   VAR
     (* use RAM address 12 for tmp variable *)
@@ -203,7 +189,7 @@ BEGIN
   LED(LEDbase + 2);
   IF ~SYSTEM.BIT(SysCtrlAdr, SysCtrlNoReload) THEN
 
-    (***
+    (*
     SYSTEM.PUT(CalltraceStatusAdr, SelectCtrl); (* select call trace stack 0 *)
     SYSTEM.PUT(CalltraceStatusAdr, ClearCtrl);
     *)
@@ -212,36 +198,8 @@ BEGIN
     InitSPI;
     LED(LEDbase + 4);
     LoadFromDisk;
-    LED(LEDbase + 5);
+    LED(LEDbase + 5)
   END;
-
-  SYSTEM.GET(0, addr12); writeHex(addr12);
-  SYSTEM.GET(4, addr12); writeHex(addr12);
-  SYSTEM.GET(8, addr12); writeHex(addr12);
-  SYSTEM.GET(12, addr12); writeHex(addr12);
-  SYSTEM.GET(16, addr12); writeHex(addr12);
-  SYSTEM.GET(20, addr12); writeHex(addr12);
-  SYSTEM.GET(24, addr12); writeHex(addr12);
-  SYSTEM.GET(28, addr12); writeHex(addr12);
-
-  SYSTEM.GET(32, addr12); writeHex(addr12);
-  SYSTEM.GET(36, addr12); writeHex(addr12);
-  SYSTEM.GET(40, addr12); writeHex(addr12);
-  SYSTEM.GET(44, addr12); writeHex(addr12);
-  SYSTEM.GET(48, addr12); writeHex(addr12);
-  SYSTEM.GET(52, addr12); writeHex(addr12);
-  SYSTEM.GET(56, addr12); writeHex(addr12);
-  SYSTEM.GET(60, addr12); writeHex(addr12);
-
-  SYSTEM.GET(64, addr12); writeHex(addr12);
-  SYSTEM.GET(68, addr12); writeHex(addr12);
-  SYSTEM.GET(72, addr12); writeHex(addr12);
-  SYSTEM.GET(76, addr12); writeHex(addr12);
-  SYSTEM.GET(80, addr12); writeHex(addr12);
-  SYSTEM.GET(84, addr12); writeHex(addr12);
-  SYSTEM.GET(88, addr12); writeHex(addr12);
-  SYSTEM.GET(92, addr12); writeHex(addr12);
-
 
   (* put the memory info for Modules and Kernel *)
   (* note: the statically linked boot file adds some more, eg. for AllocPtr *)
@@ -260,6 +218,5 @@ BEGIN
   (* read by Kernel *)
   SYSTEM.PUT(SysCfgAdr, GetMemLimCmd);
   SYSTEM.GET(SysCfgAdr, addr12); (* set directly via GET *)
-  LED(LEDbase + 6);
-  REPEAT UNTIL FALSE
+  LED(LEDbase + 6)
 END BootLoad.
