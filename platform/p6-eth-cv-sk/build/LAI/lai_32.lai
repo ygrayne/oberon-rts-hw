@@ -1,0 +1,151 @@
+<session jtag_chain="" jtag_device="">
+  <display_attributes active_instance="1" active_tab="2"/>
+  <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_0" type="generic">
+    <node_ip_info instance_id="0" mfg_id="110" node_id="7" version="0"/>
+    <core_parameters bank_count="2" capture_mode="timing" crc_value="1194" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <pins>
+      <pin io_standard="2.5 V" location="PIN_A8" name="altera_reserved_lai_0_0"/>
+      <pin io_standard="2.5 V" location="PIN_B12" name="altera_reserved_lai_0_1"/>
+      <pin io_standard="2.5 V" location="PIN_A9" name="altera_reserved_lai_0_2"/>
+      <pin io_standard="2.5 V" location="PIN_A13" name="altera_reserved_lai_0_3"/>
+      <pin io_standard="2.5 V" location="PIN_F16" name="altera_reserved_lai_0_4"/>
+      <pin io_standard="2.5 V" location="PIN_C23" name="altera_reserved_lai_0_5"/>
+      <pin io_standard="2.5 V" location="PIN_E15" name="altera_reserved_lai_0_6"/>
+      <pin io_standard="2.5 V" location="PIN_C22" name="altera_reserved_lai_0_7"/>
+    </pins>
+    <banks>
+      <bank name="Bank 0">
+        <signal name="clocks:clocks_0|clk" type="comb"/>
+        <signal name="risc5_2:cpu|wr" type="comb"/>
+        <signal name="risc5_2:cpu|rd" type="comb"/>
+        <signal name="risc5_2:cpu|STR" type="comb"/>
+        <signal name="risc5_2:cpu|LDR" type="comb"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+      <bank name="Bank 1">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+    </banks>
+    <display_attributes connected_bank="-3"/>
+  </instance>
+  <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_1" type="generic">
+    <node_ip_info instance_id="1" mfg_id="110" node_id="7" version="0"/>
+    <core_parameters bank_count="2" capture_mode="timing" crc_value="3F1B" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <pins>
+      <pin io_standard="2.5 V" location="PIN_D13" name="altera_reserved_lai_1_0"/>
+      <pin io_standard="2.5 V" location="PIN_B14" name="altera_reserved_lai_1_1"/>
+      <pin io_standard="2.5 V" location="PIN_C14" name="altera_reserved_lai_1_2"/>
+      <pin io_standard="2.5 V" location="PIN_A23" name="altera_reserved_lai_1_3"/>
+      <pin io_standard="2.5 V" location="PIN_C15" name="altera_reserved_lai_1_4"/>
+      <pin io_standard="2.5 V" location="PIN_A22" name="altera_reserved_lai_1_5"/>
+      <pin io_standard="2.5 V" location="PIN_E16" name="altera_reserved_lai_1_6"/>
+      <pin io_standard="2.5 V" location="PIN_A17" name="altera_reserved_lai_1_7"/>
+    </pins>
+    <banks>
+      <bank name="Bank 0">
+        <signal name="sram:sram_0|clk0" type="comb"/>
+        <signal name="sram:sram_0|clk1" type="comb"/>
+        <signal name="sram:sram_0|clk_cpu" type="comb"/>
+        <signal name="sram:sram_0|en" type="comb"/>
+        <signal name="sram:sram_0|we" type="comb"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+      <bank name="Bank 1">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+    </banks>
+    <display_attributes connected_bank="-3"/>
+  </instance>
+  <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_2" type="generic">
+    <node_ip_info instance_id="2" mfg_id="110" node_id="7" version="0"/>
+    <core_parameters bank_count="2" capture_mode="timing" crc_value="676F" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <pins>
+      <pin io_standard="2.5 V" location="PIN_D16" name="altera_reserved_lai_2_0"/>
+      <pin io_standard="2.5 V" location="PIN_A16" name="altera_reserved_lai_2_1"/>
+      <pin io_standard="2.5 V" location="PIN_D18" name="altera_reserved_lai_2_2"/>
+      <pin io_standard="2.5 V" location="PIN_C17" name="altera_reserved_lai_2_3"/>
+      <pin io_standard="2.5 V" location="PIN_D17" name="altera_reserved_lai_2_4"/>
+      <pin io_standard="2.5 V" location="PIN_B17" name="altera_reserved_lai_2_5"/>
+      <pin io_standard="2.5 V" location="PIN_E20" name="altera_reserved_lai_2_6"/>
+      <pin io_standard="2.5 V" location="PIN_C19" name="altera_reserved_lai_2_7"/>
+    </pins>
+    <banks>
+      <bank name="Bank 0">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+      <bank name="Bank 1">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+    </banks>
+    <display_attributes connected_bank="-3"/>
+  </instance>
+  <instance compilation_mode="normal" entity_name="sld_multitap" is_auto_node="true" name="auto_lai_3" type="generic">
+    <node_ip_info instance_id="3" mfg_id="110" node_id="7" version="0"/>
+    <core_parameters bank_count="2" capture_mode="timing" crc_value="676F" enable_auto_setup="false" enable_plug_run="false" max_freq="100" pin_count="8" power_up_state="tristate" tdm_rate="1"/>
+    <pins>
+      <pin io_standard="2.5 V" location="PIN_D21" name="altera_reserved_lai_3_0"/>
+      <pin io_standard="2.5 V" location="PIN_B21" name="altera_reserved_lai_3_1"/>
+      <pin io_standard="2.5 V" location="PIN_D20" name="altera_reserved_lai_3_2"/>
+      <pin io_standard="2.5 V" location="PIN_B20" name="altera_reserved_lai_3_3"/>
+      <pin io_standard="2.5 V" location="PIN_B24" name="altera_reserved_lai_3_4"/>
+      <pin io_standard="2.5 V" location="" name="altera_reserved_lai_3_5"/>
+      <pin io_standard="2.5 V" location="PIN_A24" name="altera_reserved_lai_3_6"/>
+      <pin io_standard="2.5 V" location="" name="altera_reserved_lai_3_7"/>
+    </pins>
+    <banks>
+      <bank name="Bank 0">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+      <bank name="Bank 1">
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+        <signal name="" type="unused"/>
+      </bank>
+    </banks>
+    <display_attributes connected_bank="-3"/>
+  </instance>
+</session>
